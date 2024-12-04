@@ -1,0 +1,102 @@
+.moDev-body{
+    display: flex;   
+}
+
+.moDev-header{
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    flex-direction: row-reverse;
+}
+
+
+.moDev-cont-herramientas{   
+    background: #424242;
+    padding: 5px;
+    /*min-width: 30%;*/
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition:.5s;
+}
+
+.w3-btn{
+    background-color: #958260;
+    width: 231px;
+}
+
+/*Hijos de contenedores que parecen bajo el boton*/
+#moDev-cont-session{
+    padding: 5px 0px;    
+    font-size: 10px;
+    color: white;
+}
+
+.moDev-cont-hide{
+    background: #595b5c;     
+    width: 0px;
+    height: 0px;    
+    background: #949494;    
+    transition: .8s; 
+    overflow: hidden;
+}
+.moDev-cont-show{  
+    margin: 5px 0px; 
+    width: 400px;
+    height: auto;   
+    padding: 5px;    
+}
+
+/*DIREctORIO de componentes*/
+#moDev-cont-arbol-tag{
+    display: flex;
+    color: white;
+    font-weight: bold;
+}
+.moDev-cont-arbol-tag-dir{
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    margin: 0;
+}
+
+#moDev-cont-arbol-archivos .fila{
+    padding: 10px;
+    /*background: aliceblue;*/
+    margin: 5px 0px;
+}
+
+#moDev-cont-arbol-archivos .fila .folder,
+#moDev-cont-arbol-archivos .fila .file{
+    width: 200px;
+    height: 50px;
+    background: #ffe793;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#moDev-cont-arbol-archivos .fila .file{
+    background: #eb80d4;
+}
+
+
+/*VISOR---------*/
+.moDev-visor{
+
+}
+
+/*PRESENTACION*/
+ficha-tecnica h2{
+    text-align: center;
+}
+
+ficha-tecnica{
+    width: calc(100% - 241px);
+}
+ficha-tecnica section div:nth-child(1){
+    display: flex;
+    
+}
