@@ -49,7 +49,7 @@
   
 <script>
   import { defineComponent, onMounted, defineAsyncComponent } from 'vue';  
-  
+   
   export default defineComponent({
     name: 'TablaBody',
     components: {
