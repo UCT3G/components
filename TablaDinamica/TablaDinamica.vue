@@ -61,7 +61,7 @@
     @update:visible="cerrarFormCrud"
     titulo="Modifica la información"
     :fullScreenHeight="false"
-  >
+  ><!--JALA MALDITA SEA-->
     <div v-if="formularioBaseFilas != null">
       <FormD_CapaTablaDinamica
         :urls="url_formulario"
