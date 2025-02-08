@@ -48,11 +48,12 @@
     ref="modalEditar"
     :fullScreenHeight="false"
   >
+  <!--
     <TablaDinamicaEditor 
       :tabla_nombre="tabla_nombre"
       :tablaBase="tablaBase"
       @CerrarEditor = "CerrarEditor"
-    ></TablaDinamicaEditor>
+    ></TablaDinamicaEditor>-->
   </PopUpSolido>
 
   <PopUpSolido
@@ -62,22 +63,14 @@
     titulo="Modifica la información"
     :fullScreenHeight="false"
   ><!--JALA MALDITA SEA-->
-    <div v-if="formularioBaseFilas != null">
-      <FormD_CapaTablaDinamica
-        :urls="url_formulario"
-        :formularioBase="formularioBaseFilas"
-        :inputs_catalogo="inputs_catalogoSistema"
-        :idGenerales="idGenerales"
-        :descargaData="descargaData"
-        @submitSuccess="formularioBaseFilasSuccess"
-      ></FormD_CapaTablaDinamica>
+    <div v-if="formularioBaseFilas != null">      
     </div>
   </PopUpSolido>
 </template>
 
 <script>
 import { defineComponent, ref, onMounted, watch, toRefs, computed, onUnmounted } from "vue";
-import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
+//import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
 import PopUpSolido from "@/components/Modal/ModalSolid.vue";
 import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
 
@@ -86,7 +79,7 @@ import TablaBody from "@/components/TablaDinamica/TablaBody.vue";
 import TablaFooter from "@/components/TablaDinamica/TablaFooter.vue";
 
 import { inputs_catalogoSistema } from "@/store/ReporteadorReactive/FormularioDinamicoADM";
-import FormD_CapaTablaDinamica from "@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue";
+
 
 import { TablaBase } from "@/store/ReporteadorReactive/TablaDinamica.js";
 import { useStore } from "vuex";
@@ -98,12 +91,12 @@ export default defineComponent({
   name: "TablaDinamica",
   components: {
     PopUpSolido,
-    TablaDinamicaEditor,
+    //TablaDinamicaEditor,
     DynamicSvgLoader,
     TablaHead,
     TablaBody,
     FilasCargando,
-    FormD_CapaTablaDinamica,
+ 
     TablaFooter,
     BotonIconoPrimary,
   },
