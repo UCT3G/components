@@ -148,7 +148,7 @@
 
                 try {
                     mostrarEditorJson.value = false
-                    const response = await axios.post('/FormularioDinamico/GuardarConsultaSQL', { id_tabla: 0, consultaSQL:consultaSQL.value }, headers);                    
+                    const response = await axios.post('http://localhost:8000/FormularioDinamico/GuardarConsultaSQL', { id_tabla: 0, consultaSQL:consultaSQL.value }, headers);                    
                     //se combierte la cadena de texto en un objeto json
                     //const data = JSON.parse(response.data.json)                    
                     localJson.value.columnas = response.data.json.columnas

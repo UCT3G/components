@@ -76,7 +76,7 @@
     import {defineComponent, ref, computed, toRefs,} from 'vue'
     import { Vue3JsonEditor } from 'vue3-json-editor'
     import PopUp from '@/components/Modal/Modal.vue';
-    import FormD_CapaTablaDinamica from '@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue'
+    // import FormD_CapaTablaDinamica from '@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue'
     import { inputs_catalogoSistema, tablas_sistema } from '@/store/ReporteadorReactive/FormularioDinamicoADM';
     import { useStore } from 'vuex';
     //import { GetTablaNombre, TablaBase } from "@/store/ReporteadorReactive/TablaDinamica.js";
@@ -90,7 +90,7 @@
         components:{
             Vue3JsonEditor,
             PopUp,
-            FormD_CapaTablaDinamica,
+            // FormD_CapaTablaDinamica,
             TablaHead,
             //TablaBody
         },
@@ -196,7 +196,7 @@
 
                 try {
                     mostrarEditorJson.value = false
-                    const response = await axios.post('/FormularioDinamico/GuardarConsultaSQL', { id_tabla: tablaBase.value.id_tabla, consultaSQL:consultaSQL.value }, headers);                    
+                    const response = await axios.post('http://localhost:8000/FormularioDinamico/GuardarConsultaSQL', { id_tabla: tablaBase.value.id_tabla, consultaSQL:consultaSQL.value }, headers);                    
                     //se combierte la cadena de texto en un objeto json
                     //const data = JSON.parse(response.data.json)                    
                     json.value.columnas = response.data.json.columnas
