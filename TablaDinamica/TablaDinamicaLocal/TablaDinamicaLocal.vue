@@ -54,7 +54,7 @@
     import TablaFooter from '@/components/TablaDinamica/TablaFooter.vue';
 
     import {inputs_catalogoSistema} from '@/store/ReporteadorReactive/FormularioDinamicoADM';
-    import FormD_CapaTablaDinamica from '@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue'
+    // import FormD_CapaTablaDinamica from '@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue'
 
     import { TablaBase } from "@/store/ReporteadorReactive/TablaDinamica.js"
     import { useStore } from 'vuex';
@@ -71,7 +71,7 @@
             DynamicSvgLoader,
             TablaHead,          
             FilasCargando,
-            FormD_CapaTablaDinamica,
+            // FormD_CapaTablaDinamica,
             TablaFooter,
             BotonIconoPrimary
         },

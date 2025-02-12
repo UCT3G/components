@@ -86,7 +86,7 @@ import TablaBody from "@/components/TablaDinamica/TablaBody.vue";
 import TablaFooter from "@/components/TablaDinamica/TablaFooter.vue";
 
 import { inputs_catalogoSistema } from "@/store/ReporteadorReactive/FormularioDinamicoADM";
-import FormD_CapaTablaDinamica from "@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue";
+// import FormD_CapaTablaDinamica from "@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue";
 
 import { TablaBase } from "@/store/ReporteadorReactive/TablaDinamica.js";
 import { useStore } from "vuex";
@@ -103,7 +103,7 @@ export default defineComponent({
     TablaHead,
     TablaBody,
     FilasCargando,
-    FormD_CapaTablaDinamica,
+    // FormD_CapaTablaDinamica,
     TablaFooter,
     BotonIconoPrimary,
   },
@@ -255,8 +255,8 @@ export default defineComponent({
         json.value.registros_filtrados =
           res.data.data_table.registros_filtrados;
         json.value.filas = res.data.data_table.json_actualizado.filas;
-        console.log("AQUIIII SE RECUPERAN LOS DATOS");
-        console.log(json.value);
+        // console.log("AQUIIII SE RECUPERAN LOS DATOS");
+        // console.log(json.value);
         cargando.value = false; // Actualiza el estado cuando los datos están cargados
         //console.log(data_table.value);
         emit("finalizarRenderBody");
