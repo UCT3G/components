@@ -48,11 +48,12 @@
     ref="modalEditar"
     :fullScreenHeight="false"
   >
+  <!--
     <TablaDinamicaEditor 
       :tabla_nombre="tabla_nombre"
       :tablaBase="tablaBase"
       @CerrarEditor = "CerrarEditor"
-    ></TablaDinamicaEditor>
+    ></TablaDinamicaEditor>-->
   </PopUpSolido>
 
   <PopUpSolido
@@ -61,23 +62,15 @@
     @update:visible="cerrarFormCrud"
     titulo="Modifica la información"
     :fullScreenHeight="false"
-  >
-    <div v-if="formularioBaseFilas != null">
-      <FormD_CapaTablaDinamica
-        :urls="url_formulario"
-        :formularioBase="formularioBaseFilas"
-        :inputs_catalogo="inputs_catalogoSistema"
-        :idGenerales="idGenerales"
-        :descargaData="descargaData"
-        @submitSuccess="formularioBaseFilasSuccess"
-      ></FormD_CapaTablaDinamica>
+  ><!--JALA MALDITA SEA-->
+    <div v-if="formularioBaseFilas != null">      
     </div>
   </PopUpSolido>
 </template>
 
 <script>
 import { defineComponent, ref, onMounted, watch, toRefs, computed, onUnmounted } from "vue";
-import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
+//import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
 import PopUpSolido from "@/components/Modal/ModalSolid.vue";
 import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
 
@@ -98,7 +91,7 @@ export default defineComponent({
   name: "TablaDinamica",
   components: {
     PopUpSolido,
-    TablaDinamicaEditor,
+    //TablaDinamicaEditor,
     DynamicSvgLoader,
     TablaHead,
     TablaBody,
