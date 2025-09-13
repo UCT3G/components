@@ -48,12 +48,15 @@
     ref="modalEditar"
     :fullScreenHeight="false"
   >
-  <!--
     <TablaDinamicaEditor 
       :tabla_nombre="tabla_nombre"
       :tablaBase="tablaBase"
       @CerrarEditor = "CerrarEditor"
-    ></TablaDinamicaEditor>-->
+    ></TablaDinamicaEditor>
+
+    <Form_dinamic
+      :tablaBase="tablaBase"
+    />
   </PopUpSolido>
 
   <PopUpSolido
@@ -70,13 +73,14 @@
 
 <script>
 import { defineComponent, ref, onMounted, watch, toRefs, computed, onUnmounted } from "vue";
-//import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
+import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
 import PopUpSolido from "@/components/Modal/ModalSolid.vue";
 import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
 
 import TablaHead from "@/components/TablaDinamica/TablaHead.vue";
 import TablaBody from "@/components/TablaDinamica/TablaBody.vue";
 import TablaFooter from "@/components/TablaDinamica/TablaFooter.vue";
+import Form_dinamic from "./Form_dinamic.vue";
 
 import { inputs_catalogoSistema } from "@/store/ReporteadorReactive/FormularioDinamicoADM";
 // import FormD_CapaTablaDinamica from "@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue";
@@ -91,11 +95,12 @@ export default defineComponent({
   name: "TablaDinamica",
   components: {
     PopUpSolido,
-    //TablaDinamicaEditor,
+    TablaDinamicaEditor,
     DynamicSvgLoader,
     TablaHead,
     TablaBody,
     FilasCargando,
+    Form_dinamic,
     // FormD_CapaTablaDinamica,
     TablaFooter,
     BotonIconoPrimary,
