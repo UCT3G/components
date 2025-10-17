@@ -28,12 +28,13 @@
 
 
         <div v-if="comprobarTblaBase" class="position-relative mt-1">
-            <FormD_CapaTablaDinamica 
+            <Form_dinamic :tablaBase="tablaBase" />
+            <!-- <FormD_CapaTablaDinamica 
                 :formularioBase="formularioBaseTabla"            
                 :inputs_catalogo="inputs_catalogoSistema"
                 :idGenerales="[{name:'id_tabla', value:tablaBase.id_tabla, tabla_bd:'tabla_dinamica'}]"
                 :descargaData="true"        
-            ></FormD_CapaTablaDinamica>        
+            ></FormD_CapaTablaDinamica>         -->
         </div>
     
     </div>
@@ -76,6 +77,7 @@
     import {defineComponent, ref, computed, toRefs,} from 'vue'
     import { Vue3JsonEditor } from 'vue3-json-editor'
     import PopUp from '@/components/Modal/Modal.vue';
+    import Form_dinamic from "./Form_dinamic.vue";
     // import FormD_CapaTablaDinamica from '@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue'
     import { inputs_catalogoSistema, tablas_sistema } from '@/store/ReporteadorReactive/FormularioDinamicoADM';
     import { useStore } from 'vuex';
@@ -90,6 +92,7 @@
         components:{
             Vue3JsonEditor,
             PopUp,
+            Form_dinamic,
             // FormD_CapaTablaDinamica,
             TablaHead,
             //TablaBody

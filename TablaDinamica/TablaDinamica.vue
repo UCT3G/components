@@ -48,15 +48,12 @@
     ref="modalEditar"
     :fullScreenHeight="false"
   >
-    <TablaDinamicaEditor 
+
+    <TablaDinamicaEditor
       :tabla_nombre="tabla_nombre"
       :tablaBase="tablaBase"
-      @CerrarEditor = "CerrarEditor"
+      @CerrarEditor="CerrarEditor"
     ></TablaDinamicaEditor>
-
-    <Form_dinamic
-      :tablaBase="tablaBase"
-    />
   </PopUpSolido>
 
   <PopUpSolido
@@ -65,14 +62,21 @@
     @update:visible="cerrarFormCrud"
     titulo="Modifica la información"
     :fullScreenHeight="false"
-  ><!--JALA MALDITA SEA-->
-    <div v-if="formularioBaseFilas != null">      
-    </div>
+    ><!--JALA MALDITA SEA-->
+    <div v-if="formularioBaseFilas != null"></div>
   </PopUpSolido>
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, watch, toRefs, computed, onUnmounted } from "vue";
+import {
+  defineComponent,
+  ref,
+  onMounted,
+  watch,
+  toRefs,
+  computed,
+  onUnmounted,
+} from "vue";
 import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
 import PopUpSolido from "@/components/Modal/ModalSolid.vue";
 import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
@@ -80,7 +84,6 @@ import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
 import TablaHead from "@/components/TablaDinamica/TablaHead.vue";
 import TablaBody from "@/components/TablaDinamica/TablaBody.vue";
 import TablaFooter from "@/components/TablaDinamica/TablaFooter.vue";
-import Form_dinamic from "./Form_dinamic.vue";
 
 import { inputs_catalogoSistema } from "@/store/ReporteadorReactive/FormularioDinamicoADM";
 // import FormD_CapaTablaDinamica from "@/screens/UCT_Admin/FormD_ADM/CapasImplementacion/FormD_CapaTablaDinamica.vue";
@@ -100,7 +103,7 @@ export default defineComponent({
     TablaHead,
     TablaBody,
     FilasCargando,
-    Form_dinamic,
+    // Form_dinamic,
     // FormD_CapaTablaDinamica,
     TablaFooter,
     BotonIconoPrimary,
@@ -128,8 +131,8 @@ export default defineComponent({
     },
     Indicadores: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   emits: [
     "button_evento",
@@ -348,7 +351,7 @@ export default defineComponent({
     const CerrarEditor = () => {
       visible_editor_tabla.value = false;
       //emit("visible_editor_tabla", false);
-    }
+    };
 
     const handleFilaClick = ({ fila, index }) => {
       console.log("Fila seleccionada:", fila, "Índice:", index);
@@ -356,18 +359,19 @@ export default defineComponent({
       emit("filaSeleccionada", { fila, index });
     };
     onUnmounted(() => {
-      if (!store.getters['reporteador/getTablaPorNombre'](props.tabla_nombre)){
+      if (!store.getters["reporteador/getTablaPorNombre"](props.tabla_nombre)) {
         return;
       }
       // Limpiar todas las propiedades valor de json.value.columnas.valor
       json.value.columnas.forEach((columna) => {
         columna.valor = "";
       });
-      store.getters['reporteador/getTablaPorNombre'](props.tabla_nombre).json_tabla = JSON.stringify(json.value);
-      
+      store.getters["reporteador/getTablaPorNombre"](
+        props.tabla_nombre
+      ).json_tabla = JSON.stringify(json.value);
+
       emit("TBDestruida", { mensaje: "El componente ha sido destruido." });
     });
-
 
     return {
       visible_editor_tabla,
@@ -390,7 +394,7 @@ export default defineComponent({
       ClasesTablaDinamica,
       cerrarFormCrud,
       CerrarEditor,
-      handleFilaClick
+      handleFilaClick,
     };
   },
 });
@@ -404,7 +408,6 @@ export default defineComponent({
 
 .TablaDinamica {
   position: relative;
-  
 }
 .TablaDinamica .TablaDinamicabtn-filtrar {
   display: none;
@@ -561,54 +564,63 @@ export default defineComponent({
   /*color: var(--black);*/
   font-family: "MonserratSemiBold";
   border-right: 4px solid var(--blueBerry);
-  border-bottom: 2px solid var(--blueBerryPastel);  
-  
+  border-bottom: 2px solid var(--blueBerryPastel);
 }
 
-.TablaDinamica table tbody tr td .conBorde {/* Neblina en la parte inferior de la celda */
-    min-height: 35px;
-    max-height: 50px;
-    display: flex;
-    align-items: start;
-    overflow: hidden;
-    position: relative;
-    height: 50px;
-    padding: 10px 0px 0px 0px;   
-    position: relative;
-  } 
-
-  .TablaDinamica table tbody tr td .conBordeCentrado {
-    min-height: 35px;
-    max-height: 50px;
-    display: flex;
-    align-items: center; /* Centrar verticalmente */
-    justify-content: center; /* Centrar horizontalmente */
-    overflow: hidden;
-    position: relative;
-    height: 50px;
-    padding: 10px 0px 0px 0px;   
-    position: relative;
+.TablaDinamica table tbody tr td .conBorde {
+  /* Neblina en la parte inferior de la celda */
+  min-height: 35px;
+  max-height: 50px;
+  display: flex;
+  align-items: start;
+  overflow: hidden;
+  position: relative;
+  height: 50px;
+  padding: 10px 0px 0px 0px;
+  position: relative;
 }
 
-  .TablaDinamica table tbody tr td .conBorde::before {
-    content: "";/* Neblina en la parte inferior de la celda */
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 20px; /* Altura de la neblina */
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--babyBlue) 100%);
-    pointer-events: none;
-  }
+.TablaDinamica table tbody tr td .conBordeCentrado {
+  min-height: 35px;
+  max-height: 50px;
+  display: flex;
+  align-items: center; /* Centrar verticalmente */
+  justify-content: center; /* Centrar horizontalmente */
+  overflow: hidden;
+  position: relative;
+  height: 50px;
+  padding: 10px 0px 0px 0px;
+  position: relative;
+}
 
-  .TablaDinamica table tbody tr td .conBorde.controles{
-    /* Sobrescribe los estilos o deja vacío para que no se apliquen */
-    all: unset; /* Esto desactiva cualquier estilo que se haya aplicado */
-  }
+.TablaDinamica table tbody tr td .conBorde::before {
+  content: ""; /* Neblina en la parte inferior de la celda */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px; /* Altura de la neblina */
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    var(--babyBlue) 100%
+  );
+  pointer-events: none;
+}
 
-  .TablaDinamica table tbody tr:hover td {
-    background: linear-gradient(to bottom, var(--babyBlue) 0%, var(--blueBerryPastel) 70%, rgba(255, 255, 255, 0.3) 100%);
-  }
+.TablaDinamica table tbody tr td .conBorde.controles {
+  /* Sobrescribe los estilos o deja vacío para que no se apliquen */
+  all: unset; /* Esto desactiva cualquier estilo que se haya aplicado */
+}
+
+.TablaDinamica table tbody tr:hover td {
+  background: linear-gradient(
+    to bottom,
+    var(--babyBlue) 0%,
+    var(--blueBerryPastel) 70%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+}
 .TablaDinamica table tbody tr .td-titulo {
   display: none;
 }
@@ -625,7 +637,7 @@ export default defineComponent({
   border-radius: 0px 0px var(--border-radius-small) 0px;
 }
 
-.TablaDinamicaFooter{
+.TablaDinamicaFooter {
   background: var(--blanco);
 }
 
@@ -658,8 +670,14 @@ export default defineComponent({
 
 /*estilos de a¿la tabla que aplican de 768px hacia abajo */
 @media (max-width: 576px) {
-  .TablaDinamica table tbody tr td .conBorde::before 
-  .TablaDinamica.break-sm .TablaDinamicabtn-filtrar {
+  .TablaDinamica
+    table
+    tbody
+    tr
+    td
+    .conBorde::before
+    .TablaDinamica.break-sm
+    .TablaDinamicabtn-filtrar {
     display: inline-block;
   }
   .TablaDinamica.break-sm table {
@@ -705,7 +723,7 @@ export default defineComponent({
     padding: 0 15px;
     background: unset;
   }
-  
+
   .TablaDinamica.break-sm .tablaDinamica-filtro-content select {
     min-width: 200px;
   }
@@ -730,7 +748,7 @@ export default defineComponent({
   .TablaDinamica.break-sm tbody tr {
     display: flex;
     flex-direction: column;
-    width: 100%;/**Ancho de la fila */
+    width: 100%; /**Ancho de la fila */
     position: relative;
     margin: 10px;
     padding: 0px !important;
@@ -738,7 +756,7 @@ export default defineComponent({
     border: unset;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   }
-   /**Cancelar Hover en tr */
+  /**Cancelar Hover en tr */
   /* .TablaDinamica.break-sm tbody tr:hover {
     background: unset;
     background-color: unset;
@@ -756,7 +774,7 @@ export default defineComponent({
   .TablaDinamica.break-sm table tbody tr .td-titulo {
     display: inline-block;
     background: var(--blueBerryPastel);
-    width: 30%;/**Ancho de la columna Titulo*/
+    width: 30%; /**Ancho de la columna Titulo*/
     min-width: 100px;
     text-align: end;
     padding: 0 10px 0px 5px;
@@ -775,7 +793,7 @@ export default defineComponent({
     margin: 0;
     padding: 0;
     font-family: "MonserratSemiBoldItalic";
-  }  
+  }
 
   .TablaDinamica.break-sm tbody tr td:nth-child(1) {
     position: relative;
@@ -884,7 +902,7 @@ export default defineComponent({
   .TablaDinamica.break-md tbody tr {
     display: flex;
     flex-direction: column;
-    width: 100%;/**Ancho de la fila */
+    width: 100%; /**Ancho de la fila */
     position: relative;
     margin: 10px;
     padding: 0px !important;
@@ -911,7 +929,7 @@ export default defineComponent({
   .TablaDinamica.break-md table tbody tr .td-titulo {
     display: inline-block;
     background: var(--blueBerryPastel);
-    width: 30%;/**Ancho de la columna Titulo*/
+    width: 30%; /**Ancho de la columna Titulo*/
     min-width: 100px;
     text-align: end;
     padding: 0 10px 0px 5px;
@@ -967,11 +985,11 @@ export default defineComponent({
 
 @media (max-width: 992px) {
   .TablaDinamica table tbody tr td .conBorde::before,
-  .TablaDinamica table tbody tr:hover td{
+  .TablaDinamica table tbody tr:hover td {
     background: unset;
     background-color: unset;
   }
-  
+
   .TablaDinamica.break-lg .TablaDinamicabtn-filtrar {
     display: inline-block;
   }
@@ -1049,13 +1067,12 @@ export default defineComponent({
     position: relative;
     flex-wrap: wrap;
     justify-content: center;
-    
   }
 
   .TablaDinamica.break-lg tbody tr {
     display: flex;
     flex-direction: column;
-    width: 100%;/**Ancho de la fila */
+    width: 100%; /**Ancho de la fila */
     position: relative;
     margin: 10px;
     padding: 0px !important;
@@ -1076,7 +1093,7 @@ export default defineComponent({
   .TablaDinamica.break-lg table tbody tr .td-titulo {
     display: inline-block;
     background: var(--blueBerryPastel);
-    width: 30%;/**Ancho de la columna Titulo*/
+    width: 30%; /**Ancho de la columna Titulo*/
     min-width: 100px;
     text-align: end;
     padding: 0 10px 0px 5px;
@@ -1132,6 +1149,5 @@ export default defineComponent({
   .TablaDinamica.break-lg table .dropstart .dropdown-toggle::before {
     color: var(--babyBlue);
   }
-  
 }
 </style>
