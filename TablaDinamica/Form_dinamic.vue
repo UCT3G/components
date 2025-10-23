@@ -70,6 +70,7 @@ export default defineComponent({
 
       try {
        const response = await axios.post('/Dinamicos/Form', payload);
+       console.log('Respuesta del backend:', response.data);
       } catch (error) {
        console.error('Error al enviar los datos:', error);
       }
