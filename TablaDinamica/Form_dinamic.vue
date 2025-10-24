@@ -22,6 +22,7 @@
 <script>
 import { defineComponent, ref, toRefs, onMounted } from 'vue';
 import axios from '@/../axios-config.js';
+import { useStore } from 'vuex';
 
 export default defineComponent({
   name: 'FormDinamico',
@@ -32,6 +33,7 @@ export default defineComponent({
     }
   },
   setup(props) {
+    const store = useStore();
     const { tablaBase } = toRefs(props);
     const id_tabla = ref();
     const descripcion = ref("");
@@ -68,8 +70,18 @@ export default defineComponent({
         consulta: consulta.value,
       };
 
+      const getCredenciales = () => {
+          const token = store.state.user.token; // Ajusta según la estructura de tu store
+          return {
+              headers: {
+                  Authorization: `Bearer ${token}`
+              }
+          };
+      };
+
       try {
-       const response = await axios.post('/Dinamicos/Form', payload);
+        const headers = getCredenciales();
+       const response = await axios.post('/Dinamicos/Form', payload, headers);
        console.log('Respuesta del backend:', response.data);
       } catch (error) {
        console.error('Error al enviar los datos:', error);
