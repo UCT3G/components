@@ -157,6 +157,8 @@ export default defineComponent({
 
     const mostrarFiltros = ref(false);
 
+    const isFiltering = ref(false)
+
     const ClasesTablaDinamica = computed(() => {
       switch (props.breakpoint) {
         case "sm":
@@ -228,6 +230,8 @@ export default defineComponent({
     };
 
     const filtrar = async () => {
+      if (isFiltering.value) return
+      isFiltering.value = true
       try {
         let tbase = props.tablaBase;
         tbase.json_tabla = JSON.stringify(json.value);
@@ -266,6 +270,8 @@ export default defineComponent({
         // Manejar el error adecuadamente aquí
         cargando.value = false; // Asegurarse de que la indicación de carga se detenga en caso de error
         alert("Error al filtrar los datos. Por favor, inténtelo de nuevo.");
+      }finally{
+        isFiltering.value = false
       }
     };
 
