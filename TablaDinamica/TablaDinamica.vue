@@ -140,6 +140,7 @@ export default defineComponent({
     "finalizarRenderBody",
     "visibleFormCRUD",
     "TBDestruida",
+    "filaSeleccionada"
   ],
   setup(props, { emit }) {
     const visibleFormCRUD = ref(false);
