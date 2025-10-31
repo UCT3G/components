@@ -21,6 +21,7 @@ import { svgCache } from '@/utils/svgCache.js';
 
 export default {
   name: 'ButtonOnlyIcon',
+  emits: ['click'],
   props: {
     iconName: { type: String, required: true },
     isDisabled: { type: Boolean, default: false },
@@ -93,7 +94,7 @@ export default {
       if (!props.isDisabled) {
         // Emite ambos por compatibilidad
         emit('click');
-        emit('clickPrimary');
+        //emit('clickPrimary');
       }
     };
 
