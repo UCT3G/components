@@ -1,174 +1,177 @@
+<!-- src/components/PanelContenedorFlexible/PanelContenedorFlexible.vue -->
 <template>
-  <!-- Trigger móvil (hamburguesa). Si provees <template #trigger>, se usa tu trigger -->
-  <div v-if="isMobile" class="pcf-trigger">
+  <!-- Trigger opcional (slot o interno). Por defecto oculto -->
+  <div v-if="isOverlay && showInternalTrigger" class="pcf-trigger">
     <slot name="trigger">
       <button class="pcf-btn" type="button" @click="toggle()"
-              :aria-expanded="!internalCollapsed" aria-controls="pcf-panel">
-        <!-- Icono hamburguesa minimal -->
-        <span class="pcf-burger"></span>
-        <span class="pcf-burger"></span>
-        <span class="pcf-burger"></span>
+              :aria-expanded="!internalCollapsed" :aria-controls="idPanel">
+        <span class="pcf-burger"></span><span class="pcf-burger"></span><span class="pcf-burger"></span>
       </button>
       <span class="pcf-title" v-if="title">{{ title }}</span>
     </slot>
   </div>
 
-  <!-- Contenedor panel -->
   <aside
     :id="idPanel"
     class="pcf-panel"
-    :class="[{ 'pcf-collapsed': internalCollapsed && !isMobile,
-               'pcf-overlay': isMobile,
-               'pcf-open': isMobile && !internalCollapsed,
-               [`pcf-${side}`]: true
-             }]"
+    :class="[
+      { 'pcf-collapsed': internalCollapsed && !isOverlay,
+        'pcf-overlay': isOverlay,
+        'pcf-open': isOverlay && !internalCollapsed
+      },
+      `pcf-${side}`
+    ]"
     :style="panelInlineStyle"
     ref="panelRef"
   >
-    <!-- Header opcional -->
     <header v-if="title || $slots.header" class="pcf-header">
       <slot name="header">
         <h6 class="m-0">{{ title }}</h6>
       </slot>
-      <button v-if="isMobile" type="button" class="pcf-close" @click="toggle()">×</button>
+      <button v-if="isOverlay" type="button" class="pcf-close" @click="close()">×</button>
     </header>
 
-    <!-- Contenido desplazable -->
     <div class="pcf-content">
       <slot />
     </div>
 
-    <!-- Resizer (solo desktop y expandido) -->
     <div
-      v-if="!isMobile && !internalCollapsed && resizable"
+      v-if="!isOverlay && !internalCollapsed && resizable"
       class="pcf-resizer"
       :class="[`pcf-resizer--${side}`]"
       @mousedown="startResize"
       @touchstart.prevent="startResize"
-    ></div>
+    />
   </aside>
 
-  <!-- Backdrop móvil -->
   <div
-    v-if="isMobile"
+    v-if="isOverlay"
     class="pcf-backdrop"
     :class="{ 'pcf-backdrop--show': !internalCollapsed }"
-    @click="toggle()"
-  ></div>
+    @click="close()"
+  />
 </template>
 
 <script setup>
-/* global defineProps, defineEmits, defineExpose */
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, computed, onMounted, onBeforeUnmount, defineProps, defineEmits, defineExpose } from 'vue'
 
 const props = defineProps({
-  /** v-model para colapsado: true = colapsado (oculto), false = visible */
-  modelValue: { type: Boolean, default: false },
-  /** ancho del panel en desktop */
+  modelValue: { type: Boolean, default: false }, // true = colapsado
   width: { type: Number, default: 350 },
   minWidth: { type: Number, default: 300 },
   maxWidth: { type: Number, default: 900 },
-  /** lado en el que aparece el panel */
   side: { type: String, default: 'left', validator: v => ['left', 'right'].includes(v) },
-  /** breakpoint en px para pasar a modo móvil/overlay */
-  breakpoint: { type: Number, default: 992 }, // ~lg
-  /** z-index para el overlay móvil */
+  breakpoint: { type: Number, default: 992 },
   overlayZ: { type: Number, default: 1050 },
-  /** título opcional en header */
   title: { type: String, default: '' },
-  /** permitir redimensionar en desktop */
   resizable: { type: Boolean, default: true },
-  /** radio “pill” */
   rounded: { type: Boolean, default: true },
-  /** id opcional (útil si usas varias instancias) */
-  id: { type: String, default: '' }
-});
+  id: { type: String, default: '' },
 
-const emit = defineEmits(['update:modelValue', 'update:width', 'toggle']);
+  /* Nuevo */
+  forceOverlay: { type: Boolean, default: false },   // fuerza modo móvil
+  startCollapsed: { type: Boolean, default: true },  // inicia oculto
+  showInternalTrigger: { type: Boolean, default: false } // oculta trigger interno por defecto
+})
 
-const internalWidth = ref(props.width);
-const internalCollapsed = ref(props.modelValue);
-const isMobile = ref(false);
-const dragging = ref(false);
-const startX = ref(0);
-const startW = ref(props.width);
-const panelRef = ref(null);
+const emit = defineEmits(['update:modelValue', 'update:width', 'toggle', 'open', 'close'])
 
-const idPanel = computed(() => props.id || 'pcf-panel');
+const internalWidth = ref(props.width)
+const internalCollapsed = ref(props.modelValue)
+const isOverlay = ref(false) // overlay activo (móvil o forzado)
+const dragging = ref(false)
+const startX = ref(0)
+const startW = ref(props.width)
+const panelRef = ref(null)
+
+const idPanel = computed(() => props.id || 'pcf-panel')
 
 const panelInlineStyle = computed(() => {
-  // Desktop expandido: fija ancho; Desktop colapsado: width: 0
-  // Móvil: width fijo (80vw) en CSS; control visible por clases
-  const styles = {};
-  if (!isMobile.value) {
-    styles.width = internalCollapsed.value ? '0px' : `${internalWidth.value}px`;
-    styles.borderRadius = props.rounded ? '30px' : '0';
+  const s = {}
+  if (!isOverlay.value) {
+    s.width = internalCollapsed.value ? '0px' : `${internalWidth.value}px`
+    s.borderRadius = props.rounded ? '30px' : '0'
+  } else {
+    s.zIndex = props.overlayZ
   }
-  if (isMobile.value) {
-    styles.zIndex = props.overlayZ;
-  }
-  return styles;
-});
+  return s
+})
 
-function checkMobile() {
-  isMobile.value = window.matchMedia(`(max-width: ${props.breakpoint - 1}px)`).matches;
+function recomputeOverlay() {
+  if (props.forceOverlay) {
+    isOverlay.value = true
+  } else {
+    isOverlay.value = window.matchMedia(`(max-width: ${props.breakpoint - 1}px)`).matches
+  }
 }
 
+function open() {
+  if (!internalCollapsed.value) return
+  internalCollapsed.value = false
+  emit('update:modelValue', false)
+  emit('toggle', true)
+  emit('open')
+}
+function close() {
+  if (internalCollapsed.value) return
+  internalCollapsed.value = true
+  emit('update:modelValue', true)
+  emit('toggle', false)
+  emit('close')
+}
 function toggle() {
-  internalCollapsed.value = !internalCollapsed.value;
-  emit('update:modelValue', internalCollapsed.value);
-  emit('toggle', !internalCollapsed.value);
+  internalCollapsed.value ? open() : close()
 }
 
 function onResizeMove(e) {
-  if (!dragging.value) return;
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-
-  let delta = clientX - startX.value;
-  if (props.side === 'right') delta = -delta;
-
-  let newW = startW.value + delta;
-  newW = Math.max(props.minWidth, Math.min(props.maxWidth, newW));
-  internalWidth.value = newW;
-  emit('update:width', newW);
+  if (!dragging.value) return
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  let delta = clientX - startX.value
+  if (props.side === 'right') delta = -delta
+  let newW = startW.value + delta
+  newW = Math.max(props.minWidth, Math.min(props.maxWidth, newW))
+  internalWidth.value = newW
+  emit('update:width', newW)
 }
-
 function stopResize() {
-  dragging.value = false;
-  document.removeEventListener('mousemove', onResizeMove);
-  document.removeEventListener('mouseup', stopResize);
-  document.removeEventListener('touchmove', onResizeMove);
-  document.removeEventListener('touchend', stopResize);
+  dragging.value = false
+  document.removeEventListener('mousemove', onResizeMove)
+  document.removeEventListener('mouseup', stopResize)
+  document.removeEventListener('touchmove', onResizeMove)
+  document.removeEventListener('touchend', stopResize)
 }
-
 function startResize(e) {
-  if (isMobile.value) return;
-  dragging.value = true;
-  startX.value = e.touches ? e.touches[0].clientX : e.clientX;
-  startW.value = internalWidth.value;
-
-  document.addEventListener('mousemove', onResizeMove);
-  document.addEventListener('mouseup', stopResize);
-  document.addEventListener('touchmove', onResizeMove, { passive: false });
-  document.addEventListener('touchend', stopResize);
+  if (isOverlay.value) return
+  dragging.value = true
+  startX.value = e.touches ? e.touches[0].clientX : e.clientX
+  startW.value = internalWidth.value
+  document.addEventListener('mousemove', onResizeMove)
+  document.addEventListener('mouseup', stopResize)
+  document.addEventListener('touchmove', onResizeMove, { passive: false })
+  document.addEventListener('touchend', stopResize)
 }
 
-watch(() => props.modelValue, v => (internalCollapsed.value = v));
-watch(internalCollapsed, v => emit('update:modelValue', v));
-watch(() => props.width, w => (internalWidth.value = w));
+watch(() => props.modelValue, v => (internalCollapsed.value = v))
+watch(internalCollapsed, v => emit('update:modelValue', v))
+watch(() => props.width, w => (internalWidth.value = w))
 
 onMounted(() => {
-  checkMobile();
-  window.addEventListener('resize', checkMobile);
-});
+  recomputeOverlay()
+  window.addEventListener('resize', recomputeOverlay)
+
+  // Iniciar oculto si se pide (como móvil)
+  if (props.startCollapsed) {
+    internalCollapsed.value = true
+    emit('update:modelValue', true)
+  }
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', checkMobile);
-  stopResize();
-});
+  window.removeEventListener('resize', recomputeOverlay)
+  stopResize()
+})
 
-// expón helpers por si los quieres llamar desde el padre
-defineExpose({ toggle });
+defineExpose({ open, close, toggle })
 </script>
 
 <style scoped>
