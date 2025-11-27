@@ -156,9 +156,7 @@ export default defineComponent({
     const getFormularioPorNombre = (nombre) =>
       store.getters["reporteador/getFormularioPorNombre"](nombre);
 
-    const mostrarFiltros = ref(false);
-
-    const isFiltering = ref(false)
+    const mostrarFiltros = ref(false);  
 
     const ClasesTablaDinamica = computed(() => {
       switch (props.breakpoint) {
@@ -230,9 +228,7 @@ export default defineComponent({
       descargaData.value = true;
     };
 
-    const filtrar = async () => {
-      if (isFiltering.value) return
-      isFiltering.value = true
+   const filtrar = async () => {
       try {
         let tbase = props.tablaBase;
         tbase.json_tabla = JSON.stringify(json.value);
@@ -258,21 +254,16 @@ export default defineComponent({
         });
 
         json.value.registros_total = res.data.data_table.registros_total;
-        json.value.registros_filtrados =
-          res.data.data_table.registros_filtrados;
+        json.value.registros_filtrados =  res.data.data_table.registros_filtrados;
         json.value.filas = res.data.data_table.json_actualizado.filas;
-        // console.log("AQUIIII SE RECUPERAN LOS DATOS");
-        // console.log(json.value);
         cargando.value = false; // Actualiza el estado cuando los datos están cargados
-        //console.log(data_table.value);
         emit("finalizarRenderBody");
+        emit("filtroTotal", json.value.registros_filtrados);
       } catch (error) {
         console.error("Ocurrió un error en filtrar:", error);
         // Manejar el error adecuadamente aquí
         cargando.value = false; // Asegurarse de que la indicación de carga se detenga en caso de error
         alert("Error al filtrar los datos. Por favor, inténtelo de nuevo.");
-      }finally{
-        isFiltering.value = false
       }
     };
 
@@ -287,6 +278,16 @@ export default defineComponent({
     watch(
       () => json.value.columnas.map((columna) => columna.valor),
       (nuevosValores, viejosValores) => {
+        // Función para verificar si todos los valores son nulos, vacíos o espacios en blanco
+        const todosSonNulosOVacios = (valores) =>
+          valores.every((valor) => valor === null || valor === '' || valor.trim?.() === '');
+
+        // Si ambos conjuntos (nuevos y viejos valores) son nulos/vacíos, no ejecuta filtrar()
+        if (todosSonNulosOVacios(nuevosValores) && todosSonNulosOVacios(viejosValores)) {
+          return; // No hacer nada
+        }
+
+        // Verificar si hubo algún cambio significativo
         const cambioSignificativo = nuevosValores.some(
           (valor, idx) => valor !== viejosValores[idx]
         );
@@ -306,6 +307,9 @@ export default defineComponent({
     watch(
       () => json.value.columnas.map((columna) => columna.bOrder),
       (nuevosValores, viejosValores) => {
+        if(nuevosValores.length != viejosValores.length){
+          return;
+        }
         const cambioSignificativo = nuevosValores.some(
           (valor, idx) => valor !== viejosValores[idx]
         );
