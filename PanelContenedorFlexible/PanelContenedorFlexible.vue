@@ -17,7 +17,8 @@
     :class="[
       { 'pcf-collapsed': internalCollapsed && !isOverlay,
         'pcf-overlay': isOverlay,
-        'pcf-open': isOverlay && !internalCollapsed
+        'pcf-open': isOverlay && !internalCollapsed,
+        'pcf-gradient': useGradient
       },
       `pcf-${side}`
     ]"
@@ -71,7 +72,8 @@ const props = defineProps({
   /* Nuevo */
   forceOverlay: { type: Boolean, default: false },   // fuerza modo móvil
   startCollapsed: { type: Boolean, default: true },  // inicia oculto
-  showInternalTrigger: { type: Boolean, default: false } // oculta trigger interno por defecto
+  showInternalTrigger: { type: Boolean, default: false }, // oculta trigger interno por defecto
+  useGradient: { type: Boolean, default: true } // degradado opcional, true por defecto
 })
 
 const emit = defineEmits(['update:modelValue', 'update:width', 'toggle', 'open', 'close'])
@@ -90,10 +92,16 @@ const panelInlineStyle = computed(() => {
   const s = {}
   if (!isOverlay.value) {
     s.width = internalCollapsed.value ? '0px' : `${internalWidth.value}px`
-    s.borderRadius = props.rounded ? '30px' : '0'
+    s.borderRadius = '0px' // Eliminado border-radius por petición del usuario
   } else {
     s.zIndex = props.overlayZ
   }
+
+  // Si no se usa degradado, podemos poner un fondo sólido por defecto o dejarlo transparente
+  if (!props.useGradient) {
+    s.background = '#fff'
+  }
+
   return s
 })
 
@@ -218,6 +226,17 @@ defineExpose({ open, close, toggle })
 /* === PANEL LATERAL === */
 .pcf-panel {
   position: relative;
+  background: rgba(255, 255, 255, 0.5); /* Cristal translucido */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  height: 100%;
+  transition: width 0.3s ease, transform 0.25s ease, opacity 0.2s ease;
+  overflow: hidden;
+  border: 1px solid rgba(106, 106, 106, 0.25);
+  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+}
+
+.pcf-gradient {
   background:
     radial-gradient(circle at 0% 0%, var(--azulNormal, #2a5bd7) 0%, transparent 40%),
     radial-gradient(circle at 70% 20%, var(--azulDark, #163a8a) 0%, transparent 40%),
@@ -229,19 +248,13 @@ defineExpose({ open, close, toggle })
     linear-gradient(135deg, var(--azulDark, #163a8a), #ffffff);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(106, 106, 106, 0.25);
-  height: 100%;
-  transition: width 0.3s ease, transform 0.25s ease, opacity 0.2s ease;
-  overflow: hidden;
-  border-radius: 30px;
-  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
 }
 
 .pcf-left {
-  border-radius: 30px 0 0 30px;
+  border-radius: 0;
 }
 .pcf-right {
-  border-radius: 0 30px 30px 0;
+  border-radius: 0;
 }
 
 /* Colapsado */
@@ -302,7 +315,7 @@ defineExpose({ open, close, toggle })
 }
 .pcf-overlay.pcf-open {
   transform: translateX(0);
-  opacity: 1;
+  opacity: 1;  
 }
 .pcf-overlay.pcf-left { left: 0; }
 .pcf-overlay.pcf-right { right: 0; }
@@ -315,6 +328,7 @@ defineExpose({ open, close, toggle })
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
+  z-index: 1000;
 }
 .pcf-backdrop--show {
   opacity: 1;
