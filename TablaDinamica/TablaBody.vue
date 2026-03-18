@@ -2,7 +2,7 @@
  
   <tbody>
     <tr v-for="(fila_data,nofila) in data_table.valor" :key="`fila-${nofila}`" @click="filaClick(fila_data, nofila)">      
-      <td v-for="(fila_estrutura, index) in json.filas" :key="`fila-${nofila}-columna-${index}`" :class="getIndicadorClass(fila_data)">
+      <td v-for="(fila_estrutura, index) in json.filas" :key="`fila-${nofila}-columna-${index}`" :class="getIndicadorClass(fila_data)" :style="getEstilosFila(index)">
         <!-- Verifica el tipo de contenido de la fila -->
         <div v-if="fila_estrutura.type == 'label' && filaDataAsArray(fila_data)[index] != null" :class="Indicadores ? 'conBordeCentrado' : 'conBorde'" :title="filaDataAsArray(fila_data)[index]">          
             <span v-if = "filaDataAsArray(fila_data)[index] != null" class="td-titulo">{{ obtenerNombreColumna(json,index) }}: </span>{{ filaDataAsArray(fila_data)[index] }} 
@@ -75,6 +75,14 @@
       Indicadores: {
         type: Boolean,
         default: false
+      },
+      columnaFija: {
+        type: Array,
+        default: () => []
+      },
+      stickyOffsets: {
+        type: Array,
+        default: () => []
       }
     },
     emits: ['button_evento', 'turnOnFormularioCRUD', 'fila_click'],
@@ -200,6 +208,33 @@
         context.emit('fila_click',{fila, index});
       }
 
+      const getEstilosFila = (index) => {
+        const estilos = {};
+        
+        if (props.columnaFija.includes(index + 1)) {
+          estilos.position = 'sticky';
+          estilos.zIndex = 5;
+          estilos.backgroundColor = 'white';
+          
+          if (props.stickyOffsets && props.stickyOffsets[index] !== undefined) {
+            estilos.left = `${props.stickyOffsets[index]}px`;
+          } else {
+            // Fallback si no está calculado aún
+            let left = 0;
+            for (let i = 0; i < index; i++) {
+              if (props.columnaFija.includes(i + 1)) {
+                const widthStr = props.json.columnas[i].width_col || "150px";
+                const widthVal = parseInt(widthStr) || 150;
+                left += widthVal;
+              }
+            }
+            estilos.left = `${left}px`;
+          }
+        }
+        
+        return estilos;
+      };
+
       return {
         getComponent,
         turnOnFormularioCRUD,
@@ -209,7 +244,8 @@
         button_evento,
         obtenerNombreColumna,
         filaClick,
-        getIndicadorClass
+        getIndicadorClass,
+        getEstilosFila
       };
     }
   });

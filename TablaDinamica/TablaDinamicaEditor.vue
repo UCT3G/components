@@ -1,17 +1,10 @@
 <template>
     <div>
 
-        <form class="row g-3 d-flex justify-content-between" @submit="CrearTabla($event, tabla_nombre, opcionesTablaCrear_selected)">
+        <form class="row g-3 d-flex justify-content-between" @submit="CrearTabla($event, tabla_nombre, 2)">
             <div class="col-5">
                 <label for="NombreTabla" class="visually-hidden">Nombre Tabla</label>
                 <input type="text" readonly class="form-control-plaintext" id="NombreTabla" :value="tabla_nombre">
-            </div> 
-            <div class="col-4" v-if="!comprobarTblaBase">
-                <label for="agregarFormulario" class="visually-hidden">Agregar Formulario</label>
-                <select class="form-select" aria-label="Default select example" id="agregarFormulario" required v-model="opcionesTablaCrear_selected">
-                    <option selected>...</option>
-                    <option v-for="opcion in opcionesTablaCrear" :key="opcion.texto"  :value="opcion.valor">{{opcion.texto}}</option>
-                </select>
             </div>        
             <div class="col-auto">
                 <button v-if="!comprobarTblaBase"                 
@@ -127,11 +120,6 @@
             const zoomLevel = ref(.5);          
             const consultaSQL = ref('')
 
-            const opcionesTablaCrear =[
-                {texto:'Con formulario', valor:1},
-                {texto:'Sin formulario', valor:2}
-            ]
-            const opcionesTablaCrear_selected = ref(0)
             const getFormularioPorNombre = (nombre) => store.getters['reporteador/getFormularioPorNombre'](nombre);
             
             const formularioBaseFilas = computed(() => getFormularioPorNombre(props.tabla_nombre + "_form"));
@@ -222,9 +210,7 @@
                           
                 ExisteTabla,
                 //GetTablaNombre,
-                opcionesTablaCrear,
                 CrearTabla,
-                opcionesTablaCrear_selected,
                 formularioBaseFilas,
                 formularioBaseTabla,
                 zoomLevel,

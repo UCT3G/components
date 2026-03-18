@@ -4,8 +4,8 @@
       <th
         v-for="(columna, index) in json.columnas"
         :key="`columna-${index}`"
-        class="col-12"
-        :style="{ width: columna.width_col }"
+        :class="['col-12', { 'sticky-col-header': columnaFija.includes(index + 1) }]"
+        :style="getEstilosColumna(index)"
       >
         <div class="d-flex TablaDinamica_nombreCampo">
           <p :title="columna.titulo">
@@ -86,6 +86,14 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    columnaFija: {
+      type: Array,
+      default: () => [],
+    },
+    stickyOffsets: {
+      type: Array,
+      default: () => [],
+    },
   },
   setup(props) {
     const json = toRef(props, "json");
@@ -135,10 +143,37 @@ export default defineComponent({
       // emit('valorCambiado'); // Emitir un evento para notificar al componente padre
     };
 
+    const getEstilosColumna = (index) => {
+      const estilos = { width: json.value.columnas[index].width_col };
+      
+      if (props.columnaFija.includes(index + 1)) {
+        estilos.position = 'sticky';
+        estilos.zIndex = 11;
+        
+        if (props.stickyOffsets && props.stickyOffsets[index] !== undefined) {
+          estilos.left = `${props.stickyOffsets[index]}px`;
+        } else {
+          // Backup fallback si no se ha calculado
+          let left = 0;
+          for (let i = 0; i < index; i++) {
+            if (props.columnaFija.includes(i + 1)) {
+              const widthStr = json.value.columnas[i].width_col || "150px";
+              const widthVal = parseInt(widthStr) || 150;
+              left += widthVal;
+            }
+          }
+          estilos.left = `${left}px`;
+        }
+      }
+      
+      return estilos;
+    };
+
     return {
       changeOrder,
       iconoRow,
       actualizarValor,
+      getEstilosColumna,
     };
   },
 });
@@ -162,5 +197,25 @@ th .loaderSVG-contend-selected {
   align-items: center;
   justify-content: center;
   padding-bottom: 15px !important;
+}
+
+.sticky-col-header {
+  background-color: transparent !important;
+}
+
+.sticky-col-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--purple-sb);
+  z-index: -1;
+}
+
+/* Redondear esquina solo si es la primera columna fija */
+th.sticky-col-header:first-child::before {
+  border-radius: var(--border-radius-large) 0 0 0;
 }
 </style>

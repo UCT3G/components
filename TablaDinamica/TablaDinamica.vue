@@ -17,26 +17,32 @@
       width_icon="20px"
       :icon_active="true"
     ></DynamicSvgLoader>
-    <table class="table table-light" v-if="json">
-      <TablaHead
-        :json="json"
-        @orderChanged="handleOrderChange"
-        :class="{ showHead: mostrarFiltros, hideHead: !mostrarFiltros }"
-      ></TablaHead>
-      <FilasCargando
-        v-if="cargando"
-        :columnas="json.filas.length"
-      ></FilasCargando>
-      <TablaBody
-        v-else
-        :json="json"
-        :data_table="data_table"
-        @button_evento="button_evento_hijo"
-        @turnOnFormularioCRUD="ShowFormularioCRUD"
-        @fila_click="handleFilaClick"
-        :Indicadores="Indicadores"
-      ></TablaBody>
-    </table>
+    <div class="TablaDinamica_scrollContainer">
+      <table class="table table-light" v-if="json" ref="tablaRef">
+        <TablaHead
+          :json="json"
+          :columnaFija="columnaFija"
+          :stickyOffsets="stickyOffsets"
+          @orderChanged="handleOrderChange"
+          :class="{ showHead: mostrarFiltros, hideHead: !mostrarFiltros }"
+        ></TablaHead>
+        <FilasCargando
+          v-if="cargando"
+          :columnas="json.filas.length"
+        ></FilasCargando>
+        <TablaBody
+          v-else
+          :json="json"
+          :data_table="data_table"
+          :columnaFija="columnaFija"
+          :stickyOffsets="stickyOffsets"
+          @button_evento="button_evento_hijo"
+          @turnOnFormularioCRUD="ShowFormularioCRUD"
+          @fila_click="handleFilaClick"
+          :Indicadores="Indicadores"
+        ></TablaBody>
+      </table>
+    </div>
     <TablaFooter :json="json" @cambiarPagina="CambiarPagina"></TablaFooter>
   </div>
 
@@ -48,7 +54,6 @@
     ref="modalEditar"
     :fullScreenHeight="false"
   >
-
     <TablaDinamicaEditor
       :tabla_nombre="tabla_nombre"
       :tablaBase="tablaBase"
@@ -133,6 +138,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    liberarAncho: {
+      type: Boolean,
+      default: false,
+    },
+    columnaFija: {
+      type: Array,
+      default: () => [],
+    },
   },
   emits: [
     "button_evento",
@@ -144,7 +157,6 @@ export default defineComponent({
   ],
   setup(props, { emit }) {
     const visibleFormCRUD = ref(false);
-    const visible_editor_tabla = ref(false);
     const store = useStore();
     const json = ref(JSON.parse(props.tablaBase.json_tabla));
     const { consultar_registros } = toRefs(props);
@@ -157,19 +169,95 @@ export default defineComponent({
       store.getters["reporteador/getFormularioPorNombre"](nombre);
 
     const mostrarFiltros = ref(false);  
+    const visible_editor_tabla = ref(false);
+    const modalEditar = ref(null);
+    const token = store.state.user.token;
+    const user_rol = store.state.user.user_rol;
+
+    // Novedades para stickyColumns
+    const tablaRef = ref(null);
+    const stickyOffsets = ref([]);
+    let resizeObserver = null;
+
+    const calculateOffsets = () => {
+      if (!tablaRef.value || !props.columnaFija.length) {
+        stickyOffsets.value = [];
+        return;
+      }
+      const ths = tablaRef.value.querySelectorAll("thead th");
+      let currentLeft = 0;
+      const newOffsets = [];
+      ths.forEach((th, index) => {
+        newOffsets.push(currentLeft);
+        if (props.columnaFija.includes(index + 1)) {
+          // Usamos getBoundingClientRect para precisión decimal con paddings y bordes
+          currentLeft += th.getBoundingClientRect().width;
+        }
+      });
+      stickyOffsets.value = newOffsets;
+    };
+
+    onMounted(async () => {
+      if (consultar_registros.value) {
+        filtrar();
+      }
+      cargarFormularioBase();
+
+      // Usar ResizeObserver para recalcular si el contenido de la tabla cambia de tamaño
+      if (window.ResizeObserver) {
+        resizeObserver = new ResizeObserver(() => {
+          calculateOffsets();
+        });
+        if (tablaRef.value) {
+          resizeObserver.observe(tablaRef.value);
+        }
+      }
+    });
+
+    onUnmounted(() => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    });
+
+    watch(
+      () => props.columnaFija,
+      () => {
+        nextTick(calculateOffsets);
+      },
+      { deep: true }
+    );
+    
+    watch(
+      json, // Watching the ref directly
+      () => {
+        nextTick(() => {
+          if (resizeObserver && tablaRef.value) {
+            resizeObserver.observe(tablaRef.value);
+          }
+          calculateOffsets();
+        });
+      },
+      { deep: true }
+    );
 
     const ClasesTablaDinamica = computed(() => {
+      let baseClases = "TablaDinamica col-12";
+      if (props.liberarAncho) {
+        baseClases += " liberar-ancho";
+      }
+
       switch (props.breakpoint) {
         case "sm":
-          return "TablaDinamica col-12 break-sm";
+          return `${baseClases} break-sm`;
         case "md":
-          return "TablaDinamica col-12 break-md";
+          return `${baseClases} break-md`;
         case "lg":
-          return "TablaDinamica col-12 break-lg";
+          return `${baseClases} break-lg`;
         case "unset":
-          return "TablaDinamica col-12";
+          return baseClases;
         default:
-          return "TablaDinamica col-12 break-movil";
+          return `${baseClases} break-movil`;
       }
     });
 
@@ -198,12 +286,7 @@ export default defineComponent({
       }
     );
 
-    onMounted(async () => {
-      if (consultar_registros.value) {
-        filtrar();
-      }
-      cargarFormularioBase();
-    });
+    // El onMounted fue movido arriba y combinado con el ResizeObserver
 
     //Cambia el orden con el que se mostraran los datos
     const handleOrderChange = (index) => {
@@ -406,6 +489,8 @@ export default defineComponent({
       cerrarFormCrud,
       CerrarEditor,
       handleFilaClick,
+      tablaRef,
+      stickyOffsets,
     };
   },
 });
@@ -433,6 +518,81 @@ export default defineComponent({
   background-color: var(--blueBerryPastel);
   border-radius: 50%;
 }
+
+/** Estilos para liberar ancho de la tabla */
+.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer {
+  overflow-x: auto;
+  padding-bottom: 20px; /* Espacio para el scroll */
+  
+  /* Sombras de Scroll Dinámicas (CSS Only) */
+  background:
+    /* Sombra izquierda (aparece al scrollear a la derecha) */
+    linear-gradient(to right, white 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(to right, rgba(255, 255, 255, 0), white 70%) 100% 0,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)),
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 100% 0;
+  background-repeat: no-repeat;
+  background-color: white;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table {
+  width: max-content;
+  min-width: 100%;
+}
+
+/* ------ FIX TRUNCAMIENTO INTELIGENTE (Smart Truncation) ------ */
+/* Limitar el contenedor principal del header y forzar alineación izquierda */
+.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table thead tr th .TablaDinamica_nombreCampo {
+  max-width: 250px !important; /* Ajuste final de producción */
+  justify-content: flex-start !important; /* Evitar que el centering corte el inicio */
+  padding-left: 5px;
+}
+
+/* El elemento P dentro del header debe truncarse correctamente */
+.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table thead tr th .TablaDinamica_nombreCampo p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0; /* CRUCIAL para que un hijo flex pueda truncarse */
+  width: 100%; 
+  text-align: left;
+  margin: 0;
+}
+
+/* Truncamiento para las celdas del body */
+.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table tbody tr td .conBorde,
+.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table tbody tr td .conBordeCentrado {
+  white-space: nowrap;
+  max-width: 250px !important; /* Ajuste final de producción */
+  display: block !important; /* Asegurar bloque para el text-overflow */
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-align: left !important;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+/* ------------------------------------------------------------- */
+
+/* Sticky Header corrigiendo identidad visual */
+.TablaDinamica.liberar-ancho table thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.TablaDinamica.liberar-ancho table thead tr th {
+  white-space: nowrap;
+  background-color: transparent; /* Evitar tapar el gradiente del tr::after */
+}
+
+/* Las reglas específicas de columnaFija se manejarán con estilos dinámicos o clases inyectadas en los subcomponentes */
+
+.TablaDinamica.liberar-ancho table thead tr::after {
+  z-index: 2; /* Mantener sobre el fondo pero bajo el texto */
+}
+
 .TablaDinamica table {
   border-collapse: collapse;
   border-spacing: 0; /* Esto es equivalente a cellspacing="0" en HTML */
