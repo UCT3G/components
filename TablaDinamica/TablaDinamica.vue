@@ -81,7 +81,7 @@ import {
   toRefs,
   computed,
   onUnmounted,
-  nextTick
+  nextTick,
 } from "vue";
 import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
 import PopUpSolido from "@/components/Modal/ModalSolid.vue";
@@ -119,6 +119,10 @@ export default defineComponent({
       type: String,
       default: null,
     },
+    BtnImprimir: {
+      type: Boolean,
+      default: false,
+    },
     tablaBase: {
       type: Object,
       default: TablaBase,
@@ -154,7 +158,8 @@ export default defineComponent({
     "finalizarRenderBody",
     "visibleFormCRUD",
     "TBDestruida",
-    "filaSeleccionada"
+    "filaSeleccionada",
+    "filtroTotal"
   ],
   setup(props, { emit }) {
     const visibleFormCRUD = ref(false);
