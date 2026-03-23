@@ -81,6 +81,7 @@ import {
   toRefs,
   computed,
   onUnmounted,
+  nextTick
 } from "vue";
 import TablaDinamicaEditor from "./TablaDinamicaEditor.vue";
 import PopUpSolido from "@/components/Modal/ModalSolid.vue";
