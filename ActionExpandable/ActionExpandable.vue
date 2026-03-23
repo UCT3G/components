@@ -1,6 +1,7 @@
 <template>
   <div 
     class="expandable-action-wrapper"
+    :class="{ 'is-expanded': isExpanded }"
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
   >
@@ -90,8 +91,15 @@ export default defineComponent({
 <style scoped>
 .expandable-action-wrapper {
   position: relative;
+  z-index: 10;
+  transition: z-index 0.3s step-end;
   display: flex;
   align-items: center;
+}
+
+.expandable-action-wrapper.is-expanded {
+  z-index: 1050;
+  transition: none;
 }
 
 .action-trigger {
@@ -174,12 +182,13 @@ export default defineComponent({
 .action-menu {
   position: absolute;
   top: 100%;
-  left: 0;
+  left: 0; 
   min-width: 180px;
+  max-width: 400px; /* Prevent overflow */
   background: white;
   border-radius: 10px;
   padding: 6px;
-  z-index: 1000;
+  z-index: 1060;
   margin-top: 4px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
   animation: dropdownFadeIn 0.2s ease-out;

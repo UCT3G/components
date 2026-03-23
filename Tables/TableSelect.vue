@@ -17,7 +17,11 @@
         class="ms-2 d-flex align-items-center"
         style="height: 38px; cursor: pointer;"
       >
-        <img :src="iconSelect" alt="Seleccionar" class="icon_select" />
+        <DynamicSvgLoader 
+          :fileName="iconSelect" 
+          width_icon="37px" 
+          height_icon="37px"
+        />
       </div>
 
       <button 
@@ -80,12 +84,11 @@ import { defineComponent, ref, onMounted, computed, nextTick } from "vue";
 import { useStore } from "vuex";
 import TablaDinamica from "@/components/TablaDinamica/TablaDinamica.vue";
 import Checkbox from "@/components/Inputs/Checkbox.vue";
-import checkbox_icon from "@/assets/images/icons/check-2.svg";
-import unchecked_icon from "@/assets/images/icons/checkbox-unchecked.svg";
+import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 
 export default defineComponent({
   name: "TablaSelect",
-  components: { TablaDinamica, Checkbox },
+  components: { TablaDinamica, Checkbox, DynamicSvgLoader },
 
   props: {
     tablaNombre: { type: String, required: true },   // Ej: TB_GT_USUARIOS
@@ -120,7 +123,7 @@ export default defineComponent({
     );
 
     const iconSelect = computed(() =>
-      registrosSeleccionados.value.length > 0 ? checkbox_icon : unchecked_icon
+      registrosSeleccionados.value.length > 0 ? 'icons/check-2' : 'icons/checkbox-unchecked'
     );
 
     const configurarTabla = () => {
@@ -206,9 +209,21 @@ export default defineComponent({
 .size-input {
   width: 80px;
 }
-.icon_select {
-  height: 100%;
-  width: auto;
-  object-fit: contain;
+:deep(.loaderSVG-contend) {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  --icon_color: var(--bs-gray-600);
+  --icon_color_hover: var(--purple-sb);
+  transition: transform 0.2s ease;
+}
+:deep(.loaderSVG-contend:hover) {
+  transform: scale(1.1);
+}
+:deep(.loaderSVG-contend svg) {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 </style>

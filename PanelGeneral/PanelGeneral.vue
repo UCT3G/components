@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent, ref, provide, computed } from 'vue';
 
 export default defineComponent({
   name: 'PanelGeneral',
@@ -59,10 +59,30 @@ export default defineComponent({
     title: {
       type: String,
       default: ''
+    },
+    accordion: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['update:activeTab'],
   setup(props, { emit }) {
+    const activeSectionId = ref(null);
+
+    const toggleSection = (sectionId) => {
+      if (activeSectionId.value === sectionId) {
+        activeSectionId.value = null;
+      } else {
+        activeSectionId.value = sectionId;
+      }
+    };
+
+    provide('accordionContext', {
+      isAccordion: computed(() => props.accordion),
+      activeSectionId: computed(() => activeSectionId.value),
+      toggleSection
+    });
+
     const selectTab = (tab) => {
       emit('update:activeTab', tab.toLowerCase());
     };
