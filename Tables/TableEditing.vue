@@ -435,49 +435,23 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.checkbox-hover label:hover {
-  color: var(--bluelight-sb) !important;
-}
+.checkbox-hover label:hover {color: var(--bluelight-sb) !important;}
 .checkbox-hover {
   padding: 0.5rem;
   border-radius: 0.5rem;
   transition: background-color 0.2s ease;
 }
-
-.checkbox-hover:hover {
-  background-color: var(--bs-gray-200);
-}
-.label:hover{
-  color:var(--bluelight-sb)
-}
-input[type="checkbox"]:hover {
-    border-color: var(--bluelight-sb);
-}
-input[type="checkbox"]:focus {
-    box-shadow: 0 0 5px var(--bluelight-sb);
-    border-color: var(--bluelight-sb);
-}
-.iconBtn{
-  padding: unset;
-  fill: var(--bs-gray-700);
-}
-.iconBtn:hover {
-  fill: var(--bluelight-sb);
-}
-.boton-color{
-  fill:var(--bs-gray-500)
-}
-
-.boton-color:hover {
-  fill: var(--acceso1);
-  transform: scale(1.1);
-}
+.checkbox-hover:hover {background-color: var(--bs-gray-200);}
+.label:hover{color:var(--bluelight-sb)}
+input[type="checkbox"]:hover {border-color: var(--bluelight-sb);}
+input[type="checkbox"]:focus {box-shadow: 0 0 5px var(--bluelight-sb);border-color: var(--bluelight-sb);}
+.iconBtn{padding: unset;fill: var(--bs-gray-700);}
+.iconBtn:hover {fill: var(--bluelight-sb);}
+.boton-color{fill:var(--bs-gray-500)}
+.boton-color:hover {fill: var(--acceso1);transform: scale(1.1);}
 
 /* ===== Contenedor principal ===== */
-.container-fluid {
-  font-family: 'Inter', sans-serif;
-  color: var(--bs-gray-700);
-}
+.container-fluid {font-family: 'Inter', sans-serif;color: var(--bs-gray-700);}
 
 /* ===== Cards ===== */
 .card {
@@ -488,15 +462,8 @@ input[type="checkbox"]:focus {
   margin-bottom: 1.5rem;
   background-color: white;
 }
-
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-}
-
-.card-body {
-  padding: 1rem 1.5rem;
-}
+.card:hover {transform: translateY(-3px);box-shadow: 0 6px 20px rgba(0,0,0,0.12);}
+.card-body {padding: 1rem 1.5rem;}
 
 /* ===== Overlay de Loading ===== */
 .loading-overlay-fullscreen {
@@ -537,18 +504,12 @@ input[type="checkbox"]:focus {
 .table-input {
   width: auto;
   min-width: 70px;
-  /* max-width: 120px; */
   display: inline-block;
   text-align: center;
   margin: 0 auto;
 }
 /* ===== Tabla ===== */
-.table {
-  /* border-collapse: separate;
-  border-spacing: 0 8px; */
-  width: 100%;
-}
-
+.table {width: 100%;}
 .table th {
   background-color: var(--bs-gray-100);
   color: var(--bs-gray-800);
@@ -557,10 +518,7 @@ input[type="checkbox"]:focus {
   padding: 10px 12px;
   border-top: none;
 }
-.table thead th {
-  border-right: 2px solid var(--bs-gray-300) ;
-}
-
+.table thead th {border-right: 2px solid var(--bs-gray-300) ;}
 .table td {
   background-color: white;
   border-top: none;
@@ -569,61 +527,19 @@ input[type="checkbox"]:focus {
   text-align: center;
   vertical-align: middle;
 }
-.table td:last-child {
-  border-right: none; /* quitar borde de la última columna */
-}
-.table thead th:last-child {
-  border-right: none; /* quitar borde de la última columna */
-}
-
-.table tr:hover td {
-  background-color: var(--bs-gray-100);
-  transition: background-color 0.2s ease;
-}
-
-/* ===== Fila de Totales ===== */
+.table td:last-child {border-right: none; }
+.table thead th:last-child {border-right: none; }
+.table tr:hover td { background-color: var(--bs-gray-100); transition: background-color 0.2s ease;}
 .total-row {
   background-color: var(--bs-gray-100);
   border-top: 2px solid var(--bs-gray-300);
   font-weight: 600;
 }
-
-.total-row td {
-  padding: 12px 8px;
-}
-
-.total-valid {
-  color: var(--bs-green); 
-}
-
-.total-invalid {
-  color: var(--bs-red); 
-}
-
-/* ===== Checkbox Switch ===== */
-.form-check-input:checked {
-  background-color: var(--bluelight-sb);
-  border-color: var(--bluelight-sb);
-}
-
-/* ===== Textos ===== */
-.text-muted {
-  color: var(--bs-gray-600);
-  /* font-style: italic; */
-}
-
-/* ===== Alert de advertencia ===== */
-/* .alert-warning {
-  border-radius: 10px;
-  border-left: 4px solid var(--gantt-parentTasks-selected);
-  background-color: var(--bs-alert-bg);;
-  color: #92400e;
-  font-size: 14px;
-  line-height: 1.5;
-  padding: 12px 16px;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
-} */
-
+.total-row td {padding: 12px 8px;}
+.total-valid {color: var(--bs-green); }
+.total-invalid {color: var(--bs-red); }
+.form-check-input:checked {background-color: var(--bluelight-sb);border-color: var(--bluelight-sb);}
+.text-muted {color: var(--bs-gray-600);}
 .color-preview-circle {
   width: 22px;
   height: 22px;
@@ -633,8 +549,5 @@ input[type="checkbox"]:focus {
   cursor: default;
   transition: transform 0.2s ease;
 }
-
-.color-preview-circle:hover {
-  transform: scale(1.1);
-}
+.color-preview-circle:hover {transform: scale(1.1);}
 </style>
