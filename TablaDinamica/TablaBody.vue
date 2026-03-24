@@ -16,15 +16,15 @@
             <template v-for="(elemento, index_componente) in fila_estrutura.componente" :key="`elemento-${index_componente}`">
               <div v-if="CambiarMayuscula(elemento.nombre) =='FORMULARIO'" class="m-1">
                 <!-- ABRE FORMULARIO ASOCIADO A LA TABLA --> 
-                <button @click="turnOnFormularioCRUD(nofila,data_table.idGenerales)" class="btn btn-primary">Editar</button>
+                <button @click.stop="turnOnFormularioCRUD(nofila,data_table.idGenerales)" class="btn btn-primary">Editar</button>
               </div>
               <div v-if="CambiarMayuscula(elemento.nombre) =='NEW_TAB'" class="m-1">  
                 <!-- ABRE NUEVA PESTAÑA -->                 
-                <button @click="AbrirPestaña(fila_data, index, index_componente, elemento.path)" class="btn btn-primary">Link</button>
+                <button @click.stop="AbrirPestaña(fila_data, index, index_componente, elemento.path)" class="btn btn-primary">Link</button>
               </div>
               <div v-if="CambiarMayuscula(elemento.nombre) =='BUTTON'" class="m-1">  
                 <!-- BOTON QUE MODIFICA EL JSON-->                 
-                <button @click="button_evento(fila_data, index, index_componente)" class="btn btn-primary">{{elemento.titulo}}</button>
+                <button @click.stop="button_evento(fila_data, index, index_componente)" class="btn btn-primary">{{elemento.titulo}}</button>
               </div>
               <div v-if="CambiarMayuscula(elemento.nombre) =='COMPONENTE'" class="m-1">                  
                 <!-- COMPONENTES PERSONALIZADOS -->   
@@ -266,6 +266,11 @@
   .rojo {
     color:  #E26a2C;
   }
+
+  tbody tr {
+    cursor: pointer;
+  }
+
 
   </style>
   

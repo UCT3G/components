@@ -4,19 +4,33 @@
       <BotonIconoPrimary
         width_icon="13px"
         iconName="FILTRAR.svg"
-        @click="mostrarFiltros = !mostrarFiltros"
+        @clickPrimary="mostrarFiltros = !mostrarFiltros"
         >Filtros</BotonIconoPrimary
       >
     </div>
 
-    <DynamicSvgLoader
-      class="TablaDinamica_iconEditor"
-      title="vista edicion"
-      @click="turnOnEditable"
-      fileName="icons/UCT_ADMIN/COMPETENCIAS-13"
-      width_icon="20px"
-      :icon_active="true"
-    ></DynamicSvgLoader>
+    <div class="TablaDinamica_iconEditor_container" v-if="perfilUsuario == 1 || perfilUsuario == 20">
+      <DynamicSvgLoader
+        class="TablaDinamica_iconEditor"
+        title="vista edicion"
+        @click="turnOnEditable"
+        fileName="icons/UCT_ADMIN/COMPETENCIAS-13"
+        width_icon="20px"
+        :icon_active="true"
+      ></DynamicSvgLoader>
+    </div>
+
+    <div v-if="BtnImprimir" class="TablaDinamica_printControls">
+      <BotonIconoPrimary iconName="BUSQUEDA MF.svg" width_icon="25px" @clickPrimary="Imprimir">
+        Imprimir
+      </BotonIconoPrimary>
+      <select v-model="selectedLimit" id="limit-select">
+          <option value="5" >5</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="Todos">Todos</option>
+      </select>
+    </div>
     <div class="TablaDinamica_scrollContainer">
       <table class="table table-light" v-if="json" ref="tablaRef">
         <TablaHead
@@ -73,6 +87,7 @@
 </template>
 
 <script>
+import axios from '@/../axios-config.js';
 import {
   defineComponent,
   ref,
@@ -162,6 +177,7 @@ export default defineComponent({
     "filtroTotal"
   ],
   setup(props, { emit }) {
+    const selectedLimit = ref(5);
     const visibleFormCRUD = ref(false);
     const store = useStore();
     const json = ref(JSON.parse(props.tablaBase.json_tabla));
@@ -179,6 +195,7 @@ export default defineComponent({
     const modalEditar = ref(null);
     const token = store.state.user.token;
     const user_rol = store.state.user.user_rol;
+    const perfilUsuario = computed(() => store.state.user.userProfile?.id_perfil_fk);
 
     // Novedades para stickyColumns
     const tablaRef = ref(null);
@@ -364,6 +381,19 @@ export default defineComponent({
       }
     });
 
+    watch(selectedLimit, async(newVal, oldVal) => {
+      if(newVal != oldVal){
+        let mostrar = newVal;
+        if(newVal == 'Todos'){
+          mostrar = json.value.registros_filtrados;
+        }
+        json.value.paginaActual = 1;
+        json.value.fin = mostrar;
+        json.value.inicio = 0;
+        filtrar();
+      }
+    });
+
     watch(
       () => json.value.columnas.map((columna) => columna.valor),
       (nuevosValores, viejosValores) => {
@@ -458,6 +488,52 @@ export default defineComponent({
       // Puedes emitir el evento hacia el padre o realizar alguna acción
       emit("filaSeleccionada", { fila, index });
     };
+
+    const Imprimir = async () => {
+      let tbase = JSON.parse(JSON.stringify(props.tablaBase));
+      let jsonTabla = JSON.parse(tbase.json_tabla);
+
+      let limit = selectedLimit.value;
+      if(limit == 'Todos'){
+        limit = json.value.registros_filtrados;
+      }
+      
+      tbase.fin = limit;
+      tbase.no_filas = limit;
+      jsonTabla.no_filas = limit;
+      jsonTabla.fin = limit;
+      tbase.json_tabla = JSON.stringify(jsonTabla);
+
+      const res = await store.dispatch("reporteador/CargarDataTable", {
+        token: store.state.user.token,
+        tablaBase: tbase
+      });
+
+      const response = await axios.post("/Imprimibles/crear_excel", {
+          columnas: json.value.columnas,
+          datos: res.data.data_table.registros,
+      }, {
+          responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'ReporteSucursal.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      recalcular();
+    };
+
+    const recalcular = async() => {
+      json.value.paginaActual = 1;
+      json.value.fin = 10;
+      json.value.inicio = 0;
+      selectedLimit.value = 5; // Reset selector
+      filtrar();
+    };
     onUnmounted(() => {
       if (!store.getters["reporteador/getTablaPorNombre"](props.tabla_nombre)) {
         return;
@@ -497,6 +573,9 @@ export default defineComponent({
       handleFilaClick,
       tablaRef,
       stickyOffsets,
+      perfilUsuario,
+      Imprimir,
+      selectedLimit,
     };
   },
 });
@@ -514,15 +593,31 @@ export default defineComponent({
 .TablaDinamica .TablaDinamicabtn-filtrar {
   display: none;
 }
-.TablaDinamica_iconEditor {
+.TablaDinamica_iconEditor_container {
   position: absolute;
   right: 0;
   top: 50px;
   z-index: 10;
+}
+.TablaDinamica_iconEditor {
   cursor: pointer;
   fill: var(--babyBlue);
   background-color: var(--blueBerryPastel);
   border-radius: 50%;
+}
+
+.TablaDinamica_printControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#limit-select {
+  padding: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 100px;
 }
 
 /** Estilos para liberar ancho de la tabla */

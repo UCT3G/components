@@ -4,11 +4,12 @@
     color="red"
     :min-date="computedMinDate"
     :max-date="computedMaxDate"
+    :masks="{ input: formatoDisplay || formato }"
   >
     <template #default="{ inputValue, inputEvents }">
       <div class="form-floating mb-3" v-if="label">
         <input
-          class="form-control"
+          :class="['form-control', size ? 'form-control-' + size : '']"
           id="floatingInput"
           :value="inputValue"
           v-on="inputEvents"
@@ -17,9 +18,9 @@
         />
         <label for="floatingInput">{{ label }}</label>
       </div>
-      <div class="mb-3" v-else>
+      <div class="mb-0" v-else>
         <input
-          class="form-control"
+          :class="['form-control', size ? 'form-control-' + size : '']"
           :value="inputValue"
           v-on="inputEvents"
           :disabled="disabled"
@@ -54,6 +55,10 @@ export default defineComponent({
       type: String,
       default: "YYYY-MM-DD",
     },
+    formatoDisplay: {
+      type: String,
+      default: "",
+    },
     minDate: {
       type: String, // Cambié el tipo a String
       default: "",
@@ -63,6 +68,10 @@ export default defineComponent({
       default: "",
     },
     disabled: Boolean,
+    size: {
+      type: String,
+      default: ""
+    }
   },
   setup(props, { emit }) {
     const date = ref();
