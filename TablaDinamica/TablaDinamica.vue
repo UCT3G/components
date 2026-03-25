@@ -1,6 +1,6 @@
 <template>
   <div :class="ClasesTablaDinamica" :id="tabla_nombre">
-    <div class="TablaDinamicabtn-filtrar">
+    <div class="TablaDinamicabtn-filtrar" :class="{ 'flex-shrink-0': fullHeight }">
       <BotonIconoPrimary
         width_icon="13px"
         iconName="FILTRAR.svg"
@@ -20,7 +20,7 @@
       ></DynamicSvgLoader>
     </div>
 
-    <div v-if="BtnImprimir" class="TablaDinamica_printControls">
+    <div v-if="BtnImprimir" class="TablaDinamica_printControls" :class="{ 'flex-shrink-0': fullHeight }">
       <BotonIconoPrimary iconName="BUSQUEDA MF.svg" width_icon="25px" @clickPrimary="Imprimir">
         Imprimir
       </BotonIconoPrimary>
@@ -31,7 +31,7 @@
           <option value="Todos">Todos</option>
       </select>
     </div>
-    <div class="TablaDinamica_scrollContainer">
+    <div class="TablaDinamica_scrollContainer" :class="{ 'flex-grow-1 overflow-auto': fullHeight }">
       <table class="table table-light" v-if="json" ref="tablaRef">
         <TablaHead
           :json="json"
@@ -57,7 +57,7 @@
         ></TablaBody>
       </table>
     </div>
-    <TablaFooter :json="json" @cambiarPagina="CambiarPagina"></TablaFooter>
+    <TablaFooter :json="json" @cambiarPagina="CambiarPagina" :class="{ 'flex-shrink-0': fullHeight }"></TablaFooter>
   </div>
 
   <PopUpSolido
@@ -166,6 +166,10 @@ export default defineComponent({
       type: Array,
       default: () => [],
     },
+    fullHeight: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: [
     "button_evento",
@@ -268,6 +272,10 @@ export default defineComponent({
       let baseClases = "TablaDinamica col-12";
       if (props.liberarAncho) {
         baseClases += " liberar-ancho";
+      }
+      
+      if (props.fullHeight) {
+        baseClases += " d-flex flex-column h-100 overflow-hidden";
       }
 
       switch (props.breakpoint) {
