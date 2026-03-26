@@ -2,41 +2,41 @@
   <div class="d-flex align-items-center gap-3 vigencia-container">
     <!-- Inicio -->
     <div class="d-flex flex-column">
-      <label class="form-label fw-bold mb-1 smaller text-muted">{{ labelInicioEjercicio }}</label>
+      <label class="form-label fw-bold mb-1 text-muted">{{ labelInicioEjercicio }}</label>
       <select
         v-model="internalValue.ejercicio"
         class="form-select form-select-sm"
         style="min-width: 120px"
         @change="emitChange"
       >
-        <option :value="null" disabled>Año...</option>
+        <option :value="null" disabled>--Selecciona--</option>
         <option v-for="ejercicio in ejercicios" :key="ejercicio" :value="ejercicio">
           {{ ejercicio }}
         </option>
       </select>
     </div>
 
-    <div class="d-flex flex-column">
-      <label class="form-label fw-bold mb-1 smaller text-muted">{{ labelInicioPeriodo }}</label>
+    <div class="d-flex flex-column" v-if="mostrarPeriodos">
+      <label class="form-label fw-bold mb-1 text-muted">{{ labelInicioPeriodo }}</label>
       <select
         v-model="internalValue.periodo"
         class="form-select form-select-sm"
         style="min-width: 100px"
         @change="emitChange"
       >
-        <option :value="null" disabled>Mes...</option>
+        <option :value="null" disabled>--Selecciona--</option>
         <option v-for="(mes, index) in meses" :key="index" :value="periodos[index]">
           {{ mes }}
         </option>
       </select>
     </div>
 
-    <div v-if="showFin" class="vr mx-2 separator" style="height: 35px; margin-top: 15px; opacity: 0.2;"></div>
+    <div v-if="habilitarFechaFin" class="vr mx-2 separator" style="height: 35px; margin-top: 15px; opacity: 0.2;"></div>
 
     <!-- Fin (Opcional) -->
-    <template v-if="showFin">
+    <template v-if="habilitarFechaFin">
       <div class="d-flex flex-column">
-        <label class="form-label fw-bold mb-1 smaller text-muted">{{ labelFinEjercicio }}</label>
+        <label class="form-label fw-bold mb-1 text-muted">{{ labelFinEjercicio }}</label>
         <select
           v-model="internalValue.ejercicio_fin"
           class="form-select form-select-sm"
@@ -50,8 +50,8 @@
         </select>
       </div>
 
-      <div class="d-flex flex-column">
-        <label class="form-label fw-bold mb-1 smaller text-muted">{{ labelFinPeriodo }}</label>
+      <div class="d-flex flex-column" v-if="mostrarPeriodos">
+        <label class="form-label fw-bold mb-1 text-muted">{{ labelFinPeriodo }}</label>
         <select
           v-model="internalValue.periodo_fin"
           class="form-select form-select-sm"
@@ -59,7 +59,7 @@
           :disabled="internalValue.ejercicio_fin === null"
           @change="emitChange"
         >
-          <option :value="null">Mes...</option>
+          <option :value="null">--Selecciona--</option>
           <option v-for="(mes, index) in meses" :key="index" :value="periodos[index]">
             {{ mes }}
           </option>
@@ -85,20 +85,24 @@ export default defineComponent({
         periodo_fin: null
       })
     },
-    showFin: {
+    habilitarFechaFin: {
       type: Boolean,
       default: true
     },
-    labelInicioEjercicio: { type: String, default: 'Ejercicio Inicio' },
-    labelInicioPeriodo: { type: String, default: 'Periodo Inicio' },
-    labelFinEjercicio: { type: String, default: 'Ejercicio Fin (Opcional)' },
-    labelFinPeriodo: { type: String, default: 'Periodo Fin' }
+    labelInicioEjercicio: { type: String, default: 'Año Inicio' },
+    labelInicioPeriodo: { type: String, default: 'Mes Inicio' },
+    labelFinEjercicio: { type: String, default: 'Año Fin (Opcional)' },
+    labelFinPeriodo: { type: String, default: 'Mes Fin' },
+    mostrarPeriodos: {
+      type: Boolean,
+      default: true
+    }
   },
   emits: ['update:modelValue', 'change'],
   setup(props, { emit }) {
     const internalValue = reactive({ ...props.modelValue });
 
-    const ejercicios = Array.from({ length: 6 }, (_, i) => 2025 + i);
+    const ejercicios = Array.from({ length: 10 }, (_, i) => 2019 + i);
     const meses = [
       "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
       "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"

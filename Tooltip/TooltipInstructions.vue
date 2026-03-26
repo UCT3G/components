@@ -39,7 +39,7 @@ export default defineComponent({
   props: {
     title: {
       type: String,
-      default: 'Indicaciones'
+      default: 'Información'
     },
     items: {
       type: Array,
