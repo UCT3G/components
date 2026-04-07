@@ -19,7 +19,7 @@
                 <DynamicSvgLoader 
                   @click.stop.prevent="handleAddClick"
                   fileName="icons/AGREGAR-24" 
-                  title="Agregar criterio"
+                  :title="addCustomTitle"
                   width_icon="16px"
                   class="iconBtn"
                 >
@@ -266,6 +266,7 @@ export default defineComponent({
     catalogoOptions: { type: Array, default: () => [] },
     mensaje: { type: String, default: "" },
     useCustomAddEvent: { type: Boolean, default: false },
+    addCustomTitle: { type: String, default: "Agregar criterio" },
     hideActions: { type: Boolean, default: false } // Ocultar botones de guardar/cancelar
   },
   emits: ["fetch-data", "save-data", "editing-changed", "onButtonAction", "onAddCustom"],

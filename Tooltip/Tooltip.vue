@@ -1,7 +1,10 @@
 <template>
   <div 
     class="tooltip-shell shadow-lg border" 
-    :class="{ 'is-visible': visible }"
+    :class="[
+      { 'is-visible': visible },
+      'align-' + align
+    ]"
   >
     <div class="p-tooltip-internal">
       <div v-if="title" class="row mb-2 border-bottom pb-1 gx-0 mx-0">
@@ -50,6 +53,11 @@ export default defineComponent({
     rows: {
       type: Array,
       default: () => []
+    },
+    align: {
+      type: String,
+      default: 'center',
+      validator: (value) => ['left', 'center', 'right'].includes(value)
     }
   }
 });
@@ -59,8 +67,6 @@ export default defineComponent({
 .tooltip-shell {
     position: absolute;
     top: calc(100% + 10px);
-    left: 65%;
-    transform: translateX(-50%) translateY(5px);
     background: var(--blanco);
     min-width: 220px;
     max-width: 300px;
@@ -73,6 +79,21 @@ export default defineComponent({
     border-radius: 12px;
 }
 
+/* Alineaciones */
+.align-center {
+    left: 70%;
+    transform: translateX(-50%) translateY(5px);
+}
+.align-left {
+    left: 0;
+    transform: translateY(5px);
+}
+.align-right {
+    right: 0;
+    left: auto;
+    transform: translateY(5px);
+}
+
 .p-tooltip-internal {
     padding: 14px; 
 }
@@ -82,19 +103,37 @@ export default defineComponent({
     content: '';
     position: absolute;
     top: -6px;
-    left: 30%;
-    transform: translateX(-50%) rotate(45deg);
     width: 12px;
     height: 12px;
     background: var(--blanco);
     border-top: 1px solid var(--bs-gray-200);
     border-left: 1px solid var(--bs-gray-200);
+    transform: rotate(45deg);
 }
 
-.tooltip-shell.is-visible {
+.align-center::before {
+    left: 30%;
+    transform: translateX(-50%) rotate(45deg);
+}
+.align-left::before {
+    left: 15px;
+}
+.align-right::before {
+    right: 15px;
+    left: auto;
+}
+
+/* Estados Visibles */
+.tooltip-shell.is-visible.align-center {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
+}
+.tooltip-shell.is-visible.align-left,
+.tooltip-shell.is-visible.align-right {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .tooltip-title {
@@ -136,7 +175,7 @@ export default defineComponent({
     letter-spacing: 0.3px;
 }
 
-/* Colores de badge por defecto*/
+/* Colores de badge por defecto */
 .badge-tt.primary { background: var(--babyBlue); color: var(--purple-sb); }
 .badge-tt.success { background: white; color: var(--bs-success); }
 .badge-tt.secondary { background: white; color: var(--bs-gray); }
