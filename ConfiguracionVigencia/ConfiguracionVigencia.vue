@@ -102,7 +102,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const internalValue = reactive({ ...props.modelValue });
 
-    const ejercicios = Array.from({ length: 10 }, (_, i) => 2019 + i);
+    const ejercicios = Array.from({ length: 11 }, (_, i) => 2018 + i);
     const meses = [
       "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
       "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
