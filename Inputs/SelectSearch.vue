@@ -1,33 +1,34 @@
 <template>
-  <div class="dropdown select-search-uct" v-if="options.length > 0">
-    <button 
-      class="form-select texto-caja text-start d-flex justify-content-between align-items-center" 
-      type="button" 
-      data-bs-toggle="dropdown" 
+  <div class="dropdown select-search-integrated" v-if="options.length > 0">
+    <div 
+      class="input-group input-container"
+      :class="{'disabled': disabled}"
+      data-bs-toggle="dropdown"
       aria-expanded="false"
-      :class="customClass"
-      :disabled="disabled"
+      data-bs-auto-close="outside"
     >
-      <span v-if="selectedText" class="selected-text">{{ selectedText }}</span>
-      <span v-else class="text-muted">{{ placeholder }}</span>
-    </button>
+      <input 
+        type="text"
+        class="form-control select-inner-input"
+        :class="customClass"
+        :placeholder="placeholder"
+        v-model="searchQuery"
+        :disabled="disabled"
+        @focus="onFocus"
+        @blur="onBlur"
+        @input="onInput"
+        autocomplete="off"
+      />
+      <span class="input-group-text bg-white border-start-0 chevron-container">
+        <DynamicSvgLoader 
+          fileName="icons/chevron-down" 
+          width_icon="15px" 
+          height_icon="15px" 
+        />
+      </span>
+    </div>
     
     <div class="dropdown-menu p-2 shadow w-100 border-0 custom-dropdown-menu">
-      <div class="mb-2 sticky-top bg-white pt-1">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text bg-light border-end-0">
-            
-          </span>
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            class="form-control border-start-0 ps-0" 
-            :placeholder="searchPlaceholder"
-            @click.stop
-          />
-        </div>
-      </div>
-      
       <div class="custom-list-container">
         <button 
           v-for="option in filteredOptions" 
@@ -52,10 +53,12 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, watch, onMounted } from 'vue';
+import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
 
 export default defineComponent({
   name: 'SelectSearch',
+  components: { DynamicSvgLoader },
   props: {
     modelValue: {
       type: [String, Number, null],
@@ -98,49 +101,126 @@ export default defineComponent({
   emits: ['update:modelValue', 'change'],
   setup(props, { emit }) {
     const searchQuery = ref('');
+    const isSearching = ref(false);
 
+    // Get label for current selection
+    const selectedLabel = computed(() => {
+      if (props.modelValue === null || props.modelValue === undefined) return '';
+      const selected = props.options.find(opt => opt[props.valueKey] === props.modelValue);
+      return selected ? selected[props.labelKey] : '';
+    });
+
+    // Sync input with selection when not searching
+    watch(() => props.modelValue, () => {
+      if (!isSearching.value) {
+        searchQuery.value = selectedLabel.value;
+      }
+    }, { immediate: true });
+
+    // Filter options based on user input
     const filteredOptions = computed(() => {
-      if (!searchQuery.value) return props.options;
+      if (!isSearching.value || !searchQuery.value) return props.options;
+      
       const lowerSearch = searchQuery.value.toLowerCase();
       return props.options.filter(option => 
         String(option[props.labelKey]).toLowerCase().includes(lowerSearch)
       );
     });
 
-    const selectedText = computed(() => {
-      if (props.modelValue === null || props.modelValue === undefined) return '';
-      const selected = props.options.find(opt => opt[props.valueKey] === props.modelValue);
-      return selected ? selected[props.labelKey] : '';
-    });
+    const onFocus = (e) => {
+      isSearching.value = true;
+      e.target.select(); // Select all text for easy replacement
+    };
+
+    const onBlur = () => {
+      // Small delay to allow click on dropdown item
+      setTimeout(() => {
+        isSearching.value = false;
+        searchQuery.value = selectedLabel.value;
+      }, 200);
+    };
+
+    const onInput = () => {
+      isSearching.value = true;
+    };
 
     const selectOption = (option) => {
       emit('update:modelValue', option[props.valueKey]);
       emit('change', option);
-      searchQuery.value = ''; // Reset search on select
+      isSearching.value = false;
+      searchQuery.value = option[props.labelKey];
+      
+      // Close dropdown manually if needed (Bootstrap usually handles it if clicked on a button in menu)
     };
 
     return {
       searchQuery,
       filteredOptions,
-      selectedText,
-      selectOption
+      selectedLabel,
+      selectOption,
+      onFocus,
+      onBlur,
+      onInput
     };
   }
 });
 </script>
 
 <style scoped>
-.form-select:focus {
+.select-search-integrated {
+  position: relative;
+}
+
+.input-container {
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.input-container:focus-within {
   border-color: var(--acceso1);
   box-shadow: 0 0 0 0.2rem rgba(var(--acceso1-rgb), 0.15);
 }
 
-.form-select {
-  border-radius: 8px;
-  border: 1px solid var(--bs-gray-400);
-  padding: 12px 12px;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
+.select-inner-input {
+  border-radius: 8px 0 0 8px !important;
+  border-right: none;
+  padding: 7px 12px;
+  cursor: pointer;
+  background-color: white !important;
 }
+
+.select-inner-input:focus {
+  cursor: text;
+  box-shadow: none;
+  border-color: var(--bs-gray-400);
+}
+
+.chevron-container {
+  border-radius: 0 8px 8px 0 !important;
+  border-left: none;
+  padding: 0 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Override DynamicSvgLoader internal padding to prevent enlarging the select */
+:deep(.loaderSVG-contend) {
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+:deep(.loaderSVG-contend svg) {
+  display: block;
+}
+
+/* Orphan .chevron-icon style removed as DynamicSvgLoader handles its own styling */
 
 .custom-dropdown-menu {
   min-width: 100%;
@@ -168,21 +248,12 @@ export default defineComponent({
 }
 
 .dropdown-item.active {
-  background-color: var(--blueBerryPastel);
-  color: white;
+  background-color: var(--blueBerryPastel) !important;
+  color: white !important;
 }
 
-.selected-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.input-group-text {
-  border-radius: 6px 0 0 6px;
-}
-
-.form-control-sm {
-  border-radius: 0 6px 6px 0;
+.disabled {
+  opacity: 0.65;
+  pointer-events: none;
 }
 </style>
