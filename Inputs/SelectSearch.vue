@@ -1,6 +1,7 @@
 <template>
   <div class="dropdown select-search-integrated" v-if="options.length > 0">
     <div 
+      ref="dropdownToggle"
       class="input-group input-container"
       :class="{'disabled': disabled}"
       data-bs-toggle="dropdown"
@@ -54,6 +55,7 @@
 
 <script>
 import { defineComponent, ref, computed, watch, onMounted } from 'vue';
+import { Dropdown } from 'bootstrap';
 import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
 
 export default defineComponent({
@@ -100,6 +102,7 @@ export default defineComponent({
   },
   emits: ['update:modelValue', 'change'],
   setup(props, { emit }) {
+    const dropdownToggle = ref(null);
     const searchQuery = ref('');
     const isSearching = ref(false);
 
@@ -150,7 +153,13 @@ export default defineComponent({
       isSearching.value = false;
       searchQuery.value = option[props.labelKey];
       
-      // Close dropdown manually if needed (Bootstrap usually handles it if clicked on a button in menu)
+      // Cerrar el dropdown manualmente después de seleccionar
+      if (dropdownToggle.value) {
+        const bsDropdown = Dropdown.getInstance(dropdownToggle.value) || new Dropdown(dropdownToggle.value);
+        if (bsDropdown) {
+          bsDropdown.hide();
+        }
+      }
     };
 
     return {
@@ -160,7 +169,8 @@ export default defineComponent({
       selectOption,
       onFocus,
       onBlur,
-      onInput
+      onInput,
+      dropdownToggle
     };
   }
 });

@@ -6,38 +6,43 @@
         <h6 class="mb-0 fw-bold text-dark">Control de Acceso</h6>
         <p class="text-muted x-small mb-0">Gestiona quién puede ver o editar esta vista.</p>
       </div>
-      <button 
+      <BotonIconoPrimary 
         v-if="isOwner"
-        class="btn btn-sm btn-primary px-3"
+        width_icon="13px"
+        iconName="UCT_ADMIN/plus-circle.svg"
+        title="Agregar Usuarios"
         @click="showSelectionModal = true"
-      >
-        Agregar Usuarios
-      </button>
+      />
     </div>
+    <!-- <hr> -->
 
     <!-- Cargando Compartidos -->
-    <div v-if="fetching" class="loading-container">
+    <div v-if="fetching || loading" class="loading-container">
       <LoadingUCT :blockFullScreem="false" />
     </div>
 
     <!-- Lista de Usuarios Seleccionados -->
     <div v-else-if="selectedUsers.length > 0">
       <!-- Filtro rápido / Toggle Global -->
-      <div v-if="isOwner" class="d-flex justify-content-end mb-3">
-        <div class="btn-group btn-group-sm shadow-xs">
-          <input type="radio" class="btn-check" name="global-perm" id="global-read" @click="setGlobalPermission('lectura')">
-          <label class="btn btn-outline-secondary py-1" for="global-read">Todo Lectura</label>
-          <input type="radio" class="btn-check" name="global-perm" id="global-edit" @click="setGlobalPermission('editar')">
-          <label class="btn btn-outline-secondary py-1" for="global-edit">Todo Editar</label>
-        </div>
-      </div>
+      <!-- <div v-if="isOwner" class="form-check form-switch mb-3 ms-2">
+        <input 
+          class="form-check-input" 
+          type="checkbox" 
+          role="switch" 
+          id="globalSwitch"
+          @change="(e) => setGlobalPermission(e.target.checked ? 'editar' : 'lectura')"
+        >
+        <label class="form-check-label small text-muted" for="globalSwitch">
+          Permitir edición a todos
+        </label>
+      </div> -->
 
       <div class="selected-users-grid mb-4">
         <div 
-          v-for="(user, index) in selectedUsers" 
+          v-for="user in sortedUsers" 
           :key="user.id_usuario" 
           class="user-card"
-          :style="{ animationDelay: (index * 0.05) + 's' }"
+          :class="{ 'new-user-card': !user.isPersisted }"
         >
           <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center flex-grow-1 overflow-hidden">
@@ -52,7 +57,7 @@
                 class="form-select form-select-sm border-0 bg-transparent fw-bold text-muted x-small-select"
                 :value="user.tipo_permiso"
                 :disabled="!isOwner"
-                @change="(e) => handlePermissionChange(user, index, e.target.value)"
+                @change="(e) => handlePermissionChange(user, e.target.value)"
               >
                 <option value="lectura">Lector</option>
                 <option value="editar">Editor</option>
@@ -64,13 +69,12 @@
       </div>
 
       <!-- Acciones Finales -->
-      <div v-if="hasChanges && isOwner" class="d-flex justify-content-end pt-3 border-top mt-auto">
-        <div class="text-muted small me-auto d-flex align-items-center">
-          Tienes cambios pendientes por guardar
+      <div v-if="hasChanges && isOwner" class="d-flex justify-content-end align-items-center pt-3 border-top mt-auto gap-3">
+        <div class="text-muted small me-auto">
+          Tienes cambios pendientes por compartir
         </div>
         <button @click="confirmShare" :disabled="loading" class="btn btn-primary"> 
-          <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-          {{ loading ? 'Sincronizando...' : 'Guardar' }}
+          Compartir
         </button> 
       </div>
     </div>
@@ -116,6 +120,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useStore } from 'vuex';
 import TableSelect from "@/components/Tables/TableSelect.vue";
 import PopUpSolido from "@/components/Modal/ModalSolid.vue";
+import BotonIconoPrimary from "@/components/ButtonWithIcon/ButtonPrimary.vue";
 import LoadingUCT from '@/components/Loading/Loading.vue';
 
 export default {
@@ -127,7 +132,8 @@ export default {
   components: {
     TableSelect,
     PopUpSolido,
-    LoadingUCT
+    LoadingUCT,
+    BotonIconoPrimary
   },
   emits: ['shared'],
   setup(props, { emit }) {
@@ -146,6 +152,15 @@ export default {
       const userId = store.state.user.userProfile?.id_usuario;
       // Consideramos dueño si el permiso es explicitamente propietario o si los IDs coinciden (en caso de que falte el campo)
       return props.currentPermission === 'propietario' || props.view.tipo_permiso === 'propietario' || props.view.registro_usuario == userId;
+    });
+
+    const sortedUsers = computed(() => {
+      // Los usuarios nuevos (isPersisted = false) van primero
+      return [...selectedUsers.value].sort((a, b) => {
+        if (!a.isPersisted && b.isPersisted) return -1;
+        if (a.isPersisted && !b.isPersisted) return 1;
+        return 0;
+      });
     });
 
     onMounted(async () => {
@@ -214,13 +229,16 @@ export default {
         hasChanges.value = true;
     };
 
-    const removeOrRevoke = async (user, index) => {
+    const removeOrRevoke = (user) => {
+      const realIndex = selectedUsers.value.findIndex(u => u.id_usuario === user.id_usuario);
+      if (realIndex === -1) return;
+
       if (user.isPersisted) {
         userToRevoke.value = user;
-        userToRevokeIndex.value = index;
+        userToRevokeIndex.value = realIndex;
         showRevokeModal.value = true;
       } else {
-        selectedUsers.value.splice(index, 1);
+        selectedUsers.value.splice(realIndex, 1);
         // Recalcular si quedan cambios pendientes
         hasChanges.value = selectedUsers.value.some(u => !u.isPersisted);
       }
@@ -243,9 +261,9 @@ export default {
       userToRevokeIndex.value = null;
     };
 
-    const handlePermissionChange = (user, index, value) => {
+    const handlePermissionChange = (user, value) => {
       if (value === 'remove') {
-        removeOrRevoke(user, index);
+        removeOrRevoke(user);
       } else {
         updateUserPermission(user, value);
       }
@@ -276,7 +294,7 @@ export default {
     };
 
     return {
-      selectedUsers, loading, fetching, showSelectionModal, isOwner, hasChanges,
+      selectedUsers, sortedUsers, loading, fetching, showSelectionModal, isOwner, hasChanges,
       showRevokeModal, userToRevoke, confirmRevoke,
       onAddUsers,
       setGlobalPermission,
@@ -345,17 +363,15 @@ export default {
 .shadow-xs { box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
 
 .selected-users-grid {
-  max-height: 400px;
+  max-height: calc(100vh - 290px);
   overflow-y: auto;
   padding-right: 5px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE y Edge */
 }
 
 .selected-users-grid::-webkit-scrollbar {
-  width: 4px;
-}
-.selected-users-grid::-webkit-scrollbar-thumb {
-  background: var(--bs-gray-200);
-  border-radius: 10px;
+  display: none; /* Chrome, Safari y Opera */
 }
 
 .empty-share-state {

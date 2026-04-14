@@ -106,9 +106,9 @@
             @select="(view) => onViewSelect(view, 'shared')"
           />
 
-          <!-- Botón Guardar -->
+          <!-- Botón Guardar: visible si es admin O si puede actualizar una vista existente -->
           <ActionExpandable
-            v-if="currentPermission !== 'lectura'"
+            v-if="(isDataChartsAdmin && !activeView) || (activeView && currentPermission !== 'lectura')"
             icon="icons/GUARDAR"
             :label="activeView ? 'Actualizar' : 'Guardar'"
             :isExpanded="isSaveHovered"
@@ -150,6 +150,7 @@ import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 import ButtonPrimary from '@/components/ButtonWithIcon/ButtonPrimary.vue';
 import Tooltip from '@/components/Tooltip/Tooltip.vue';
 import ActionExpandable from '@/components/ActionExpandable/ActionExpandable.vue';
+import { useDataChartsPermisos } from '@/components/DataCharts/composables/useDataChartsPermisos.js';
 
 export default defineComponent({
   name: 'VisualizerHeader',
@@ -166,16 +167,30 @@ export default defineComponent({
     subGroupByColumn: String,
     activeView: Object,
     currentPermission: { type: String, default: 'propietario' },
-    savedViews: Array
+    savedViews: Array,
   },
   emits: ['update:isChartMode', 'toggle-sidebar', 'save-request', 'load-view', 'reset-view', 'delete-view', 'share-view'],
   setup(props, { emit }) {
+    const { isDataChartsAdmin } = useDataChartsPermisos();
     const isOwnHovered = ref(false);
     const isSharedHovered = ref(false);
     const isSaveHovered = ref(false);
     const isTooltipVisible = ref(false);
 
     const timers = { own: null, shared: null, save: null };
+
+    const formatDateTime = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            return new Intl.DateTimeFormat('es-MX', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: false
+            }).format(date);
+        } catch (e) {
+            return dateStr;
+        }
+    };
 
     const onHoverEnter = (type) => {
       // Mutual Exclusion: Cerrar inmediatamente cualquier otro que esté abierto
@@ -222,6 +237,8 @@ export default defineComponent({
         return [
             { label: 'Nombre', value: props.activeView.nombre, class: 'fw-bold text-truncate ms-2' },
             { label: 'Dueño', value: props.activeView.propietario_nombre || 'Tú', class: 'fw-bold' },
+            { label: 'Modificado por', value: props.activeView.modificador_nombre || 'Tú', class: 'text-muted small' },
+            { label: 'Última edición', value: formatDateTime(props.activeView.ultima_fecha), class: 'text-muted small' },
             { 
               label: 'Acceso', 
               value: props.currentPermission === 'propietario' ? 'Propietario' : (props.currentPermission === 'lectura' ? 'Solo Lectura' : 'Editor'),
@@ -255,7 +272,8 @@ export default defineComponent({
       setChartMode,
       onViewSelect,
       onHoverEnter,
-      onHoverLeave
+      onHoverLeave,
+      isDataChartsAdmin
     };
   }
 });

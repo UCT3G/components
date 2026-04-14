@@ -74,6 +74,7 @@
       <VisualizerForm 
         v-model="newViewName"
         :activeView="activeView"
+        :currentPermission="currentPermission"
         @confirm-save="confirmSave"
         @confirm-update="confirmUpdate"
       />

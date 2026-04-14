@@ -242,7 +242,9 @@ export function useDataCharts() {
             activeView.value = { 
                 id_vista: viewInfo.id_vista, 
                 nombre: viewInfo.nombre,
-                propietario_nombre: viewInfo.propietario_nombre
+                propietario_nombre: viewInfo.propietario_nombre,
+                ultima_fecha: viewInfo.ultima_fecha,
+                modificador_nombre: viewInfo.modificador_nombre
             };
             currentPermission.value = viewInfo.tipo_permiso || 'propietario';
         }
