@@ -267,7 +267,8 @@ export default defineComponent({
     mensaje: { type: String, default: "" },
     useCustomAddEvent: { type: Boolean, default: false },
     addCustomTitle: { type: String, default: "Agregar criterio" },
-    hideActions: { type: Boolean, default: false } // Ocultar botones de guardar/cancelar
+    hideActions: { type: Boolean, default: false }, // Ocultar botones de guardar/cancelar
+    editing: { type: Boolean, default: false } // Sincroniza el estado de edición desde el padre
   },
   emits: ["fetch-data", "save-data", "editing-changed", "onButtonAction", "onAddCustom"],
 
@@ -275,7 +276,12 @@ export default defineComponent({
     const showCatalogo = ref(false);
     const selectedCatalogo = ref([]);
     const selectedValues = ref({}); 
-    const editar = ref(false);
+    const editar = ref(props.editing); // <--- Inicia con el valor de la prop
+
+    // Sincronizar hacia adentro: si el padre cambia la prop, actualizar el ref local
+    watch(() => props.editing, (newVal) => {
+      editar.value = newVal;
+    });
 
     // Emitir cuando cambia el estado de edición
     watch(editar, (newValue) => {
@@ -395,13 +401,7 @@ export default defineComponent({
       emit("fetch-data", { ...selectedValues.value });
     };
 
-    // desactivar edición cuando loading termina
-    watch(
-      () => props.loading,
-      (newVal) => {
-        if (!newVal) editar.value = false;
-      }
-    );
+
 
     // Manejar la selección del dropdown
     const handleDropdownSelection = (label, row, options) => {
