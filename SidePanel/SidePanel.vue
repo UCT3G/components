@@ -1,25 +1,46 @@
 <template>
   <div class="sidebar-container d-flex" ref="sidebarContainer">
-    <!-- SIDEBAR -->
-    <div class="sidebar d-flex flex-column align-items-center py-3" >
-      <button
-        v-for="(panel, index) in panels"
-        :key="index"
-        class="sidebar-btn d-flex align-items-center justify-content-center position-relative"
-        @click="handleClick(panel.id)"
-        :class="{ 'collapsed': activePanelId !== panel.id }"
-        :title="panel.label"
-      >
-        <DynamicSvgLoader 
-          :fileName="panel.icon" 
-          :title="panel.label"
-          :width_icon="panel.width_icon"
+    <div class="sidebar d-flex flex-column align-items-center py-2 position-relative">
+      <!-- Flecha Arriba -->
+      <DynamicSvgLoader 
+        v-if="showUpArrow" 
+        class="scroll-arrow up-arrow" 
+        @click="scrollUp"
+        fileName="icons/chevron-down" 
+        width_icon="16px" 
+        :icon_active="true" 
+      />
+
+      <!-- Contenedor scrollable de iconos -->
+      <div class="sidebar-content w-100 h-100" ref="scrollContainer" @scroll="checkScroll">
+        <button
+          v-for="(panel, index) in panels"
+          :key="index"
+          class="sidebar-btn d-flex align-items-center justify-content-center position-relative"
+          @click="handleClick(panel.id)"
           :class="{ 'collapsed': activePanelId !== panel.id }"
+          :title="panel.label"
         >
-        </DynamicSvgLoader>
-        <!-- <img :src="panel.icon" :alt="panel.label || 'icono'" /> -->
-        <span v-if="panel.notify" class="notification-dot"></span>
-      </button>
+          <DynamicSvgLoader 
+            :fileName="panel.icon" 
+            :title="panel.label"
+            :width_icon="panel.width_icon"
+            :icon_active="activePanelId === panel.id"
+          >
+          </DynamicSvgLoader>
+          <span v-if="panel.notify" class="notification-dot"></span>
+        </button>
+      </div>
+
+      <!-- Flecha Abajo -->
+      <DynamicSvgLoader 
+        v-if="showDownArrow" 
+        class="scroll-arrow down-arrow" 
+        @click="scrollDown"
+        fileName="icons/chevron-down" 
+        width_icon="16px" 
+        :icon_active="true" 
+      />
     </div>
 
     <!-- CONTENIDO DE PANELES -->
@@ -67,26 +88,40 @@ export default defineComponent({
     const isCollapsed = ref(false)
     const panelWidth = ref(400)
     const sidebarContainer = ref(null)
+    const scrollContainer = ref(null)
+    const showUpArrow = ref(false)
+    const showDownArrow = ref(false)
 
     const activePanel = computed(() =>
       props.panels.find(p => p.id === activePanelId.value) || {}
     )
 
+    const checkScroll = () => {
+      if (!scrollContainer.value) return
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value
+      showUpArrow.value = scrollTop > 5
+      showDownArrow.value = scrollTop + clientHeight < scrollHeight - 5
+    }
+
+    const scrollUp = () => {
+      scrollContainer.value?.scrollBy({ top: -100, behavior: 'smooth' })
+    }
+
+    const scrollDown = () => {
+      scrollContainer.value?.scrollBy({ top: 100, behavior: 'smooth' })
+    }
+
     const handleClick = (panelId) => {
       if (activePanelId.value === panelId) {
-        // Solo toggle del colapso, sin desactivar el panel
         isCollapsed.value = !isCollapsed.value
       } else {
-        // Abrir otro panel
         activePanelId.value = panelId
         isCollapsed.value = false
       }
       emit('update:panel', activePanelId.value)
     }
 
-    // Función para detectar clicks fuera del sidebar
     const handleClickOutside = (event) => {
-      // Si el panel activo tiene preventOutsideCollapse, no colapsamos por click exterior
       const activePanel = props.panels.find(p => p.id === activePanelId.value)
       if (activePanel?.preventOutsideCollapse) return
 
@@ -95,17 +130,23 @@ export default defineComponent({
       }
     }
 
-    // Agregar event listener al montar el componente
     onMounted(() => {
       document.addEventListener('click', handleClickOutside)
+      window.addEventListener('resize', checkScroll)
+      // Dar tiempo al renderizado de los paneles
+      setTimeout(checkScroll, 500)
     })
 
-    // Remover event listener al desmontar el componente
     onUnmounted(() => {
       document.removeEventListener('click', handleClickOutside)
+      window.removeEventListener('resize', checkScroll)
     })
 
-    return { handleClick, activePanelId, isCollapsed, panelWidth, activePanel, sidebarContainer }
+    return { 
+      handleClick, activePanelId, isCollapsed, panelWidth, activePanel, 
+      sidebarContainer, scrollContainer, showUpArrow, showDownArrow,
+      checkScroll, scrollUp, scrollDown 
+    }
   }
 })
 </script>
@@ -120,16 +161,46 @@ export default defineComponent({
 .sidebar {
   width: 44px;
   flex-shrink: 0;
-  background: var(--blueBerry);
+  background: var(--purple-sb);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 0;
+  /* padding: 10px 0; */ /* Movido a scroll-container */
   height: calc(100vh - 112px);
+  overflow: hidden; /* Las flechas se posicionan fuera */
+}
+
+.sidebar-content {
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+.scroll-arrow {
+  filter: invert(1);
+}
+
+.scroll-arrow:hover {
+  opacity: 0.7;
+}
+
+.up-arrow {
+  transform: rotate(180deg);
+  border-radius: 20px 20px 0 0;
+}
+
+.down-arrow {
+  border-radius: 0 0 20px 20px;
 }
 .sidebar-btn {
-
   border-radius: 25px 0 0 25px;
   border: none;
   background: white;
@@ -147,13 +218,14 @@ export default defineComponent({
   filter: none; /* Por defecto normal */
 }
 
+.sidebar-btn.collapsed > div {
+  filter: brightness(0) invert(1) !important;
+}
+
 /* Botones inactivos/colapsados */
 .sidebar-btn.collapsed {
   transform: translateX(-20%);
   background: transparent;
-}
-.sidebar-btn:not(.collapsed) > div {
-  filter: invert(1); /* Invertido solo cuando está activo */
 }
 
 .notification-dot {
@@ -181,7 +253,7 @@ export default defineComponent({
     radial-gradient(circle at 40% 30%, var(--blueBerry) 0%, transparent 40%),
     radial-gradient(circle at 80% 40%, var(--blueBerry) 0%, transparent 40%),
     radial-gradient(circle at 80% 50%, var(--blueBerry) 0%, transparent 40%),
-    radial-gradient(circle at 30% 90%, var(--bs-gray-300) 0%, transparent 40%),
+    radial-gradient(circle at 80% 95%, white 0%, transparent 40%),
     linear-gradient(135deg, var(--blueBerry));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -247,11 +319,7 @@ export default defineComponent({
 .formulario.collapsed .formulario-content {
   opacity: 0;
   transform: translateX(-30px);
-  pointer-events: none; /* AVOID CLICKS WHILE CLOSING */
-}
-
-.sidebar-btn:not(.collapsed):hover > div {
-  filter: invert(1); /* Invertido solo cuando está activo */
+  pointer-events: none; 
 }
 
 .loaderSVG-contend:hover {

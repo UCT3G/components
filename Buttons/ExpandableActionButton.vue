@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex flex-column mb-3">
     <button
-      class="btn btn-outline-light text-center py-2 px-3 shadow-sm"
+      class="btn btn-tertiary d-flex justify-content-between align-items-center w-100 py-2 px-3 shadow-sm gap-2"
       :class="{ 
         'active': isExpanded,
         'rounded-bottom-0 border-bottom-0': isExpanded,
@@ -9,13 +9,23 @@
       }"
       @click="toggleExpanded"
     >
-      {{ label }}
+      <span class="text-truncate flex-grow-1 text-start" :title="label">
+        {{ label }}
+      </span>
+
+      <DynamicSvgLoader
+        class="p-0 flex-shrink-0 chevron-icon"
+        :class="{ 'rotated': isExpanded }"
+        fileName="icons/chevron-down"
+        width_icon="18px"
+        :icon_active="isExpanded"
+      />
     </button>
 
     <transition name="expand">
       <div 
         v-if="isExpanded" 
-        class="bg-white bg-opacity-10 p-2 rounded-bottom-3 border border-light border-opacity-25 border-top-0"
+        class="bg-white p-2 rounded-bottom-3 border border-light border-opacity-25 border-top-0"
       >
         <!-- Prioridad 1: Slot personalizado-->
         <slot v-if="$slots.actions"></slot>
@@ -32,16 +42,15 @@
             :style="action.disabled ? '' : 'cursor: pointer;'"
           >
             <button
-              class="btn btn-sm w-100 py-2 shadow-sm rounded-2"
+              class="btn btn-sm w-100 py-2 btn-action-item"
               :class="[
                 action.variant || '',
-                { 'bg-white bg-opacity-25': action.label === selectedActionLabel }
+                { 'bg-purple-active': action.label === selectedActionLabel }
               ]"
               :disabled="action.disabled"
               :style="action.disabled ? 'pointer-events: none;' : ''"
               @click="action.handler"
             >
-              <i v-if="action.icon" :class="action.icon"></i>
               {{ action.label }}
             </button>
           </span>
@@ -53,9 +62,13 @@
 
 <script>
 import { defineComponent, ref, watch } from 'vue';
+import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 
 export default defineComponent({
   name: 'ExpandableActionButton',
+  components: {
+    DynamicSvgLoader
+  },
   props: {
     label: {
       type: String,
@@ -102,6 +115,26 @@ export default defineComponent({
 .rounded-bottom-0 { 
   border-bottom-left-radius: 0 !important; 
   border-bottom-right-radius: 0 !important; 
+}
+
+.chevron-icon {
+  transition: transform 0.3s ease;
+  flex-shrink: 0; /* Asegura que la flecha nunca se aplaste */
+}
+
+.chevron-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.btn-action-item {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.btn-action-item:hover,
+.bg-purple-active {
+  background-color: var(--bs-gray-200) !important;
+  color: black !important;
 }
 
 .expand-enter-active,
