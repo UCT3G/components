@@ -4,7 +4,7 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
       <div>
         <h6 class="mb-0 fw-bold text-dark">Control de Acceso</h6>
-        <p class="text-muted x-small mb-0">Gestiona quién puede ver o editar esta vista.</p>
+        <p class="text-muted small mb-0">Gestiona quién puede ver o editar esta vista.</p>
       </div>
       <BotonIconoPrimary 
         v-if="isOwner"
@@ -54,10 +54,11 @@
 
             <div class="permission-select-container ms-3">
               <select 
-                class="form-select form-select-sm border-0 bg-transparent fw-bold text-muted x-small-select"
+                class="form-select form-select-sm border-0 bg-transparent fw-bold text-muted"
                 :value="user.tipo_permiso"
                 :disabled="!isOwner"
                 @change="(e) => handlePermissionChange(user, e.target.value)"
+                style="width: auto; min-width: 90px;"
               >
                 <option value="lectura">Lector</option>
                 <option value="editar">Editor</option>
@@ -308,18 +309,6 @@ export default {
 </script>
 
 <style scoped>
-.x-small { font-size: 0.65rem; }
-.x-small-select { 
-  font-size: 0.85rem; 
-  cursor: pointer;
-  padding-right: 2rem;
-  width: auto;
-}
-.x-small-select:focus {
-  box-shadow: none;
-  background-color: var(--bs-gray-100);
-}
-
 .loading-container {
   display: flex;
   justify-content: center;

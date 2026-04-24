@@ -7,6 +7,13 @@
       <label class="panel-section-title mb-0 cursor-pointer" :class="{ 'is-active': isInternalOpen }">
         {{ title }}
       </label>
+      <DynamicSvgLoader 
+        fileName="icons/chevron-down" 
+        width_icon="14px" 
+        height_icon="14px" 
+        class="toggle-icon"
+        :class="{ 'is-rotated': isInternalOpen }"
+      />
     </header>
     
     <div class="section-content accordion-transition" :class="{ 'is-open': isInternalOpen }">
@@ -15,13 +22,18 @@
       </div>
     </div>
   </section>
+  <hr class="my-3 opacity-10">
 </template>
 
 <script>
 import { defineComponent, inject, computed, onMounted } from 'vue';
+import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
 
 export default defineComponent({
   name: 'ConfigSection',
+  components: {
+    DynamicSvgLoader
+  },
   props: {
     title: String,
     isOpen: Boolean,
@@ -59,7 +71,7 @@ export default defineComponent({
 <style scoped>
 .section-header-clickable {
   user-select: none;
-  padding: 4px 0;
+  padding: 2px 0;
   cursor: pointer;
 }
 
@@ -90,5 +102,29 @@ export default defineComponent({
 }
 .section-header-clickable:hover .panel-section-title {
   color: var(--purple-sb);
+}
+.toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, color 0.3s ease;
+  color: var(--bs-gray-500);
+}
+
+.toggle-icon.is-rotated {
+  transform: rotate(180deg);
+  color: var(--purple-sb);
+}
+
+.toggle-icon :deep(.loaderSVG-contend) {
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-icon :deep(svg) {
+  fill: currentColor !important;
+  display: block;
 }
 </style>

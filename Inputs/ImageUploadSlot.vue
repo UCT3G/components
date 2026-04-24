@@ -104,13 +104,15 @@ export default defineComponent({
     .img-upload-slot-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.15);
+        background: var(--bs-gray-100);
         display: flex;
         align-items: center;
         justify-content: center;
         opacity: 0;
-        transition: opacity 0.2s ease, background 0.2s ease;
+        transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
         color: white;
+        border: 2px dashed var(--bs-gray-400);
+        box-sizing: border-box;
     }
 
     /* Si no hay imagen, el overlay/placeholder es siempre visible en modo edición */
@@ -126,7 +128,8 @@ export default defineComponent({
 
     .img-upload-slot-wrapper.edit-mode-active:hover .img-upload-slot-overlay {
         opacity: 1;
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--bs-gray-200);
+        border-color: var(--bs-gray-500);
     }
 
     /* Ajustes para el loader de SVG */
@@ -140,5 +143,6 @@ export default defineComponent({
     .upload-slot-icon-loader :deep(svg) {
         width: 100% !important;
         height: 100% !important;
+        color:var(--bs-gray-400) !important;
     }
 </style>

@@ -127,7 +127,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.x-small { font-size: 0.7rem; }
 .uppercase { text-transform: uppercase; letter-spacing: 0.5px; }
 .transition-all { transition: all 0.25s ease; }
 .cursor-pointer { cursor: pointer; }

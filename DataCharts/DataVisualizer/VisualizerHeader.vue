@@ -36,30 +36,24 @@
 
                 <!-- Botones de Acción Minimalistas -->
                 <div class="d-inline-flex align-items-center gap-1 px-1 action-group-minimal">
-                  <div v-if="currentPermission === 'propietario'" class="btn-action-view" @click.stop="onShareView" title="Compartir">
-                    <DynamicSvgLoader 
-                      class="flex-shrink-0" 
-                      fileName="icons/UCT_ADMIN/PERSON_PLUS"
-                      width_icon="13px"
-                      height_icon="13px"
-                    />   
-                  </div>
-                  <div v-if="currentPermission === 'propietario'" class="btn-action-view" @click.stop="onDeleteView" title="Eliminar">
-                    <DynamicSvgLoader 
-                      class="flex-shrink-0" 
-                      fileName="icons/TRASH"
-                      width_icon="13px"
-                      height_icon="13px"
-                    />   
-                  </div>
-                  <div class="btn-action-view shadow-none" @click.stop="onResetView" title="Cerrar vista">
-                    <DynamicSvgLoader 
-                      class="flex-shrink-0" 
-                      fileName="icons/CERRAR"
-                      width_icon="13px"
-                      height_icon="13px"
-                    />   
-                  </div>
+                  <IconButtonAction 
+                    v-if="currentPermission === 'propietario'" 
+                    iconName="icons/UCT_ADMIN/PERSON_PLUS" 
+                    title="Compartir" 
+                    @click="onShareView" 
+                  />
+                  <IconButtonAction 
+                    v-if="currentPermission === 'propietario'" 
+                    iconName="icons/TRASH" 
+                    title="Eliminar" 
+                    @click="onDeleteView" 
+                  />
+                  <IconButtonAction 
+                    iconName="icons/CERRAR" 
+                    title="Cerrar vista" 
+                    extraClass="shadow-none"
+                    @click="onResetView" 
+                  />
                 </div>
               </div>
               
@@ -70,7 +64,7 @@
                 :rows="tooltipRows"
               />
             </div>
-            <span v-if="!groupByColumn && !subGroupByColumn && !activeView" class="text-muted x-small opacity-50 uppercase fw-bold">Sin agrupación</span>
+            <span v-if="!groupByColumn && !subGroupByColumn && !activeView" class="text-muted small opacity-50 uppercase fw-bold">Sin agrupación</span>
           </div>
         </div>
       </div>
@@ -119,26 +113,12 @@
           />
         </div>
 
-         <div class="view-toggle-segmented d-flex p-1 bg-light rounded-3 border shadow-sm me-auto me-lg-2">
-          <ButtonPrimary 
-            class="px-3 py-1 m-0 transition-all no-shadow" 
-            :class="{ 'mode-inactive': isChartMode }"
-            width_icon="14px"  
-            iconName="UCT_ADMIN/listOL.svg"
-            @click="setChartMode(false)"
-          >
-            Datos
-          </ButtonPrimary>
-          <ButtonPrimary 
-            class="px-3 py-1 m-0 transition-all no-shadow" 
-            :class="{ 'mode-inactive': !isChartMode }"
-            width_icon="14px"
-            iconName="graph.svg"
-            @click="setChartMode(true)"
-          >
-            Gráficas
-          </ButtonPrimary>
-        </div>
+        <TabButtons 
+          :modelValue="isChartMode"
+          :options="chartModeOptions"
+          extraClass="me-auto me-lg-2"
+          @update:modelValue="setChartMode"
+        />
       </div>
     </div>
   </header>
@@ -148,8 +128,10 @@
 import { defineComponent, computed, ref } from 'vue';
 import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 import ButtonPrimary from '@/components/ButtonWithIcon/ButtonPrimary.vue';
+import TabButtons from '@/components/TabsNav/TabButtons.vue';
 import Tooltip from '@/components/Tooltip/Tooltip.vue';
 import ActionExpandable from '@/components/ActionExpandable/ActionExpandable.vue';
+import IconButtonAction from '@/components/ButtonWithIcon/IconButtonAction.vue';
 import { useDataChartsPermisos } from '@/components/DataCharts/composables/useDataChartsPermisos.js';
 
 export default defineComponent({
@@ -158,7 +140,9 @@ export default defineComponent({
     DynamicSvgLoader,
     ButtonPrimary,
     Tooltip,
-    ActionExpandable
+    ActionExpandable,
+    IconButtonAction,
+    TabButtons
   },
   props: {
     selectedTableName: String,
@@ -176,6 +160,11 @@ export default defineComponent({
     const isSharedHovered = ref(false);
     const isSaveHovered = ref(false);
     const isTooltipVisible = ref(false);
+
+    const chartModeOptions = [
+      { label: 'Datos', value: false, icon: 'UCT_ADMIN/listOL.svg' },
+      { label: 'Gráficas', value: true, icon: 'graph.svg' }
+    ];
 
     const timers = { own: null, shared: null, save: null };
 
@@ -271,6 +260,7 @@ export default defineComponent({
       onSaveRequest,
       setChartMode,
       onViewSelect,
+      chartModeOptions,
       onHoverEnter,
       onHoverLeave,
       isDataChartsAdmin
@@ -305,7 +295,7 @@ export default defineComponent({
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     background-color: var(--blueBerryGlass);
     color: var(--purple-sb);
-    border-color: rgba(106, 27, 154, 0.1);
+    border-color: rgba(31, 30, 31, 0.1);
 }
 .pill-container {
     background: var(--bs-secondary-bg);
@@ -318,7 +308,7 @@ export default defineComponent({
 .pill-container:hover {
     background: white;
     border-color: var(--purple-sb);
-    box-shadow: 0 4px 12px rgba(106, 27, 154, 0.1);
+    box-shadow: 0 4px 12px rgba(41, 41, 41, 0.1);
 }
 .badge-view-status {
     font-size: 0.7rem;
@@ -334,52 +324,5 @@ export default defineComponent({
 /* Botones de acción minimalistas */
 .action-group-minimal { display: flex; }
 
-.btn-action-view {
-    background: transparent;
-    border: none;
-    padding: 0;
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    color: var(--bs-tertiary-color); 
-    opacity: 0.9;
-    background: var(--babyBlue_7); 
-}
-
-.btn-action-view:hover { 
-    background: var(--blanco); 
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    opacity: 1;
-    color: var(--purple-sb); /* Color de marca para acciones */
-}
-
-/* Centrado forzado para DynamicSvgLoader en botones */
-.btn-action-view :deep(.loaderSVG-contend) {
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: transparent !important;
-    fill: currentColor !important;
-    transition: fill 0.25s ease;
-}
-
-.btn-action-view:hover :deep(.loaderSVG-contend) { fill: var(--purple-sb) !important; }
-.btn-action-view :deep(svg) { display: block; }
-.no-shadow { box-shadow: none !important; }
-.transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-
-
 .btn-text-tt { font-size: 0.85rem; color: var(--black); }
-:deep(.mode-inactive) { background: transparent !important; color: var(--bs-gray-600) !important; border: none !important; }
-:deep(.mode-inactive:hover) { background: rgba(0,0,0,0.05) !important; color: var(--purple-sb) !important; }
-:deep(.mode-inactive .icon) { filter: grayscale(1) opacity(0.5); }
-:deep(.btn-primary:not(.mode-inactive)) { z-index: 1; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
-:deep(.iconBtn) { padding: 0 !important; }
-:deep(.iconBtn svg) { width: 100% !important; height: 100% !important; }
 </style>

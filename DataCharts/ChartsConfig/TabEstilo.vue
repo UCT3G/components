@@ -11,8 +11,8 @@
         title="Alcance de Diseño" 
       >
         <div class="mb-3">
-          <label class="form-label x-small text-muted mb-1">Configurar para:</label>
-          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+          <label class="form-label small text-muted mb-2">Configurar para:</label>
+          <select class="form-select form-select-sm  shadow-sm bg-white" 
                   :value="activeConfigKey"
                   @change="handleUpdate('update:activeConfigKey', $event.target.value)">
             <option v-for="key in availableConfigKeys" :key="key" :value="key">
@@ -22,18 +22,16 @@
           
           <div v-if="activeConfigKey !== 'Global'" class="mt-2">
             <div v-if="hasCustomConfig" class="config-indicator custom-config">
-              <span class="x-small">Personalizada</span>
+              <span class="small">Personalizada</span>
               <button class="btn-reset-config" @click="handleReset" title="Eliminar personalización y heredar de Global">
               </button>
             </div>
             <div v-else class="config-indicator inherited-config">
-              <span class="x-small">Hereda de Global</span>
+              <span class="small">Hereda de Global</span>
             </div>
           </div>
         </div>
       </ConfigSection>
-
-      <hr v-if="availableConfigKeys.length > 1" class="my-4 opacity-10">
 
       <!-- VISUALIZACIÓN -->
       <ConfigSection 
@@ -43,17 +41,15 @@
         <div class="chart-type-grid row g-2">
           <div v-for="type in chartTypes" :key="type.id" class="col-6">
             <div 
-              class="chart-option-card p-3 rounded-3 border text-center transition-all cursor-pointer"
+              class="chart-option-card p-3 rounded-3 border text-center transition-all cursor-pointer small text-muted"
               :class="visualizationType === type.id ? 'active border-primary shadow-sm bg-light' : 'bg-white'"
               @click="handleUpdate('update:visualizationType', type.id)"
             >
-              <span class="x-small fw-bold">{{ type.label }}</span>
+              <span class="small fw-bold">{{ type.label }}</span>
             </div>
           </div>
         </div>
       </ConfigSection>
-
-      <hr v-if="isChartMode" class="my-4 opacity-10">
 
       <!-- ESCALA E INTERVALOS -->
       <ConfigSection 
@@ -62,17 +58,17 @@
       >
         <!-- Para gráficas estándar -->
         <div v-if="visualizationType !== 'radar'">
-          <p class="x-small text-muted mb-2">Configurar eje de valores {{ visualizationType === 'horizontal_line' ? '(horizontal)' : '(vertical)' }}</p>
+          <label class="small text-muted mb-3 fw-bold">Configurar eje de valores {{ visualizationType === 'horizontal_line' ? '(horizontal)' : '(vertical)' }}</label>
           <div class="row g-2 mb-2">
             <div class="col-6">
-              <label class="form-label x-small text-muted mb-1">Mínimo</label>
+              <label class="form-label small text-muted mb-2">Mínimo: </label>
               <input type="number" class="form-control form-control-sm" 
                      :value="scaleConfig.yMin" 
                      @input="onScaleUpdate('yMin', $event.target.value)"
                      placeholder="Auto">
             </div>
             <div class="col-6">
-              <label class="form-label x-small text-muted mb-1">Máximo</label>
+              <label class="form-label small text-muted mb-2">Máximo: </label>
               <input type="number" class="form-control form-control-sm" 
                      :value="scaleConfig.yMax" 
                      @input="onScaleUpdate('yMax', $event.target.value)"
@@ -80,7 +76,7 @@
             </div>
           </div>
           <div class="mb-2">
-            <label class="form-label x-small text-muted mb-1">Intervalo</label>
+            <label class="form-label small text-muted mb-2">Intervalo: </label>
             <input type="number" class="form-control form-control-sm" 
                    :value="scaleConfig.yInterval" 
                    @input="onScaleUpdate('yInterval', $event.target.value)"
@@ -90,17 +86,17 @@
 
         <!-- Para Radar -->
         <div v-else>
-          <p class="x-small text-muted mb-2">Configurar escala del radar</p>
+          <p class="small text-muted mb-2">Configurar escala del radar</p>
           <div class="row g-2 mb-2">
             <div class="col-6">
-              <label class="form-label x-small text-muted mb-1">Mínimo</label>
+              <label class="form-label small text-muted mb-2">Mínimo</label>
               <input type="number" class="form-control form-control-sm" 
                      :value="scaleConfig.radarMin" 
                      @input="onScaleUpdate('radarMin', $event.target.value)"
                      placeholder="0">
             </div>
             <div class="col-6">
-              <label class="form-label x-small text-muted mb-1">Máximo</label>
+              <label class="form-label small text-muted mb-2">Máximo</label>
               <input type="number" class="form-control form-control-sm" 
                      :value="scaleConfig.radarMax" 
                      @input="onScaleUpdate('radarMax', $event.target.value)"
@@ -108,7 +104,7 @@
             </div>
           </div>
           <div class="mb-2">
-            <label class="form-label x-small text-muted mb-1">Número de Intervalos</label>
+            <label class="form-label small text-muted mb-2">Número de Intervalos</label>
             <input type="number" class="form-control form-control-sm" 
                    :value="scaleConfig.radarSplitNumber" 
                    @input="onScaleUpdate('radarSplitNumber', $event.target.value)"
@@ -117,8 +113,6 @@
         </div>
       </ConfigSection>
 
-      <hr v-if="isChartMode" class="my-4 opacity-10">
-
       <!-- PERSONALIZACIÓN DE SERIES -->
       <ConfigSection 
         v-if="isChartMode"
@@ -126,8 +120,8 @@
         class="pb-5"
       >
         <div v-for="col in currentYCols" :key="col" class="style-config-row p-3 border rounded-3 mb-3 bg-white shadow-sm transition-all">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="x-small fw-bold text-truncate" :title="col">{{ col }}</span>
+          <div class="d-flex align-items-center justify-content-between mb-2 text-muted small">
+            <span class="small fw-bold text-truncate" :title="col">{{ col }}</span>
             <div class="color-picker-wrapper rounded-circle overflow-hidden shadow-sm border">
               <input type="color" class="color-input" 
                      :value="seriesConfigs?.[col]?.color || '#4e73df'"
@@ -135,7 +129,7 @@
             </div>
           </div>
           <div class="input-group input-group-sm">
-            <input type="text" class="form-control x-small border-start-0 ps-0" 
+            <input type="text" class="form-control small border-start-0 ps-0" 
                    placeholder="Nombre visible"
                    :value="seriesConfigs?.[col]?.alias || ''"
                    @input="updateSeriesAttr(col, 'alias', $event.target.value)">
@@ -230,7 +224,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.x-small { font-size: 0.7rem; }
 .chart-option-card:hover { 
   transform: translateY(-2px); 
   border-color: var(--blueBerryPastel); 

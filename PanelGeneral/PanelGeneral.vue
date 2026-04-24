@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="sidebar-general-container position-relative h-100 subtitulo" 
+    class="sidebar-general-container position-relative h-100" 
     :class="{ 'collapsed': collapsed }" 
     :style="{ width: collapsed ? '0' : width }"
     @click.stop
@@ -16,14 +16,14 @@
           @click="selectTab(tab)"
         >
           <slot name="tab-label" :tab="tab">
-              <span class="fw-bold x-small uppercase">{{ tab }}</span>
+              <span class="fw-bold uppercase subtitulo">{{ tab }}</span>
           </slot>
         </button>
       </div>
 
       <!-- Header Estático (Opcional) -->
       <div v-else-if="title" class="panel-header-static border-bottom bg-light p-3">
-          <h5 class="mb-0 fw-bold x-small uppercase">{{ title }}</h5>
+          <h5 class="mb-0 fw-bold small uppercase">{{ title }}</h5>
       </div>
 
       <!-- Contenido con Scroll -->
@@ -95,6 +95,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.subtitulo {font-size: 0.8rem !important;}
+
 .sidebar-general-container {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
@@ -144,7 +146,6 @@ export default defineComponent({
     max-height: calc(100vh - 150px); 
     overflow-y: auto;
 }
-.x-small { font-size: 0.7rem; }
 .uppercase { text-transform: uppercase; letter-spacing: 0.5px; }
 .transition-all { transition: all 0.25s ease; }
 

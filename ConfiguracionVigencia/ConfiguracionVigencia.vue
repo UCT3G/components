@@ -6,8 +6,8 @@
       <select
         v-model="internalValue.ejercicio"
         class="form-select form-select-sm"
-        style="min-width: 120px"
         @change="emitChange"
+        style="width: auto;"
       >
         <option :value="null" disabled>--Selecciona--</option>
         <option v-for="ejercicio in ejercicios" :key="ejercicio" :value="ejercicio">
