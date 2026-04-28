@@ -1,6 +1,6 @@
 <template>
   <button class="btn-primary" :disabled="isDisabled" @click="handleClick">
-    <span v-html="svgContent" class="icon"></span>
+    <span v-if="iconName" v-html="svgContent" class="icon"></span>
     <slot></slot>
   </button>
 </template>
@@ -14,7 +14,8 @@ export default {
   props: {
     iconName: {
       type: String,
-      required: true
+      required: false,
+      default: ''
     },
     isDisabled: {
       type: Boolean,

@@ -6,7 +6,7 @@
       class="px-3 py-1 m-0 transition-all no-shadow" 
       :class="{ 'mode-inactive': modelValue !== option.value }"
       :width_icon="iconWidth"
-      :iconName="option.icon"
+      :iconName="option.icon || ''"
       @click="handleClick(option.value)"
     >
       {{ option.label }}
