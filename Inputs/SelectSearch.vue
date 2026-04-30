@@ -183,7 +183,7 @@ export default defineComponent({
 
 .input-container {
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 7px;
   overflow: hidden;
   transition: all 0.2s ease;
 }
@@ -194,9 +194,9 @@ export default defineComponent({
 }
 
 .select-inner-input {
-  border-radius: 8px 0 0 8px !important;
+  border-radius: 7px 0 0 7px !important;
   border-right: none;
-  padding: 7px 12px;
+  padding: 7px;
   cursor: pointer;
   background-color: white !important;
 }
@@ -208,7 +208,8 @@ export default defineComponent({
 }
 
 .chevron-container {
-  border-radius: 0 8px 8px 0 !important;
+  border-radius: 0 7px 7px 0 !important;
+  border: 1px solid var(--blueBerry);
   border-left: none;
   padding: 0 12px;
   cursor: pointer;
