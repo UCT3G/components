@@ -29,7 +29,7 @@
       >
         Actualizar vista
       </button>
-      <!-- Guardar nueva / Guardar copia: solo si es admin de DataCharts (id_permiso 22) -->
+      <!-- Guardar nueva / Guardar copia: solo si es admin de DataCharts (id_permiso 23) -->
       <button 
         v-if="isDataChartsAdmin" 
         class="btn btn-primary" 
