@@ -1,7 +1,7 @@
 <template>
   <div class="p-2 bg-white bg-opacity-50 rounded-3 border">
     <!-- Preview & Upload Slot -->
-    <div v-if="!onlyPosition" class="border rounded mb-3 overflow-hidden bg-light shadow-sm" style="height: 100px;">
+    <div v-if="isVisible('image')" class="border rounded mb-3 overflow-hidden bg-light shadow-sm" style="height: 100px;">
       <ImageUploadSlot
         :campo="campo"
         :imageUrl="imageUrl"
@@ -15,7 +15,7 @@
     <!-- Sliders de control -->
     <div>
       <!-- Posición X -->
-      <div class="mb-2">
+      <div v-if="isVisible('x')" class="mb-2">
         <div class="d-flex justify-content-between align-items-center mb-1">
           <label class="smallest text-muted fw-bold text-uppercase">Horizontal (X)</label>
           <span class="smallest fw-bold text-primary">{{ modelValue.x }}mm</span>
@@ -31,7 +31,7 @@
       </div>
 
       <!-- Posición Y -->
-      <div class="mb-2">
+      <div v-if="isVisible('y')" class="mb-2">
         <div class="d-flex justify-content-between align-items-center mb-1">
           <label class="smallest text-muted fw-bold text-uppercase">Vertical (Y)</label>
           <span class="smallest fw-bold text-primary">{{ modelValue.y }}mm</span>
@@ -47,7 +47,7 @@
       </div>
 
       <!-- Escala -->
-      <div class="mb-2">
+      <div v-if="isVisible('scale')" class="mb-2">
         <div class="d-flex justify-content-between align-items-center mb-1">
           <label class="smallest text-muted fw-bold text-uppercase">Ancho (%)</label>
           <span class="smallest fw-bold text-primary">{{ modelValue.scale }}%</span>
@@ -63,7 +63,7 @@
       </div>
 
       <!-- Opacidad -->
-      <div class="mb-2">
+      <div v-if="isVisible('opacity')" class="mb-2">
         <div class="d-flex justify-content-between align-items-center mb-1">
           <label class="smallest text-muted fw-bold text-uppercase">Opacidad (%)</label>
           <span class="smallest fw-bold text-primary">{{ modelValue.opacity ?? 100 }}%</span>
@@ -79,7 +79,7 @@
       </div>
 
       <!-- Rotación -->
-      <div class="mb-2">
+      <div v-if="isVisible('rotate')" class="mb-2">
         <div class="d-flex justify-content-between align-items-center mb-1">
           <label class="smallest text-muted fw-bold text-uppercase">Rotación (deg)</label>
           <span class="smallest fw-bold text-primary">{{ modelValue.rotate ?? 0 }}°</span>
@@ -96,7 +96,7 @@
     </div>
 
     <!-- Botones de Acción Rápida -->
-    <div class="d-flex gap-1 mt-2">
+    <div v-if="isVisible('actions')" class="d-flex gap-1 mt-2">
       <button 
         type="button"
         @click="align('center')" 
@@ -137,10 +137,18 @@ export default defineComponent({
     imageUrl: { type: String, default: '' },
     hasImage: { type: Boolean, default: false },
     campo: { type: String, required: true },
-    onlyPosition: { type: Boolean, default: false }
+    onlyPosition: { type: Boolean, default: false },
+    showFields: { 
+      type: Array, 
+      default: () => ['image', 'x', 'y', 'scale', 'opacity', 'rotate', 'actions'] 
+    }
   },
   emits: ['update:modelValue', 'image-selected'],
   setup(props, { emit }) {
+    const isVisible = (field) => {
+      if (props.onlyPosition && ['image', 'opacity', 'rotate'].includes(field)) return false;
+      return props.showFields.includes(field);
+    };
     const updateValue = (key, val) => {
       emit('update:modelValue', {
         ...props.modelValue,
@@ -170,7 +178,8 @@ export default defineComponent({
     return {
       updateValue,
       align,
-      onImageSelected
+      onImageSelected,
+      isVisible
     };
   }
 });
