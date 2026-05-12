@@ -628,78 +628,80 @@ export default defineComponent({
   min-width: 100px;
 }
 
-/** Estilos para liberar ancho de la tabla */
-.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer {
-  overflow-x: auto;
-  padding-bottom: 20px; /* Espacio para el scroll */
-  
-  /* Sombras de Scroll Dinámicas (CSS Only) */
-  background:
-    /* Sombra izquierda (aparece al scrollear a la derecha) */
-    linear-gradient(to right, white 30%, rgba(255, 255, 255, 0)),
-    linear-gradient(to right, rgba(255, 255, 255, 0), white 70%) 100% 0,
-    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)),
-    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 100% 0;
-  background-repeat: no-repeat;
-  background-color: white;
-  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
-  background-attachment: local, local, scroll, scroll;
-}
+/** Estilos para liberar ancho de la tabla (SÓLO PC) */
+@media (min-width: 993px) {
+  .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer {
+    overflow-x: auto;
+    padding-bottom: 20px; /* Espacio para el scroll */
+    
+    /* Sombras de Scroll Dinámicas (CSS Only) */
+    background:
+      /* Sombra izquierda (aparece al scrollear a la derecha) */
+      linear-gradient(to right, white 30%, rgba(255, 255, 255, 0)),
+      linear-gradient(to right, rgba(255, 255, 255, 0), white 70%) 100% 0,
+      radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)),
+      radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 100% 0;
+    background-repeat: no-repeat;
+    background-color: white;
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
 
-.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table {
-  width: max-content;
-  min-width: 100%;
-}
+  .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table {
+    width: max-content;
+    min-width: 100%;
+  }
 
-/* ------ FIX TRUNCAMIENTO INTELIGENTE (Smart Truncation) ------ */
-/* Limitar el contenedor principal del header y forzar alineación izquierda */
-.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table thead tr th .TablaDinamica_nombreCampo {
-  max-width: 250px !important; /* Ajuste final de producción */
-  justify-content: flex-start !important; /* Evitar que el centering corte el inicio */
-  padding-left: 5px;
-}
+  /* ------ FIX TRUNCAMIENTO INTELIGENTE (Smart Truncation) ------ */
+  /* Limitar el contenedor principal del header y forzar alineación izquierda */
+  .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table thead tr th .TablaDinamica_nombreCampo {
+    max-width: 250px !important; /* Ajuste final de producción */
+    justify-content: flex-start !important; /* Evitar que el centering corte el inicio */
+    padding-left: 5px;
+  }
 
-/* El elemento P dentro del header debe truncarse correctamente */
-.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table thead tr th .TablaDinamica_nombreCampo p {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0; /* CRUCIAL para que un hijo flex pueda truncarse */
-  width: 100%; 
-  text-align: left;
-  margin: 0;
-}
+  /* El elemento P dentro del header debe truncarse correctamente */
+  .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table thead tr th .TablaDinamica_nombreCampo p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0; /* CRUCIAL para que un hijo flex pueda truncarse */
+    width: 100%; 
+    text-align: left;
+    margin: 0;
+  }
 
-/* Truncamiento para las celdas del body */
-.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table tbody tr td .conBorde,
-.TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table tbody tr td .conBordeCentrado {
-  white-space: nowrap;
-  max-width: 250px !important; /* Ajuste final de producción */
-  display: block !important; /* Asegurar bloque para el text-overflow */
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  text-align: left !important;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-/* ------------------------------------------------------------- */
+  /* Truncamiento para las celdas del body */
+  .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table tbody tr td .conBorde,
+  .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table tbody tr td .conBordeCentrado {
+    white-space: nowrap;
+    max-width: 250px !important; /* Ajuste final de producción */
+    display: block !important; /* Asegurar bloque para el text-overflow */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-align: left !important;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  /* ------------------------------------------------------------- */
 
-/* Sticky Header corrigiendo identidad visual */
-.TablaDinamica.liberar-ancho table thead tr {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
+  /* Sticky Header corrigiendo identidad visual */
+  .TablaDinamica.liberar-ancho table thead tr {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
 
-.TablaDinamica.liberar-ancho table thead tr th {
-  white-space: nowrap;
-  background-color: transparent; /* Evitar tapar el gradiente del tr::after */
-}
+  .TablaDinamica.liberar-ancho table thead tr th {
+    white-space: nowrap;
+    background-color: transparent; /* Evitar tapar el gradiente del tr::after */
+  }
 
-/* Las reglas específicas de columnaFija se manejarán con estilos dinámicos o clases inyectadas en los subcomponentes */
+  /* Las reglas específicas de columnaFija se manejarán con estilos dinámicos o clases inyectadas en los subcomponentes */
 
-.TablaDinamica.liberar-ancho table thead tr::after {
-  z-index: 2; /* Mantener sobre el fondo pero bajo el texto */
+  .TablaDinamica.liberar-ancho table thead tr::after {
+    z-index: 2; /* Mantener sobre el fondo pero bajo el texto */
+  }
 }
 
 .TablaDinamica table {
@@ -1182,84 +1184,100 @@ export default defineComponent({
   .TablaDinamica.break-md tbody tr {
     display: flex;
     flex-direction: column;
-    width: 100%; /**Ancho de la fila */
+    width: 100%;
     position: relative;
-    margin: 10px;
+    margin: 10px 0;
     padding: 0px !important;
-    border-radius: 20px;
-    border: unset;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    background-color: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
-  /**Cancelar Hover en tr */
-  /* .TablaDinamica.break-md tbody tr:hover {
-    background: unset;
-    background-color: unset;
-  } */
+  .TablaDinamica.break-md tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  }
 
   .TablaDinamica.break-md tbody tr td {
-    background-color: unset;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: transparent;
     border-right: unset !important;
-    border-bottom: unset !important;
-    width: calc(100% - 20px);
-    min-height: 30px;
-    font-size: 12px;
-    padding: 10px;
+    border-bottom: 1px solid #f1f3f5 !important;
+    width: 100%;
+    min-height: 40px;
+    font-size: 0.85rem;
+    padding: 12px 15px;
   }
+
+  .TablaDinamica.break-md tbody tr td:last-child {
+    border-bottom: none !important;
+  }
+
   .TablaDinamica.break-md table tbody tr .td-titulo {
     display: inline-block;
-    background: var(--blueBerryPastel);
-    width: 30%; /**Ancho de la columna Titulo*/
-    min-width: 100px;
-    text-align: end;
-    padding: 0 10px 0px 5px;
-    margin: 0 5px 0px 0px;
-  }
-  .TablaDinamica.break-md tbody tr td .conBorde {
-    border-bottom: solid 1px var(--blueBerryPastel);
-  }
-  .TablaDinamica.break-md tbody tr td:nth-child(1) .td-titulo,
-  .TablaDinamica.break-md tbody tr td:nth-child(1) .conBorde {
-    background: unset !important;
-    border-bottom: unset;
-    width: auto;
-    font-size: 1rem;
-    color: var(--babyBlue);
-    margin: 0;
+    background: transparent;
+    color: #6c757d;
+    font-weight: 600;
+    width: 40%;
+    text-align: left;
     padding: 0;
-    font-family: "MonserratSemiBoldItalic";
+    margin: 0;
   }
-  .TablaDinamica.break-md tbody tr td:nth-child(1) {
-    position: relative;
-    background: linear-gradient(
-      90deg,
-      var(--purple-sb-70) 0%,
-      var(--bluelight-sb-70) 100%
-    );
+
+  .TablaDinamica.break-md tbody tr td .conBorde {
+    width: 60%;
+    text-align: right;
     border-bottom: unset;
-    border-radius: 15px 15px 0px 0px;
-    width: 100%;
-    top: 0;
-    left: 0;
+    color: #333;
+    font-weight: 500;
+    word-break: break-word;
   }
+
+  /* Card Header (1st Row) */
+  .TablaDinamica.break-md tbody tr td:nth-child(1) {
+    background-color: var(--blueBerry);
+    border-bottom: none !important;
+    border-radius: 12px 12px 0 0;
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    justify-content: flex-start;
+  }
+  .TablaDinamica.break-md tbody tr td:nth-child(1) .td-titulo {
+    display: none;
+  }
+  .TablaDinamica.break-md tbody tr td:nth-child(1) .conBorde {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+    width: 100%;
+    padding-right: 25px;
+  }
+
   .TablaDinamica.break-md table {
     border-collapse: collapse;
-    border-spacing: 0; /* Esto es equivalente a cellspacing="0" en HTML */
+    border-spacing: 0;
     box-shadow: unset;
     border-radius: 20px;
   }
+
   /**SOLO PARA DropDownTrespuntos */
   .TablaDinamica.break-md table .DropDownTrespuntos {
     position: absolute;
-    right: 10px;
-    top: 0;
-    color: var(--babyBlue);
+    right: 15px;
+    top: 15px;
+    color: #fff;
   }
   .TablaDinamica.break-md table .DropDownTrespuntos .icon {
-    fill: var(--babyBlue);
+    fill: #fff;
   }
   .TablaDinamica.break-md table .dropstart .dropdown-toggle::before {
-    color: var(--babyBlue);
+    color: #fff;
   }
 }
 
@@ -1352,66 +1370,84 @@ export default defineComponent({
   .TablaDinamica.break-lg tbody tr {
     display: flex;
     flex-direction: column;
-    width: 100%; /**Ancho de la fila */
+    width: 100%;
     position: relative;
-    margin: 10px;
+    margin: 10px 0;
     padding: 0px !important;
-    border-radius: 20px;
-    border: unset;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    background-color: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .TablaDinamica.break-lg tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   }
 
   .TablaDinamica.break-lg tbody tr td {
-    background-color: unset;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: transparent;
     border-right: unset !important;
-    border-bottom: unset !important;
-    width: calc(100% - 20px);
-    min-height: 30px;
-    font-size: 12px;
-    padding: 10px;
+    border-bottom: 1px solid #f1f3f5 !important;
+    width: 100%;
+    min-height: 40px;
+    font-size: 0.85rem;
+    padding: 12px 15px;
   }
+
+  .TablaDinamica.break-lg tbody tr td:last-child {
+    border-bottom: none !important;
+  }
+
   .TablaDinamica.break-lg table tbody tr .td-titulo {
     display: inline-block;
-    background: var(--blueBerryPastel);
-    width: 30%; /**Ancho de la columna Titulo*/
-    min-width: 100px;
-    text-align: end;
-    padding: 0 10px 0px 5px;
-    margin: 0 5px 0px 0px;
+    background: transparent;
+    color: #6c757d;
+    font-weight: 600;
+    width: 40%;
+    text-align: left;
+    padding: 0;
+    margin: 0;
   }
 
   .TablaDinamica.break-lg tbody tr td .conBorde {
-    border-bottom: solid 1px var(--blueBerryPastel);
-  }
-  .TablaDinamica.break-lg tbody tr td:nth-child(1) .td-titulo,
-  .TablaDinamica.break-lg tbody tr td:nth-child(1) .conBorde {
-    background: unset !important;
+    width: 60%;
+    text-align: right;
     border-bottom: unset;
-    width: auto;
-    font-size: 1rem;
-    color: var(--babyBlue);
-    margin: 0;
-    padding: 0;
-    font-family: "MonserratSemiBoldItalic";
+    color: #333;
+    font-weight: 500;
+    word-break: break-word;
   }
+
+  /* Card Header (1st Row) */
   .TablaDinamica.break-lg tbody tr td:nth-child(1) {
-    position: relative;
-  }
-  .TablaDinamica.break-lg tbody tr td:nth-child(1) {
-    background: linear-gradient(
-      90deg,
-      var(--purple-sb-70) 0%,
-      var(--bluelight-sb-70) 100%
-    );
-    border-bottom: unset;
-    border-radius: 15px 15px 0px 0px;
+    background-color: var(--blueBerry);
+    border-bottom: none !important;
+    border-radius: 12px 12px 0 0;
     width: 100%;
-    top: 0;
-    left: 0;
+    padding: 15px;
+    display: flex;
+    justify-content: flex-start;
   }
+  .TablaDinamica.break-lg tbody tr td:nth-child(1) .td-titulo {
+    display: none;
+  }
+  .TablaDinamica.break-lg tbody tr td:nth-child(1) .conBorde {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+    width: 100%;
+    padding-right: 25px;
+  }
+
   .TablaDinamica.break-lg table {
     border-collapse: collapse;
-    border-spacing: 0; /* Esto es equivalente a cellspacing="0" en HTML */
+    border-spacing: 0;
     box-shadow: unset;
     border-radius: 20px;
   }
@@ -1419,15 +1455,15 @@ export default defineComponent({
   /**SOLO PARA DropDownTrespuntos */
   .TablaDinamica.break-lg table .DropDownTrespuntos {
     position: absolute;
-    right: 10px;
-    top: 0;
-    color: var(--babyBlue);
+    right: 15px;
+    top: 15px;
+    color: #fff;
   }
   .TablaDinamica.break-lg table .DropDownTrespuntos .icon {
-    fill: var(--babyBlue);
+    fill: #fff;
   }
   .TablaDinamica.break-lg table .dropstart .dropdown-toggle::before {
-    color: var(--babyBlue);
+    color: #fff;
   }
 }
 </style>
