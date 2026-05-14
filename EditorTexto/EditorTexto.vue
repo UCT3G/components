@@ -12,6 +12,7 @@
       :options="editorOptions"
       @focus="handleFocus"
       @blur="handleBlur"
+      @ready="onEditorReady"
     />
   </div>
 </template>
@@ -51,6 +52,10 @@ export default defineComponent({
     maxHeight: {
       type: String,
       default: '300px'
+    },
+    bounds: {
+      type: String,
+      default: '.custom-card'
     }
   },
   emits: ['update:modelValue', 'focus', 'blur'],
@@ -59,7 +64,8 @@ export default defineComponent({
       modules: {
         toolbar: props.toolbarOptions
       },
-      placeholder: props.placeholder
+      placeholder: props.placeholder,
+      bounds: props.bounds
     }));
 
     const editorStyle = computed(() => ({
@@ -78,17 +84,58 @@ export default defineComponent({
       emit('blur');
     };
 
+    const onEditorReady = (quill) => {
+      quill.on('selection-change', (range) => {
+        if (range && range.length > 0) {
+          setTimeout(() => {
+            const bounds = quill.getBounds(range.index, range.length);
+            const editorRoot = quill.root;
+            if (!bounds || !editorRoot) return;
+
+            const margin = 25;
+            let scrollNeeded = false;
+            let newScrollTop = editorRoot.scrollTop;
+            let newScrollLeft = editorRoot.scrollLeft;
+
+            if (bounds.top < margin) {
+              newScrollTop += bounds.top - margin;
+              scrollNeeded = true;
+            } else if (bounds.bottom > editorRoot.clientHeight - margin) {
+              newScrollTop += (bounds.bottom - editorRoot.clientHeight) + margin;
+              scrollNeeded = true;
+            }
+
+            if (bounds.left < margin) {
+              newScrollLeft += bounds.left - margin;
+              scrollNeeded = true;
+            } else if (bounds.right > editorRoot.clientWidth - margin) {
+              newScrollLeft += (bounds.right - editorRoot.clientWidth) + margin;
+              scrollNeeded = true;
+            }
+
+            if (scrollNeeded) {
+              editorRoot.scrollTo({
+                top: newScrollTop,
+                left: newScrollLeft,
+                behavior: 'smooth'
+              });
+            }
+          }, 50);
+        }
+      });
+    };
+
     return {
       editorOptions,
       editorStyle,
       onContentChange,
       handleFocus,
-      handleBlur
+      handleBlur,
+      onEditorReady
     };
   }
 });
 </script>
-
 
 <style scoped>
 .quill-editor-custom {
@@ -114,6 +161,43 @@ export default defineComponent({
   overflow-y: auto;
   font-size: 14px;
   line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+:deep(.ql-editor ul), 
+:deep(.ql-editor ol) {
+  padding-left: 1.5em !important;
+}
+
+:deep(.ql-editor li) {
+  margin-bottom: 5px;
+}
+
+/* Hacer las viñetas de punto más grandes y alineadas */
+:deep(.ql-editor ul > li::before) {
+  font-size: 20px !important; 
+  line-height: 1 !important;
+  vertical-align: middle;
+  margin-top: -2px;
+  font-weight: normal !important; /* Por defecto normal */
+}
+
+/* Solo negrita si el LI contiene un elemento strong o b */
+:deep(.ql-editor ul > li:has(strong)::before),
+:deep(.ql-editor ul > li:has(b)::before) {
+  font-weight: bold !important;
+}
+
+/* Asegurar que los números mantengan su tamaño correcto */
+:deep(.ql-editor ol > li::before) {
+  font-size: 14px !important;
+  font-weight: normal !important;
+}
+
+:deep(.ql-editor ol > li:has(strong)::before),
+:deep(.ql-editor ol > li:has(b)::before) {
+  font-weight: bold !important;
 }
 
 :deep(.ql-clipboard) {
@@ -127,9 +211,10 @@ export default defineComponent({
   border: 1px solid var(--blueBerry) !important;
   border-radius: 8px !important;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
-  max-width: 95% !important; /* Un poco de margen de seguridad */
+  max-width: 95% !important; 
   width: max-content !important;
-  transform: translateX(-10px); /* Ajuste fino de posición */
+  min-width: 120px !important;
+  transform: translateX(-10px); 
 }
 
 /* Estilos para el input de URL al crear un link */
@@ -198,9 +283,10 @@ export default defineComponent({
 /* Efecto Hover en los botones */
 :deep(.ql-bubble .ql-toolbar) {
   display: flex !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
+  justify-content: center;
   align-items: center;
-  padding: 2px 4px !important;
+  padding: 4px !important;
 }
 
 :deep(.ql-bubble .ql-toolbar .ql-formats) {
@@ -210,9 +296,9 @@ export default defineComponent({
 }
 
 :deep(.ql-bubble .ql-toolbar button) {
-  width: 28px !important;
-  height: 28px !important;
-  padding: 4px !important;
+  width: 24px !important;
+  height: 24px !important;
+  padding: 3px !important;
   margin: 0 1px !important;
 }
 
