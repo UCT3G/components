@@ -1,47 +1,36 @@
 <template>
-  <VDatePicker
-    v-model="date"
-    color="red"
-    :min-date="computedMinDate"
-    :max-date="computedMaxDate"
-    :masks="{ input: formatoDisplay || formato }"
-  >
-    <template #default="{ inputValue, inputEvents }">
-      <div class="form-floating mb-3" v-if="label">
-        <input
-          :class="['form-control', size ? 'form-control-' + size : '']"
-          id="floatingInput"
-          :value="inputValue"
-          v-on="inputEvents"
-          :disabled="disabled"
-          :style="{ 'pointer-events': disabled ? 'none' : 'auto' }"
-        />
-        <label for="floatingInput">{{ label }}</label>
-      </div>
-      <div class="mb-0" v-else>
-        <input
-          :class="['form-control', size ? 'form-control-' + size : '']"
-          :value="inputValue"
-          v-on="inputEvents"
-          :disabled="disabled"
-          :style="{ 'pointer-events': disabled ? 'none' : 'auto' }"
-        />
-      </div>
-    </template>
-  </VDatePicker>
+  <div class="form-floating mb-3" v-if="label">
+    <input
+      :class="['form-control', size ? 'form-control-' + size : '']"
+      type="date"
+      :id="inputId"
+      :value="inputValue"
+      :min="minValue"
+      :max="maxValue"
+      :disabled="disabled"
+      @input="emitirFecha($event.target.value)"
+    />
+    <label :for="inputId">{{ label }}</label>
+  </div>
+  <div class="mb-0" v-else>
+    <input
+      :class="['form-control', size ? 'form-control-' + size : '']"
+      type="date"
+      :value="inputValue"
+      :min="minValue"
+      :max="maxValue"
+      :disabled="disabled"
+      @input="emitirFecha($event.target.value)"
+    />
+  </div>
 </template>
 
 <script>
-import { defineComponent, ref, toRefs, watch, onMounted } from "vue";
-import { DatePicker as VDatePicker } from "v-calendar";
+import { computed, defineComponent } from "vue";
 import dayjs from "dayjs";
-import { computed } from "vue";
 
 export default defineComponent({
   name: "DatePickerInput",
-  components: {
-    VDatePicker,
-  },
   props: {
     label: {
       type: String,
@@ -50,7 +39,7 @@ export default defineComponent({
     valorInput: {
       type: String,
       default: "",
-    }, //Solo recibe valores con el formato YYYY-MM-DD
+    },
     formato: {
       type: String,
       default: "YYYY-MM-DD",
@@ -60,74 +49,59 @@ export default defineComponent({
       default: "",
     },
     minDate: {
-      type: String, // Cambié el tipo a String
+      type: String,
       default: "",
     },
     maxDate: {
-      type: String, // Cambié el tipo a String
+      type: String,
       default: "",
     },
     disabled: Boolean,
     size: {
       type: String,
-      default: ""
-    }
+      default: "",
+    },
   },
+  emits: ["update:fechaActualizada"],
   setup(props, { emit }) {
-    const date = ref();
-    const { valorInput, formato } = toRefs(props);
+    const toNativeDate = (value) => {
+      if (!value) return "";
+      const valueString = String(value).substring(0, 10);
 
-    const computedMinDate = computed(() => {
-      return props.minDate ? props.minDate : null;
-    });
-
-    const computedMaxDate = computed(() => {
-      return props.maxDate ? props.maxDate : null;
-    });
-
-    // Función para formatear la fecha según el formato deseado
-    const formatDate = (date, format) => {
-      if (date instanceof Date && !isNaN(date)) {
-        return dayjs(date).format(format);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(valueString)) {
+        return valueString;
       }
-      return "";
+
+      if (/^\d{2}-\d{2}-\d{4}$/.test(valueString)) {
+        const [day, month, year] = valueString.split("-");
+        return `${year}-${month}-${day}`;
+      }
+
+      const parsed = dayjs(valueString);
+      return parsed.isValid() ? parsed.format("YYYY-MM-DD") : "";
     };
 
-    // Observa cambios en localValue para emitir eventos
-    watch(date, (newVal, oldValue) => {
-      if (newVal === null) {
-        emit("update:fechaActualizada", ""); // Emitir una cadena vacía si no hay fecha seleccionada
-      } else if (newVal && oldValue != newVal) {
-        const formattedDate = formatDate(newVal, formato.value);
-        //Pasar al formato solicitado en las props
-        emit("update:fechaActualizada", formattedDate);
-      }
-    });
+    const inputValue = computed(() => toNativeDate(props.valorInput));
+    const minValue = computed(() => toNativeDate(props.minDate));
+    const maxValue = computed(() => toNativeDate(props.maxDate));
+    const inputId = computed(() => `date-input-${Math.random().toString(36).slice(2)}`);
 
-    watch(valorInput, (newValue) => {
-      if (newValue && newValue != "") {
-        let year = valorInput.value.substring(0, 4);
-        let month = valorInput.value.substring(5, 7);
-        let day = valorInput.value.substring(8, 10);
-        date.value = new Date(year, month - 1, day);
-      } else {
-        date.value = null;
+    const emitirFecha = (value) => {
+      if (!value) {
+        emit("update:fechaActualizada", "");
+        return;
       }
-    });
 
-    onMounted(() => {
-      if (props.valorInput != "") {
-        let year = valorInput.value.substring(0, 4);
-        let month = valorInput.value.substring(5, 7);
-        let day = valorInput.value.substring(8, 10);
-        date.value = new Date(year, month - 1, day);
-      }
-    });
+      const parsed = dayjs(value);
+      emit("update:fechaActualizada", parsed.isValid() ? parsed.format(props.formato) : value);
+    };
 
     return {
-      date,
-      computedMinDate,
-      computedMaxDate,
+      inputId,
+      inputValue,
+      minValue,
+      maxValue,
+      emitirFecha,
     };
   },
 });
