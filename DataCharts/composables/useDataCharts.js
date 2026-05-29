@@ -18,7 +18,7 @@ export function useDataCharts() {
     const chartOption = ref({});         // Opción de ECharts para vista simple
     const chartOptions = ref([]);        // Array de opciones para múltiples mini-gráficas
     const loading = ref(false);          // Estado de carga
-    const maxRecords = ref(20);         // Cantidad máxima de registros a solicitar
+    const maxRecords = ref(10);         // Cantidad máxima de registros a solicitar
     
     const groupByColumn = ref(null);     // Columna principal para agrupar (Secciones del Dashboard)
     const dimensionColumn = ref(null);   // Columna de dimensión para pivot → series (Escenario 4)
@@ -162,7 +162,7 @@ export function useDataCharts() {
         groupByColumn.value = null;
         dimensionColumn.value = null;
         valueColumn.value = null;
-        maxRecords.value = 20;
+        maxRecords.value = 10;
         activeConfigKey.value = 'Global';
         
         // Limpiar configuraciones adicionales (por sección)
@@ -286,7 +286,7 @@ export function useDataCharts() {
         dimensionColumn.value = config.dimensionColumn ?? null;
         valueColumn.value = config.valueColumn ?? null;
         subGroupByColumn.value = config.subGroupByColumn ?? null;
-        maxRecords.value = config.maxRecords ?? 20;
+        maxRecords.value = config.maxRecords ?? 10;
         activeConfigKey.value = config.activeConfigKey ?? 'Global';
         if (config.seriesConfigs) {
             seriesConfigs.value = JSON.parse(JSON.stringify(config.seriesConfigs));

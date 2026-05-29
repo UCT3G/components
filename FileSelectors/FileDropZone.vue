@@ -138,7 +138,9 @@ export default defineComponent({
 
     const existingFileName = computed(() => {
       if (!props.getterPath) return null;
-      return store.getters[props.getterPath] || null;
+      const path = store.getters[props.getterPath];
+      if (!path) return null;
+      return path.split('/').pop();
     });
 
     const downloadFile = async () => {

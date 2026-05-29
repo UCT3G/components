@@ -6,8 +6,8 @@
     >
       <div class="mb-3">
         <label class="form-label small text-muted mb-2 fw-bold">Tabla activa: </label>
-        <div v-if="tableLocked" class="locked-table-display p-2 rounded-3 border bg-light d-flex align-items-center">
-          <span class="small fw-bold text-secondary text-truncate" :title="selectedTableName">{{ selectedTableName }}</span>
+        <div v-if="tableLocked" class="locked-table-display p-2 rounded-3 border bg-light w-100 overflow-hidden">
+          <span class="small fw-bold text-secondary text-truncate d-block" :title="selectedTableName">{{ selectedTableName }}</span>
         </div>
         <select v-else class="form-select border-light-subtle shadow-sm px-2 py-1" 
                 :value="selectedTableName || ''" 
@@ -19,15 +19,16 @@
 
       <div v-if="selectedTableName" class="mb-3">
         <label class="form-label small text-muted mb-2 fw-bold">Cargar registros:</label>
-        <div class="d-flex align-items-center gap-2">
-            <input 
-                type="number" 
-                :value="maxRecords" 
-                min="5" max="500"
-                class="form-control form-control-sm border-light-subtle shadow-sm"
-                @input="handleUpdate('update:maxRecords', Number($event.target.value))"
-            />
-            <span class="small text-muted">máx</span>
+        <div class="input-group input-group-sm max-records-group">
+          <input 
+            type="number" 
+            :value="maxRecords" 
+            min="1" max="500"
+            :disabled="maxRecordsLocked"
+            class="form-control border-light-subtle shadow-sm"
+            @change="handleUpdate('update:maxRecords', Number($event.target.value))"
+          />
+          <span class="input-group-text border-light-subtle bg-light text-muted">máx</span>
         </div>
       </div>
     </ConfigSection>
@@ -132,7 +133,8 @@ export default defineComponent({
     subGroupByColumn: String,
     dimensionColumn: String,
     valueColumn: String,
-    maxRecords: { type: Number, default: 20 }
+    maxRecords: { type: Number, default: 20 },
+    maxRecordsLocked: { type: Boolean, default: false }
   },
   emits: [
     'update:selectedTableName',
@@ -156,6 +158,9 @@ export default defineComponent({
 
     const handleUpdate = (event, value) => {
       let cleanValue = (value === 'null' || value === '') ? null : value;
+      if (event === 'update:maxRecords' && typeof cleanValue === 'number') {
+        cleanValue = Math.max(1, Math.min(cleanValue, 300));
+      }
       emit(event, cleanValue);
     };
 
@@ -170,6 +175,10 @@ export default defineComponent({
 <style scoped>
 .locked-table-display {
   border-left: 3px solid var(--purple-sb) !important;
+}
+.locked-table-display,
+.max-records-group {
+  max-width: 240px;
 }
 .series-list-container {
   max-height: 180px;

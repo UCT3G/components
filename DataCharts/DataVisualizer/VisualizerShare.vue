@@ -23,20 +23,6 @@
 
     <!-- Lista de Usuarios Seleccionados -->
     <div v-else-if="selectedUsers.length > 0">
-      <!-- Filtro rápido / Toggle Global -->
-      <!-- <div v-if="isOwner" class="form-check form-switch mb-3 ms-2">
-        <input 
-          class="form-check-input" 
-          type="checkbox" 
-          role="switch" 
-          id="globalSwitch"
-          @change="(e) => setGlobalPermission(e.target.checked ? 'editar' : 'lectura')"
-        >
-        <label class="form-check-label small text-muted" for="globalSwitch">
-          Permitir edición a todos
-        </label>
-      </div> -->
-
       <div class="selected-users-grid mb-4">
         <div 
           v-for="user in sortedUsers" 

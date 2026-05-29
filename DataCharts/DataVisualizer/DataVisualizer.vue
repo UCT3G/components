@@ -21,6 +21,7 @@
       :currentYCols="currentYCols"
       :availableConfigKeys="availableConfigKeys"
       :tableLocked="!!fixedTableName"
+      :maxRecordsLocked="maxRecordsLimit !== null"
       :resetConfigToGlobal="resetConfigToGlobal"
       @refresh="onRefresh"
     />
@@ -138,7 +139,9 @@ export default defineComponent({
       // Parámetros automáticos para inyectar en json_tabla.data (ej: [id_sucursal])
       tableParams: { type: Array, default: null },
       // Lista de tablas permitidas para el selector lateral
-      allowedTables: { type: Array, default: null }
+      allowedTables: { type: Array, default: null },
+      // Límite máximo de registros bloqueado (manual)
+      maxRecordsLimit: { type: Number, default: null }
   },
   emits: ['load-view'],
   setup(props, { emit }) {
@@ -168,6 +171,12 @@ export default defineComponent({
       activeView, currentPermission, availableTables, selectDataTable, resetToNew, generateEChartsOption,
       getSerializableConfig, applySavedConfig, resetConfigToGlobal
     } = useDataCharts();
+
+    watch(() => props.maxRecordsLimit, (newVal) => {
+      if (newVal !== null) {
+        maxRecords.value = newVal;
+      }
+    }, { immediate: true });
 
     const availableColumns = computed(() => {
         const tableData = store.getters['reporteador/getTablaPorNombre'](selectedTableName.value);
@@ -263,7 +272,7 @@ export default defineComponent({
      * y dispara la recarga de datos en el componente TablaDinamica.
      */
     const applyTableParamsToStore = (tableName, params) => {
-      if (!tableName || !params) return;
+      if (!tableName) return;
       const tabla = store.getters['reporteador/getTablaPorNombre'](tableName);
       if (!tabla || !tabla.json_tabla) return;
       
@@ -271,10 +280,10 @@ export default defineComponent({
         const json = JSON.parse(tabla.json_tabla);
         // Evitamos recargas infinitas comparando el estado actual con el nuevo
         const currentDataStr = JSON.stringify(json.data || []);
-        const newParamsStr = JSON.stringify(params);
+        const newParamsStr = params ? JSON.stringify(params) : currentDataStr;
         
         if (currentDataStr !== newParamsStr || json.fin !== maxRecords.value) {
-          json.data = [...params];
+          if (params) {json.data = [...params];}
           json.fin = maxRecords.value;
           json.no_filas = maxRecords.value;
           tabla.json_tabla = JSON.stringify(json);

@@ -20,6 +20,7 @@
       :dimension-column="dimensionColumn"
       :value-column="valueColumn"
       :max-records="maxRecords"
+      :max-records-locked="maxRecordsLocked"
       @update:selected-table-name="handleUpdate('update:selectedTableName', $event)"
       @update:x-axis-column="handleUpdate('update:xAxisColumn', $event)"
       @update:y-axis-columns="handleUpdate('update:yAxisColumns', $event)"
@@ -83,6 +84,7 @@ export default defineComponent({
     configs: { type: Object, default: () => ({}) },
     maxRecords: { type: Number, default: 20 },
     tableLocked: { type: Boolean, default: false },
+    maxRecordsLocked: { type: Boolean, default: false },
     resetConfigToGlobal: { type: Function, default: null }
   },
   emits: [

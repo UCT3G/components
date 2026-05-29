@@ -65,16 +65,41 @@ const chartBuilders = {
             const sConf = config.seriesConfigs?.[yCol] || {};
             return {
                 name: sConf.alias || yCol,
-                value: aggregatedDataset.map(r => r[yCol]),
+                value: aggregatedDataset.map(r => {
+                    const rawVal = r[yCol];
+                    if (rawVal === null || rawVal === undefined) return null;
+                    // Clampeamos el valor para evitar que valores inferiores al mínimo
+                    // generen radios negativos y se dibujen en el cuadrante opuesto de la gráfica
+                    return Math.max(rMin, Math.min(rMax, rawVal));
+                }),
                 lineStyle: sConf.color ? { color: sConf.color } : undefined,
                 itemStyle: sConf.color ? { color: sConf.color } : undefined
             };
         });
         
+        let labelCounter = 0;
+        const ticksPerAxis = (config.radarSplitNumber || 5) + 1;
+
         const radarConfig = { 
             indicator, 
             center: ['50%', '55%'], 
-            shape: 'polygon'
+            shape: 'polygon',
+            axisLabel: { 
+                show: true,
+                color: '#999',
+                fontSize: 10,
+                formatter: (value) => {
+                    const current = labelCounter;
+                    labelCounter++;
+                    Promise.resolve().then(() => {
+                        labelCounter = 0;
+                    });
+                    if (current < ticksPerAxis) {
+                        return value;
+                    }
+                    return '';
+                }
+            }
         };
         
         if (config.radarSplitNumber !== null && config.radarSplitNumber !== undefined) {
