@@ -87,7 +87,7 @@ export default defineComponent({
     },
     initialFile: { type: Object, default: null },
     getterPath: { type: String, default: null }, // ruta del getter en el store
-    basePath: { type: String, default: "" }, // ej: "archivos/psicometricos/pyxoom/competencias/"
+    basePath: { type: String, default: "" }, // ej: "media/psicometricos/pyxoom/competencias/"
     stacked: { type: Boolean, default: false } // Forzar diseño vertical
   },
 

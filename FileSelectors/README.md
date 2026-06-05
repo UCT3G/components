@@ -14,10 +14,7 @@ El componente `FileDropZone` (interno: `FileSelector`) proporciona una interfaz 
 
 ```vue
 <template>
-  <FileDropZone
-    accept=".pdf,.docx"
-    @file-selected="handleFile"
-  />
+  <FileDropZone accept=".pdf,.docx" @file-selected="handleFile" />
 </template>
 
 <script setup>
@@ -34,28 +31,29 @@ Si el componente debe mostrar un archivo que ya fue subido anteriormente:
 ```vue
 <FileDropZone
   getterPath="BSC/getPlantillaActual"
-  basePath="archivos/plantillas/"
+  basePath="media/plantillas/"
   @file-selected="onNewFile"
 />
 ```
 
 ## Props
 
-| Prop | Tipo | Default | Descripción |
-| :--- | :--- | :--- | :--- |
-| `accept` | `String` | `""` | Extensiones permitidas separadas por coma (ej: `.xlsx,.xls`). |
-| `getterPath` | `String` | `null` | Ruta del getter en Vuex que devuelve el nombre del archivo guardado. |
-| `basePath` | `String` | `""` | Ruta base en el servidor donde se aloja el archivo (se concatena con `DEV_BASE_URL`). |
-| `stacked` | `Boolean` | `false` | Si es `true`, obliga a que la zona de carga y la info se apilen verticalmente. |
+| Prop         | Tipo      | Default | Descripción                                                                           |
+| :----------- | :-------- | :------ | :------------------------------------------------------------------------------------ |
+| `accept`     | `String`  | `""`    | Extensiones permitidas separadas por coma (ej: `.xlsx,.xls`).                         |
+| `getterPath` | `String`  | `null`  | Ruta del getter en Vuex que devuelve el nombre del archivo guardado.                  |
+| `basePath`   | `String`  | `""`    | Ruta base en el servidor donde se aloja el archivo (se concatena con `DEV_BASE_URL`). |
+| `stacked`    | `Boolean` | `false` | Si es `true`, obliga a que la zona de carga y la info se apilen verticalmente.        |
 
 ## Emits
 
-| Evento | Payload | Descripción |
-| :--- | :--- | :--- |
-| `file-selected` | `File` | Se emite cuando el usuario selecciona un archivo válido. |
+| Evento          | Payload | Descripción                                              |
+| :-------------- | :------ | :------------------------------------------------------- |
+| `file-selected` | `File`  | Se emite cuando el usuario selecciona un archivo válido. |
 
 ## Estilos
 
 El componente utiliza variables CSS globales para mantener la consistencia visual:
+
 - `--purple-sb`: Color de acento para la información del archivo.
 - `--bs-gray-*`: Utilidades de color de Bootstrap para bordes y fondos.

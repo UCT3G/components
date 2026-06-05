@@ -1,7 +1,7 @@
 <template>
   <div class="card-selection-preview" @click="handleClick">
     <!-- Preview Slot -->
-    <div class="preview-container">
+    <div class="preview-container" :style="{ minHeight: minHeight }">
       <slot name="preview"></slot>
     </div>
 
@@ -34,7 +34,8 @@ export default defineComponent({
     badge: { type: String, default: '' },
     statusText: { type: String, default: '' },
     statusOk: { type: Boolean, default: false },
-    actionText: { type: String, default: 'Configurar →' }
+    actionText: { type: String, default: 'Configurar →' },
+    minHeight: { type: String, default: '130px' }
   },
   emits: ['click'],
   setup(props, { emit }) {

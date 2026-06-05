@@ -133,6 +133,11 @@ export default defineComponent({
     }
 
     /* Ajustes para el loader de SVG */
+    .upload-slot-icon-loader {
+        --icon_color: var(--bs-gray-600);
+        --icon_color_hover: var(--bs-gray-800);
+    }
+
     .upload-slot-icon-loader :deep(.loaderSVG-contend) {
         padding: 0 !important;
         display: flex;
