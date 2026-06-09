@@ -60,7 +60,7 @@
 
       <!-- VISTA 2: GRÁFICAS PLANAS -->
       <transition name="view-switch">
-        <div v-show="isChartMode && chartSections.length === 0" class="p-3 w-100">
+        <div v-show="isChartMode && chartSections.length === 0" class="p-2 w-100">
           <div class="row g-4 chart-view-cards">
             <div v-if="chartOptions.length === 0" class="col-12">
               <div class="main-chart-card bg-white rounded-4 shadow-sm border position-relative overflow-hidden">
