@@ -14,7 +14,7 @@ export function useDataChartsPermisos() {
 
     const isDataChartsAdmin = computed(() => {
         const permisos = store.getters['user/getPermisos'] || [];
-        const permiso = permisos.find(p => p.id_permiso === 22);
+        const permiso = permisos.find(p => p.id_permiso === 23);
         if (!permiso || !permiso.json) return false;
 
         const idPerfil  = store.state.user.userProfile?.id_perfil_fk ?? null;
