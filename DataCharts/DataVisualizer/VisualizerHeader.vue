@@ -4,6 +4,7 @@
       <!-- Lado Izquierdo: Toggle y Título -->
       <div class="col-12 col-lg-6 d-flex align-items-center mb-1 mb-lg-0">
         <DynamicSvgLoader 
+          v-if="usuarioAccesos.showSidebar"
           class="me-2 iconBtn flex-shrink-0" 
           fileName="icons/list"
           title="Menu" 
@@ -14,10 +15,10 @@
         <div class="workspace-title-block flex-grow-1">
           <h2 class="title-gt-c subtitulo mb-0 text-truncate">{{ selectedTableName }}</h2>
           <div class="d-flex gap-1 flex-wrap mt-1">
-            <span v-if="groupByColumn" class="badge-personalizable">
+            <span v-if="!readOnly && groupByColumn" class="badge-personalizable">
                 {{ groupByColumn }}
             </span>
-            <span v-if="subGroupByColumn" class="badge-personalizable">
+            <span v-if="!readOnly && subGroupByColumn" class="badge-personalizable">
                 {{ subGroupByColumn }}
             </span>
             <!-- Estado y Acciones -->
@@ -35,15 +36,15 @@
                 <div class="action-divider"></div>
 
                 <!-- Botones de Acción Minimalistas -->
-                <div class="d-inline-flex align-items-center gap-1 px-1 action-group-minimal">
+                <div v-if="!readOnly" class="d-inline-flex align-items-center gap-1 px-1 action-group-minimal">
                   <IconButtonAction 
-                    v-if="currentPermission === 'propietario'" 
+                    v-if="usuarioAccesos.isOwner" 
                     iconName="icons/UCT_ADMIN/PERSON_PLUS" 
                     title="Compartir" 
                     @click="onShareView" 
                   />
                   <IconButtonAction 
-                    v-if="currentPermission === 'propietario'" 
+                    v-if="usuarioAccesos.isOwner" 
                     iconName="icons/TRASH" 
                     title="Eliminar" 
                     @click="onDeleteView" 
@@ -62,9 +63,10 @@
                 title="Información de la Vista" 
                 :visible="isTooltipVisible"
                 :rows="tooltipRows"
+                align="left"
               />
             </div>
-            <span v-if="!groupByColumn && !subGroupByColumn && !activeView" class="text-muted small opacity-50 uppercase fw-bold">Sin agrupación</span>
+            <span v-if="!readOnly && !groupByColumn && !subGroupByColumn && !activeView" class="text-muted small opacity-50 uppercase fw-bold">Sin agrupación</span>
           </div>
         </div>
       </div>
@@ -77,6 +79,7 @@
             v-if="ownViews.length > 0"
             icon="icons/list"
             label="Mis Vistas"
+            align="right"
             :isExpanded="isOwnHovered"
             :items="ownViews"
             tooltip="Mis Vistas"
@@ -90,6 +93,7 @@
             v-if="sharedViews.length > 0"
             icon="icons/People"
             label="Compartidas"
+            align="right"
             iconWidth="18px"
             iconHeight="18px"
             :isExpanded="isSharedHovered"
@@ -102,8 +106,9 @@
 
           <!-- Botón Guardar: visible si es admin O si puede actualizar una vista existente -->
           <ActionExpandable
-            v-if="(isDataChartsAdmin && !activeView) || (activeView && currentPermission !== 'lectura')"
+            v-if="usuarioAccesos.showSaveButton"
             icon="icons/GUARDAR"
+            align="right"
             :label="activeView ? 'Actualizar' : 'Guardar'"
             :isExpanded="isSaveHovered"
             :tooltip="activeView ? 'Actualizar o Guardar como...' : 'Guardar vista'"
@@ -114,11 +119,38 @@
         </div>
 
         <TabButtons 
+          v-if="!readOnly"
           :modelValue="isChartMode"
           :options="chartModeOptions"
           extraClass="me-auto me-lg-2"
           @update:modelValue="setChartMode"
         />
+
+        <!-- Botones para modo lectura: Expandir explorador y Configurar (para admins) -->
+        <div v-if="readOnly" class="d-flex gap-2 align-items-center justify-content-end flex-shrink-0">
+          <ActionExpandable
+            icon="icons/box_arrow_in_down"
+            label="Expandir"
+            align="right"
+            :isExpanded="isExpandHovered"
+            tooltip="Expandir Visualización"
+            @mouseenter="onHoverEnter('expand')"
+            @mouseleave="onHoverLeave('expand')"
+            @action="onShowTable"
+          />
+          
+          <ActionExpandable
+            v-if="usuarioAccesos.showConfigButton"
+            icon="icons/ADMIN-04"
+            label="Configurar"
+            align="right"
+            :isExpanded="isConfigHovered"
+            tooltip="Configurar Gráfica"
+            @mouseenter="onHoverEnter('config')"
+            @mouseleave="onHoverLeave('config')"
+            @action="onConfigure"
+          />
+        </div>
       </div>
     </div>
   </header>
@@ -132,7 +164,6 @@ import TabButtons from '@/components/TabsNav/TabButtons.vue';
 import Tooltip from '@/components/Tooltip/Tooltip.vue';
 import ActionExpandable from '@/components/ActionExpandable/ActionExpandable.vue';
 import IconButtonAction from '@/components/ButtonWithIcon/IconButtonAction.vue';
-import { useDataChartsPermisos } from '@/components/DataCharts/composables/useDataChartsPermisos.js';
 
 export default defineComponent({
   name: 'VisualizerHeader',
@@ -142,7 +173,7 @@ export default defineComponent({
     Tooltip,
     ActionExpandable,
     IconButtonAction,
-    TabButtons
+    TabButtons,
   },
   props: {
     selectedTableName: String,
@@ -152,13 +183,16 @@ export default defineComponent({
     activeView: Object,
     currentPermission: { type: String, default: 'propietario' },
     savedViews: Array,
+    readOnly: { type: Boolean, default: false },
+    usuarioAccesos: { type: Object, required: true }
   },
-  emits: ['update:isChartMode', 'toggle-sidebar', 'save-request', 'load-view', 'reset-view', 'delete-view', 'share-view'],
+  emits: ['update:isChartMode', 'toggle-sidebar', 'save-request', 'load-view', 'reset-view', 'delete-view', 'share-view', 'show-table', 'configure'],
   setup(props, { emit }) {
-    const { isDataChartsAdmin } = useDataChartsPermisos();
     const isOwnHovered = ref(false);
     const isSharedHovered = ref(false);
     const isSaveHovered = ref(false);
+    const isExpandHovered = ref(false);
+    const isConfigHovered = ref(false);
     const isTooltipVisible = ref(false);
 
     const chartModeOptions = [
@@ -166,7 +200,7 @@ export default defineComponent({
       { label: 'Gráficas', value: true, icon: 'graph.svg' }
     ];
 
-    const timers = { own: null, shared: null, save: null };
+    const timers = { own: null, shared: null, save: null, expand: null, config: null };
 
     const formatDateTime = (dateStr) => {
         if (!dateStr) return '';
@@ -189,6 +223,8 @@ export default defineComponent({
             if (key === 'own') isOwnHovered.value = false;
             if (key === 'shared') isSharedHovered.value = false;
             if (key === 'save') isSaveHovered.value = false;
+            if (key === 'expand') isExpandHovered.value = false;
+            if (key === 'config') isConfigHovered.value = false;
         }
       });
 
@@ -196,6 +232,8 @@ export default defineComponent({
       if (type === 'own') isOwnHovered.value = true;
       if (type === 'shared') isSharedHovered.value = true;
       if (type === 'save') isSaveHovered.value = true;
+      if (type === 'expand') isExpandHovered.value = true;
+      if (type === 'config') isConfigHovered.value = true;
     };
 
     const onHoverLeave = (type) => {
@@ -203,6 +241,8 @@ export default defineComponent({
         if (type === 'own') isOwnHovered.value = false;
         if (type === 'shared') isSharedHovered.value = false;
         if (type === 'save') isSaveHovered.value = false;
+        if (type === 'expand') isExpandHovered.value = false;
+        if (type === 'config') isConfigHovered.value = false;
       }, 300); // Hysteresis buffer
     };
 
@@ -214,16 +254,24 @@ export default defineComponent({
     };
 
     const ownViews = computed(() => {
-        return (props.savedViews || []).filter(v => v.tipo_permiso === 'propietario');
+        let list = props.savedViews || [];
+        if (props.readOnly) {
+            list = list.filter(v => v.es_publica);
+        }
+        return list.filter(v => v.tipo_permiso === 'propietario');
     });
 
     const sharedViews = computed(() => {
-        return (props.savedViews || []).filter(v => v.tipo_permiso !== 'propietario');
+        let list = props.savedViews || [];
+        if (props.readOnly) {
+            list = list.filter(v => v.es_publica);
+        }
+        return list.filter(v => v.tipo_permiso !== 'propietario');
     });
 
     const tooltipRows = computed(() => {
         if (!props.activeView) return [];
-        return [
+        const rows = [
             { label: 'Nombre', value: props.activeView.nombre, class: 'fw-bold text-truncate ms-2' },
             { label: 'Dueño', value: props.activeView.propietario_nombre || 'Tú', class: 'fw-bold' },
             { label: 'Modificado por', value: props.activeView.modificador_nombre || 'Tú', class: 'text-muted small' },
@@ -235,6 +283,17 @@ export default defineComponent({
               variant: props.currentPermission === 'propietario' ? 'primary' : (props.currentPermission === 'lectura' ? 'secondary' : 'success')
             }
         ];
+
+        if (props.currentPermission === 'propietario') {
+            rows.push({ 
+              label: 'Visibilidad', 
+              value: props.activeView.es_publica ? 'Pública' : 'Privada',
+              type: 'badge',
+              variant: props.activeView.es_publica ? 'success' : 'secondary'
+            });
+        }
+
+        return rows;
     });
 
     // Helper functions for emissions
@@ -244,6 +303,8 @@ export default defineComponent({
     const onResetView = () => emit('reset-view');
     const onSaveRequest = () => emit('save-request');
     const setChartMode = (val) => emit('update:isChartMode', val);
+    const onShowTable = () => emit('show-table');
+    const onConfigure = () => emit('configure');
 
     return {
       ownViews,
@@ -252,6 +313,8 @@ export default defineComponent({
       isOwnHovered,
       isSharedHovered,
       isSaveHovered,
+      isExpandHovered,
+      isConfigHovered,
       isTooltipVisible,
       onToggleSidebar,
       onShareView,
@@ -259,11 +322,12 @@ export default defineComponent({
       onResetView,
       onSaveRequest,
       setChartMode,
+      onShowTable,
+      onConfigure,
       onViewSelect,
       chartModeOptions,
       onHoverEnter,
-      onHoverLeave,
-      isDataChartsAdmin
+      onHoverLeave
     };
   }
 });
@@ -272,7 +336,7 @@ export default defineComponent({
 <style scoped>
 .workspace-header {
     position: relative;
-    z-index: 100;
+    z-index: 10;
 }
 .workspace-title-block {
     border-left: 3px solid var(--purple-sb);

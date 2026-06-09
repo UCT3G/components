@@ -30,6 +30,7 @@
     <div 
       v-if="isExpanded && items.length > 0" 
       class="action-menu shadow-lg border"
+      :class="['align-' + align]"
     >
       <div 
         v-for="(item, index) in items" 
@@ -61,7 +62,12 @@ export default defineComponent({
     tooltip: { type: String, default: '' },
     iconWidth: { type: String, default: '16px' },
     iconHeight: { type: String, default: '16px' },
-    customClass: { type: String, default: '' }
+    customClass: { type: String, default: '' },
+    align: {
+      type: String,
+      default: 'left',
+      validator: (value) => ['left', 'right'].includes(value)
+    }
   },
   emits: ['mouseenter', 'mouseleave', 'select', 'action'],
   setup(props, { emit }) {
@@ -182,9 +188,10 @@ export default defineComponent({
 .action-menu {
   position: absolute;
   top: 100%;
-  left: 0; 
   min-width: 180px;
-  max-width: 400px; /* Prevent overflow */
+  max-width: calc(100vw - 32px); /* Prevent overflow */
+  max-height: 220px;
+  overflow-y: auto;
   background: white;
   border-radius: 10px;
   padding: 6px;
@@ -192,6 +199,16 @@ export default defineComponent({
   margin-top: 4px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
   animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.action-menu.align-left {
+  left: 0;
+  right: auto;
+}
+
+.action-menu.align-right {
+  right: 0;
+  left: auto;
 }
 
 /* Puente invisible para mantener el hover */

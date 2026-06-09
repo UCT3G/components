@@ -19,7 +19,7 @@ const chartBuilders = {
             title: { text: title, left: 'center', top: '10px', textStyle: { color: '#333333', fontSize: 14 } },
             tooltip: { trigger: 'axis' },
             legend: { bottom: 0, type: 'scroll' },
-            grid: { left: '5%', right: '5%', bottom: '25%', top: '60px', containLabel: true },
+            grid: { left: '5%', right: '5%', bottom: '25%', top: title ? '60px' : '30px', containLabel: true },
             xAxis: { type: 'category', data: xAxisData, axisLabel: { interval: 0 } },
             yAxis: { type: 'value', ...valueAxis },
             series: series
@@ -46,7 +46,7 @@ const chartBuilders = {
             title: { text: title, left: 'center', top: '10px', textStyle: { color: '#333333', fontSize: 14 } },
             tooltip: { trigger: 'axis' },
             legend: { bottom: 0, type: 'scroll' },
-            grid: { left: '5%', right: '5%', bottom: '15%', top: '60px', containLabel: true },
+            grid: { left: '5%', right: '5%', bottom: '15%', top: title ? '60px' : '30px', containLabel: true },
             xAxis: { type: 'value', ...valueAxis },
             yAxis: { type: 'category', data: xAxisData, inverse: true, axisLabel: { interval: 0 } },
             series: series
@@ -394,7 +394,7 @@ export function generateEChartsOption(state, data_table) {
     else {
         state.chartOption.value = createStaticOption(
             data_table.registros, 
-            state.selectedTableName.value, 
+            '', 
             state.configs.value.Global, 
             allKeys,
             state.groupByColumn.value

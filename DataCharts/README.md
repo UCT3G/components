@@ -45,6 +45,9 @@ El usuario verá un panel lateral para seleccionar la tabla de datos y configura
 | `externalDataTrigger` | `Boolean` | `false` | Disparador externo (desde el padre) para forzar una recarga de datos. Útil al combinar con filtros de fecha u otros controles externos.                            |
 | `tableParams`         | `Array`   | `null`  | Parámetros que se inyectan automáticamente en el campo `json_tabla.data` de la tabla activa. Se actualiza de forma reactiva. Ejemplo: `[id_sucursal, id_periodo]`. |
 | `allowedTables`       | `Array`   | `null`  | Lista blanca de nombres de tablas que aparecerán en el selector lateral. Si se omite, se muestran todas las tablas del store.                                      |
+| `readOnly`            | `Boolean` | `false` | Activa el modo de lectura pura: oculta el panel de configuración, bloquea cambios directos, filtra vistas para mostrar solo las públicas (`es_publica = true`), habilita ver tabla en modal y botón de configuración para administradores. |
+| `defaultViewId`       | `Number/String` | `null` | ID de vista a cargar automáticamente en el montaje inicial. |
+| `height`              | `String`  | `'calc(100vh - 120px)'` | Altura del contenedor del visualizador. |
 
 ---
 
@@ -172,6 +175,23 @@ El componente incluye un sistema completo de persistencia de vistas:
 - **Compartir**: Permite compartir una vista con otros usuarios con distintos niveles de permiso (`lectura`, `editar`).
 
 Las vistas se almacenan en el backend y se consultan automáticamente al activar una tabla. Se encuentran accesibles desde la barra de cabecera del workspace.
+
+### Clasificación de Vistas (Esquema de Permisos y Visibilidad)
+
+1. **Vista Privada (Borrador / Personal)**
+   - **Configuración:** `es_publica = FALSE` | Sin compartir.
+   - **Quién la ve:** Solo el creador original.
+   - **Propósito:** Pruebas del administrador o análisis personales que aún no se quieren mostrar a nadie.
+
+2. **Vista Compartida (Colaborativa / Específica)**
+   - **Configuración:** `es_publica = FALSE` | Compartida con usuarios o grupos específicos.
+   - **Quién la ve:** El creador y las personas seleccionadas (con permisos de lectura o edición).
+   - **Propósito:** Trabajo en equipo o reportes que solo le interesan a un grupo selecto de personas (ej. directores de un departamento), pero que no deben ser la vista general de la tarjeta.
+
+3. **Vista Predeterminada (Pública / Oficial)**
+   - **Configuración:** `es_publica = TRUE`.
+   - **Quién la ve:** Cualquier usuario que entre a la pantalla. No requiere que configures permisos de lectura individuales porque el backend la entrega de forma automática.
+   - **Propósito:** Es la gráfica/tabla oficial de la tarjeta del dashboard.
 
 ---
 

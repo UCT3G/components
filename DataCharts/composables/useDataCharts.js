@@ -244,7 +244,8 @@ export function useDataCharts() {
                 nombre: viewInfo.nombre,
                 propietario_nombre: viewInfo.propietario_nombre,
                 ultima_fecha: viewInfo.ultima_fecha,
-                modificador_nombre: viewInfo.modificador_nombre
+                modificador_nombre: viewInfo.modificador_nombre,
+                es_publica: !!viewInfo.es_publica
             };
             currentPermission.value = viewInfo.tipo_permiso || 'propietario';
         }

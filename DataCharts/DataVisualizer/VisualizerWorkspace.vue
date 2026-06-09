@@ -35,7 +35,7 @@
               title="Descargar esta agrupación"
               @click.stop="downloadSection(section, sIdx)"
               fileName="icons/DAR BAJA"
-              width_icon="24px"
+              width_icon="18px"
               :icon_active="true"
             />
             <div class="section-header p-2 bg-light border-bottom d-flex align-items-center">
@@ -69,11 +69,11 @@
                   title="Descargar gráfica"
                   @click.stop="downloadMainChart()"
                   fileName="icons/DAR BAJA"
-                  width_icon="24px"
+                  width_icon="18px"
                   :icon_active="true"
                 />
-                <div class="p-4">
-                  <EChartsVisualizer ref="mainChartRef" :option="chartOption" class="responsive-chart-main" />
+                <div class="p-2">
+                  <EChartsVisualizer ref="mainChartRef" :option="chartOption" class="responsive-chart-main" :style="{ height: chartHeight }" />
                 </div>
               </div>
             </div>
@@ -84,14 +84,15 @@
                   title="Descargar gráfica"
                   @click.stop="downloadOptionChart(idx, grouped.id)"
                   fileName="icons/DAR BAJA"
-                  width_icon="24px"
+                  width_icon="18px"
                   :icon_active="true"
                 />
-                <div class="p-4">
+                <div class="p-2">
                   <EChartsVisualizer 
                     :ref="el => { if (el) setOptionRef(idx, el) }"
                     :option="grouped.option" 
                     class="responsive-chart-grouped" 
+                    :style="{ height: groupedChartHeight }"
                   />
                 </div>
               </div>
@@ -117,7 +118,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import ButtonPrimary from '@/components/ButtonWithIcon/ButtonPrimary.vue';
 import EChartsVisualizer from '../EChartsVisualizer.vue';
 import TablaDinamica from '@/components/TablaDinamica/TablaDinamica.vue';
@@ -138,7 +139,8 @@ export default defineComponent({
     chartOptions: Array,
     chartOption: Object,
     tableBase: Object,
-    externalDataTrigger: Boolean
+    externalDataTrigger: Boolean,
+    height: { type: String, default: 'calc(100vh - 120px)' }
   },
   emits: ['open-sidebar', 'data-loaded', 'clicked'],
   setup(props, { emit }) {
@@ -314,6 +316,24 @@ export default defineComponent({
         inst.setOption({ series: seriesSinLabels }, false);
     };
 
+    const chartHeight = computed(() => {
+        if (!props.height) return '450px';
+        if (props.height.endsWith('px')) {
+            const val = parseInt(props.height);
+            return `${Math.max(150, val - 130)}px`;
+        }
+        return `calc(${props.height} - 130px)`;
+    });
+
+    const groupedChartHeight = computed(() => {
+        if (!props.height) return '300px';
+        if (props.height.endsWith('px')) {
+            const val = parseInt(props.height);
+            return `${Math.max(120, val - 180)}px`;
+        }
+        return `calc(${props.height} - 180px)`;
+    });
+
     return {
       getColClass,
       openSidebar,
@@ -324,7 +344,9 @@ export default defineComponent({
       mainChartRef,
       downloadSection,
       downloadMainChart,
-      downloadOptionChart
+      downloadOptionChart,
+      chartHeight,
+      groupedChartHeight
     };
   }
 });
@@ -339,6 +361,7 @@ export default defineComponent({
     opacity: 0.7;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --icon_color_selected: #000;
+    padding: 4px !important;
 }
 
 .download-btn-floating:hover {

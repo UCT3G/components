@@ -68,8 +68,7 @@ export default defineComponent({
     position: absolute;
     top: calc(100% + 10px);
     background: var(--blanco);
-    min-width: 220px;
-    max-width: 300px;
+    width: 350px;
     z-index: 10000;
     opacity: 0;
     visibility: hidden;
@@ -184,15 +183,21 @@ export default defineComponent({
 @media (max-width: 480px) {
     .tooltip-shell {
         min-width: 200px;
-        left: unset;
-        right: 0;
-        transform: translateY(5px);
+        max-width: calc(100vw - 32px); /* Evita que el tooltip supere el ancho de pantalla */
     }
-    .tooltip-shell::before {
-        left: unset;
-        right: 20px;
+    
+    /* El centrado colapsa a alineación izquierda en móviles para no desbordar */
+    .align-center {
+        left: 0;
+        transform: translateY(0);
     }
-    .tooltip-shell.is-visible {
+    
+    .align-center::before {
+        left: 20px;
+        transform: rotate(45deg);
+    }
+    
+    .tooltip-shell.is-visible.align-center {
         transform: translateY(0);
     }
 }
