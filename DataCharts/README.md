@@ -45,7 +45,7 @@ El usuario verá un panel lateral para seleccionar la tabla de datos y configura
 | `externalDataTrigger` | `Boolean` | `false` | Disparador externo (desde el padre) para forzar una recarga de datos. Útil al combinar con filtros de fecha u otros controles externos.                            |
 | `tableParams`         | `Array`   | `null`  | Parámetros que se inyectan automáticamente en el campo `json_tabla.data` de la tabla activa. Se actualiza de forma reactiva. Ejemplo: `[id_sucursal, id_periodo]`. |
 | `allowedTables`       | `Array`   | `null`  | Lista blanca de nombres de tablas que aparecerán en el selector lateral. Si se omite, se muestran todas las tablas del store.                                      |
-| `readOnly`            | `Boolean` | `false` | Activa el modo de lectura pura: oculta el panel de configuración, bloquea cambios directos, filtra vistas para mostrar solo las públicas (`es_publica = true`), habilita ver tabla en modal y botón de configuración para administradores. |
+| `viewMode`            | `Boolean` | `false` | Activa el modo de lectura/visualización pura: oculta el panel de configuración, bloquea cambios directos, filtra vistas para mostrar solo las públicas (`es_publica = true`), habilita ver tabla en modal y botón de configuración para administradores. |
 | `defaultViewId`       | `Number/String` | `null` | ID de vista a cargar automáticamente en el montaje inicial. |
 | `height`              | `String`  | `'calc(100vh - 120px)'` | Altura del contenedor del visualizador. |
 

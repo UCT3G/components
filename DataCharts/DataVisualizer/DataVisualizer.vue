@@ -39,7 +39,7 @@
         :activeView="activeView"
         :currentPermission="currentPermission"
         :savedViews="savedViews"
-        :readOnly="readOnly"
+        :viewMode="viewMode"
         :usuarioAccesos="usuarioAccesos"
         @toggle-sidebar="sidebarCollapsed = !sidebarCollapsed"
         @save-request="handleSaveRequest"
@@ -160,7 +160,7 @@
       <div class="p-0">
         <DataVisualizer 
           :fixedTableName="selectedTableName"
-          :readOnly="false"
+          :viewMode="false"
           :defaultViewId="activeView?.id_vista"
         />
       </div>
@@ -205,8 +205,8 @@ export default defineComponent({
       allowedTables: { type: Array, default: null },
       // Límite máximo de registros bloqueado (manual)
       maxRecordsLimit: { type: Number, default: null },
-      // Si la vista es de solo lectura para usuarios comunes
-      readOnly: { type: Boolean, default: false },
+      // Si el componente está en modo lectura/visualización simplificada
+      viewMode: { type: Boolean, default: false },
       // ID de la vista a cargar automáticamente
       defaultViewId: { type: [Number, String], default: null },
       // Altura del visualizador
@@ -265,9 +265,9 @@ export default defineComponent({
       const canUpdate = !!activeView.value && currentPermission.value !== 'lectura';
       const canSaveAsNew = isDataChartsAdmin.value;
       const canPublish = isDataChartsAdmin.value;
-      const showSidebar = isDataChartsAdmin.value && !props.readOnly;
+      const showSidebar = isDataChartsAdmin.value && !props.viewMode;
       const showConfigButton = isDataChartsAdmin.value;
-      const showSaveButton = !props.readOnly && ((isDataChartsAdmin.value && !activeView.value) || (activeView.value && currentPermission.value !== 'lectura'));
+      const showSaveButton = !props.viewMode && ((isDataChartsAdmin.value && !activeView.value) || (activeView.value && currentPermission.value !== 'lectura'));
 
       return {
         isOwner,
@@ -280,7 +280,7 @@ export default defineComponent({
       };
     });
 
-    if (props.readOnly) {
+    if (props.viewMode) {
       isChartMode.value = true;
     }
 
@@ -481,7 +481,7 @@ export default defineComponent({
         }
       }
 
-      if (props.readOnly) {
+      if (props.viewMode) {
         const firstPublic = newViews.find(v => v.es_publica);
         if (firstPublic) {
           await loadView(firstPublic);

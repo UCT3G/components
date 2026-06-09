@@ -15,11 +15,12 @@
         <div class="workspace-title-block flex-grow-1">
           <h2 class="title-gt-c subtitulo mb-0 text-truncate">{{ selectedTableName }}</h2>
           <div class="d-flex gap-1 flex-wrap mt-1">
-            <span v-if="!readOnly && groupByColumn" class="badge-personalizable">
-                {{ groupByColumn }}
-            </span>
-            <span v-if="!readOnly && subGroupByColumn" class="badge-personalizable">
-                {{ subGroupByColumn }}
+            <span 
+              v-for="badge in activeBadges" 
+              :key="badge" 
+              class="badge-personalizable"
+            >
+                {{ badge }}
             </span>
             <!-- Estado y Acciones -->
             <div 
@@ -36,7 +37,7 @@
                 <div class="action-divider"></div>
 
                 <!-- Botones de Acción Minimalistas -->
-                <div v-if="!readOnly" class="d-inline-flex align-items-center gap-1 px-1 action-group-minimal">
+                <div v-if="!viewMode" class="d-inline-flex align-items-center gap-1 px-1 action-group-minimal">
                   <IconButtonAction 
                     v-if="usuarioAccesos.isOwner" 
                     iconName="icons/UCT_ADMIN/PERSON_PLUS" 
@@ -66,7 +67,7 @@
                 align="left"
               />
             </div>
-            <span v-if="!readOnly && !groupByColumn && !subGroupByColumn && !activeView" class="text-muted small opacity-50 uppercase fw-bold">Sin agrupación</span>
+            <span v-if="showNoGroupLabel" class="text-muted small opacity-50 uppercase fw-bold">Sin agrupación</span>
           </div>
         </div>
       </div>
@@ -119,7 +120,7 @@
         </div>
 
         <TabButtons 
-          v-if="!readOnly"
+          v-if="!viewMode"
           :modelValue="isChartMode"
           :options="chartModeOptions"
           extraClass="me-auto me-lg-2"
@@ -127,7 +128,7 @@
         />
 
         <!-- Botones para modo lectura: Expandir explorador y Configurar (para admins) -->
-        <div v-if="readOnly" class="d-flex gap-2 align-items-center justify-content-end flex-shrink-0">
+        <div v-if="viewMode" class="d-flex gap-2 align-items-center justify-content-end flex-shrink-0">
           <ActionExpandable
             icon="icons/box_arrow_in_down"
             label="Expandir"
@@ -183,7 +184,7 @@ export default defineComponent({
     activeView: Object,
     currentPermission: { type: String, default: 'propietario' },
     savedViews: Array,
-    readOnly: { type: Boolean, default: false },
+    viewMode: { type: Boolean, default: false },
     usuarioAccesos: { type: Object, required: true }
   },
   emits: ['update:isChartMode', 'toggle-sidebar', 'save-request', 'load-view', 'reset-view', 'delete-view', 'share-view', 'show-table', 'configure'],
@@ -255,7 +256,7 @@ export default defineComponent({
 
     const ownViews = computed(() => {
         let list = props.savedViews || [];
-        if (props.readOnly) {
+        if (props.viewMode) {
             list = list.filter(v => v.es_publica);
         }
         return list.filter(v => v.tipo_permiso === 'propietario');
@@ -263,7 +264,7 @@ export default defineComponent({
 
     const sharedViews = computed(() => {
         let list = props.savedViews || [];
-        if (props.readOnly) {
+        if (props.viewMode) {
             list = list.filter(v => v.es_publica);
         }
         return list.filter(v => v.tipo_permiso !== 'propietario');
@@ -296,7 +297,19 @@ export default defineComponent({
         return rows;
     });
 
-    // Helper functions for emissions
+    const activeBadges = computed(() => {
+        if (props.viewMode) return [];
+        const badges = [];
+        if (props.groupByColumn) badges.push(props.groupByColumn);
+        if (props.subGroupByColumn) badges.push(props.subGroupByColumn);
+        return badges;
+    });
+
+    const showNoGroupLabel = computed(() => {
+        return !props.viewMode && !props.groupByColumn && !props.subGroupByColumn && !props.activeView;
+    });
+
+    // emits
     const onToggleSidebar = () => emit('toggle-sidebar');
     const onShareView = () => emit('share-view', props.activeView);
     const onDeleteView = () => emit('delete-view', props.activeView);
@@ -310,6 +323,8 @@ export default defineComponent({
       ownViews,
       sharedViews,
       tooltipRows,
+      activeBadges,
+      showNoGroupLabel,
       isOwnHovered,
       isSharedHovered,
       isSaveHovered,
