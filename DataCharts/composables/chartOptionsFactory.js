@@ -34,6 +34,43 @@ const chartBuilders = {
     },
 
     /**
+     * Builder para grÃ¡ficas de pastel
+     */
+    pie: (aggregatedDataset, config, xAxisData, series, title) => {
+        const pieSeries = Array.isArray(series) && series.length > 0 ? series[0] : { data: [] };
+        return {
+            title: { text: title, left: 'center', top: '10px', textStyle: { color: '#333333', fontSize: 14 } },
+            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+            legend: { bottom: 0, type: 'scroll' },
+            series: [
+                {
+                    name: pieSeries.name || 'Serie',
+                    type: 'pie',
+                    radius: ['42%', '70%'],
+                    center: ['50%', title ? '48%' : '45%'],
+                    avoidLabelOverlap: true,
+                    itemStyle: {
+                        borderRadius: 6,
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{b}\n{d}%'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontWeight: 'bold'
+                        }
+                    },
+                    data: pieSeries.data || []
+                }
+            ]
+        };
+    },
+
+    /**
      * Builder para gráficas de líneas horizontales
      */
     horizontal_line: (aggregatedDataset, config, xAxisData, series, title) => {
@@ -245,6 +282,48 @@ function prepareChartData(dataset, config, allKeys, groupByColumn) {
 }
 
 /**
+ * Prepara los datos para una grÃ¡fica de pastel usando:
+ * - eje X como categorÃ­a
+ * - primera serie seleccionada como valor
+ */
+function preparePieChartData(dataset, config, allKeys) {
+    const xCol = config.xAxisColumn || allKeys[0];
+    const excludeCols = [xCol, config.subGroupByColumn];
+    const yCols = (config.yAxisColumns && config.yAxisColumns.length > 0)
+        ? config.yAxisColumns
+        : allKeys.filter(k => !excludeCols.includes(k));
+    const valueCol = yCols[0];
+
+    if (!valueCol) {
+        return { series: [], valueCol: null };
+    }
+
+    const groupedData = {};
+    dataset.forEach(row => {
+        const category = String(row[xCol] ?? 'N/A');
+        const value = parseFloat(row[valueCol]);
+        if (!groupedData[category]) {
+            groupedData[category] = 0;
+        }
+        groupedData[category] += Number.isFinite(value) ? value : 0;
+    });
+
+    const sConf = config.seriesConfigs?.[valueCol] || {};
+    return {
+        valueCol,
+        series: [
+            {
+                name: sConf.alias || valueCol,
+                data: Object.entries(groupedData).map(([name, value]) => ({
+                    name,
+                    value
+                }))
+            }
+        ]
+    };
+}
+
+/**
  * Construye las series para gráficas estándar (barras, líneas).
  */
 function buildSeries(aggregatedDataset, yCols, config, vizType) {
@@ -280,6 +359,13 @@ export function createStaticOption(dataset, title = '', config, allKeys = [], gr
     if (!dataset || dataset.length === 0) return {};
 
     const vizType = config.visualizationType;
+
+    if (vizType === 'pie') {
+        const builder = chartBuilders.pie;
+        const { series } = preparePieChartData(dataset, config, allKeys);
+        return builder(dataset, config, [], series, title);
+    }
+
     const { xAxisData, aggregatedDataset, yCols } = prepareChartData(dataset, config, allKeys, groupByColumn);
 
     // Strategy Pattern: Seleccionar el builder correcto

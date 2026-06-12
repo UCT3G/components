@@ -12,7 +12,7 @@
           height_icon="32px"
           @click.stop="onToggleSidebar"
         />   
-        <div class="workspace-title-block flex-grow-1">
+        <div class="workspace-title-block flex-grow-1 d-none">
           <h2 class="title-gt-c subtitulo mb-0 text-truncate">{{ selectedTableName }}</h2>
           <div class="d-flex gap-1 flex-wrap mt-1">
             <span 

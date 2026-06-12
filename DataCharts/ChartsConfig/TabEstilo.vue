@@ -57,7 +57,7 @@
         title="Escala e Intervalos" 
       >
         <!-- Para gráficas estándar -->
-        <div v-if="visualizationType !== 'radar'">
+        <div v-if="visualizationType !== 'radar' && visualizationType !== 'pie'">
           <label class="small text-muted mb-3 fw-bold">Configurar eje de valores {{ visualizationType === 'horizontal_line' ? '(horizontal)' : '(vertical)' }}</label>
           <div class="row g-2 mb-2">
             <div class="col-6">
@@ -85,7 +85,7 @@
         </div>
 
         <!-- Para Radar -->
-        <div v-else>
+        <div v-else-if="visualizationType === 'radar'">
           <p class="small text-muted mb-2">Configurar escala del radar</p>
           <div class="row g-2 mb-2">
             <div class="col-6">
@@ -110,6 +110,10 @@
                    @input="onScaleUpdate('radarSplitNumber', $event.target.value)"
                    placeholder="Auto" min="1">
           </div>
+        </div>
+
+        <div v-else class="small text-muted">
+          La grafica de pastel usa la categoria del eje X y la primera serie seleccionada como valor.
         </div>
       </ConfigSection>
 
@@ -169,6 +173,7 @@ export default defineComponent({
     const chartTypes = [
         { id: 'bar', label: 'Barra' },
         { id: 'line', label: 'Línea' },
+        { id: 'pie', label: 'Pastel' },
         { id: 'radar', label: 'Radar' },
         { id: 'horizontal_line', label: 'Línea H' }
     ];
