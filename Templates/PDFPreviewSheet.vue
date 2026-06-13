@@ -1,7 +1,7 @@
 <template>
   <div 
-    class="w-100 bg-white shadow-lg rounded position-relative d-flex justify-content-center mb-5" 
-    :style="modoPreview === 'html' ? 'max-width: 580px; height: 82vh; overflow: hidden;' : 'max-width: 580px; aspect-ratio: 1 / 1.4142; overflow: hidden;'"
+    class="w-100 bg-white shadow-lg rounded position-relative d-flex justify-content-center" 
+    :style="modoPreview === 'html' ? 'max-width: 580px; height: 100%; overflow: hidden;' : 'max-width: 580px; aspect-ratio: 1 / 1.4142; overflow: hidden;'"
   >
     <!-- Loader -->
     <div v-if="cargando" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-75" style="z-index: 5;">
