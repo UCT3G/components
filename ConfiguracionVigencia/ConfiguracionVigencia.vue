@@ -8,6 +8,7 @@
         class="form-select form-select-sm"
         @change="emitChange"
         style="width: auto;"
+        :disabled="disabled"
       >
         <option :value="null" disabled>--Selecciona--</option>
         <option v-for="ejercicio in ejercicios" :key="ejercicio" :value="ejercicio">
@@ -23,6 +24,7 @@
         class="form-select form-select-sm"
         style="min-width: 100px"
         @change="emitChange"
+        :disabled="disabled"
       >
         <option :value="null" disabled>--Selecciona--</option>
         <option v-for="(mes, index) in meses" :key="index" :value="periodos[index]">
@@ -84,6 +86,10 @@ export default defineComponent({
         ejercicio_fin: null,
         periodo_fin: null
       })
+    },
+    disabled: {
+      type: Boolean,
+      default: false
     },
     habilitarFechaFin: {
       type: Boolean,

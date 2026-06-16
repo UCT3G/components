@@ -88,6 +88,7 @@ export default defineComponent({
     initialFile: { type: Object, default: null },
     getterPath: { type: String, default: null }, // ruta del getter en el store
     basePath: { type: String, default: "" }, // ej: "media/psicometricos/pyxoom/competencias/"
+    directUrl: { type: String, default: null }, // URL directa del archivo existente (alternativa a getterPath)
     stacked: { type: Boolean, default: false } // Forzar diseño vertical
   },
 
@@ -103,8 +104,10 @@ export default defineComponent({
     // Determinar si hay algún archivo presente (nuevo o remoto)
     const hasAnyFile = computed(() => !!selectedFile.value || !!existingFileUrl.value);
 
-    // Obtener URL del archivo desde el store usando el getter
+    // Obtener URL del archivo: directUrl tiene prioridad sobre getterPath
     const existingFileUrl = computed(() => {
+      if (props.directUrl) return props.directUrl;
+
       if (!props.getterPath) return null;
       
       try {
@@ -137,6 +140,8 @@ export default defineComponent({
     }, { immediate: true });
 
     const existingFileName = computed(() => {
+      // Si hay directUrl, extraer el nombre del archivo de la URL
+      if (props.directUrl) return props.directUrl.split('/').pop();
       if (!props.getterPath) return null;
       const path = store.getters[props.getterPath];
       if (!path) return null;
