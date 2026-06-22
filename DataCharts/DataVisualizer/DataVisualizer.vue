@@ -247,9 +247,9 @@ export default defineComponent({
      */
     const effectiveTrigger = computed(() => props.externalDataTrigger || internalTrigger.value);
 
-    // Vistas locales por instancia para evitar cruces entre varios DataVisualizer montados al mismo tiempo
-    const savedViews = ref([]);
-
+    // Obtiene las vistas guardadas desde el store de DataCharts
+    const savedViews = computed(() => store.getters['DataCharts/getVistas'](selectedTableName.value));
+    
     const { 
       selectedTableName, tableBase, isChartMode, chartOption, chartOptions, chartSections,
       visualizationType, xAxisColumn, yAxisColumns, groupByColumn, subGroupByColumn,
@@ -302,22 +302,6 @@ export default defineComponent({
     });
 
     const onRefresh = () => updateChart();
-
-    const recargarVistasTabla = async (referenciaTabla) => {
-      if (!referenciaTabla) {
-        savedViews.value = [];
-        return [];
-      }
-
-      const response = await store.dispatch('DataCharts/getVistas', {
-        token: store.state.user.token,
-        referencia_tabla: referenciaTabla,
-      });
-
-      const vistas = response?.result || [];
-      savedViews.value = Array.isArray(vistas) ? vistas : [];
-      return savedViews.value;
-    };
     
     const handleSaveRequest = () => {
         if (!selectedTableName.value) return;
@@ -339,8 +323,6 @@ export default defineComponent({
                 es_publica: esPublica.value
             }
         });
-
-        await recargarVistasTabla(selectedTableName.value);
 
         if (res && res.id_vista) {
             const newView = savedViews.value.find(v => String(v.id_vista) === String(res.id_vista));
@@ -364,7 +346,6 @@ export default defineComponent({
                 es_publica: esPublica.value
             }
         });
-        await recargarVistasTabla(selectedTableName.value);
         activeView.value.nombre = newViewName.value;
         activeView.value.es_publica = esPublica.value;
         showSaveModal.value = false;
@@ -392,7 +373,6 @@ export default defineComponent({
             resetToNew();
         }
 
-        await recargarVistasTabla(selectedTableName.value);
         showDeleteModal.value = false;
         viewToDelete.value = null;
     };
@@ -408,7 +388,10 @@ export default defineComponent({
       showConfigModal.value = val;
       if (!val) {
         // Al cerrar el modal de configuración, volvemos a consultar las vistas del store
-        await recargarVistasTabla(selectedTableName.value);
+        await store.dispatch('DataCharts/getVistas', {
+          token: store.state.user.token,
+          referencia_tabla: selectedTableName.value,
+        });
         // Reseteamos el visualizador para forzar la recarga de la vista por defecto/pública
         resetToNew();
       }
@@ -466,9 +449,13 @@ export default defineComponent({
     watch(selectedTableName, async (newVal) => { 
       if (newVal) {
         internalTrigger.value = false; // Bloqueamos carga mientras se realiza el cambio
+        await selectDataTable(newVal); 
 
         // Cargar vistas automáticas para la nueva tabla seleccionada
-        await recargarVistasTabla(newVal);
+        store.dispatch('DataCharts/getVistas', {
+          token: store.state.user.token,
+          referencia_tabla: newVal,
+        });
 
         if (props.tableParams) {
           applyTableParamsToStore(newVal, props.tableParams);
@@ -510,7 +497,7 @@ export default defineComponent({
      */
     watch(() => props.tableParams, (newParams) => {
       applyTableParamsToStore(selectedTableName.value, newParams);
-    }, { deep: true, immediate: false });
+    }, { deep: true, immediate: true });
 
     watch(maxRecords, () => {
       applyTableParamsToStore(selectedTableName.value, props.tableParams);

@@ -12,8 +12,8 @@
           height_icon="32px"
           @click.stop="onToggleSidebar"
         />   
-        <div class="workspace-title-block flex-grow-1 d-none">
-          <h2 class="title-gt-c subtitulo mb-0 text-truncate">{{ selectedTableName }}</h2>
+        <div class="workspace-title-block flex-grow-1" :class="{ 'no-border': viewMode }">
+          <!-- <h2 class="title-gt-c subtitulo mb-0 text-truncate">{{ selectedTableName }}</h2> -->
           <div class="d-flex gap-1 flex-wrap mt-1">
             <span 
               v-for="badge in activeBadges" 
@@ -24,7 +24,7 @@
             </span>
             <!-- Estado y Acciones -->
             <div 
-              v-if="activeView" 
+              v-if="activeView && !viewMode" 
               class="view-status-wrapper position-relative"
               @mouseenter="isTooltipVisible = true"
               @mouseleave="isTooltipVisible = false"
@@ -358,6 +358,10 @@ export default defineComponent({
     padding-left: 12px;
     min-width: 0;
     flex: 1 1 auto;
+}
+.workspace-title-block.no-border {
+    border-left: none;
+    padding-left: 0;
 }
 @media (min-width: 992px) {
     .flex-nowrap-lg { flex-wrap: nowrap !important; }
