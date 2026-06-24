@@ -213,8 +213,9 @@
         
         if (props.columnaFija.includes(index + 1)) {
           estilos.position = 'sticky';
-          estilos.zIndex = 5;
-          estilos.backgroundColor = 'white';
+          estilos.zIndex = 6;
+          estilos.backgroundColor = 'var(--bg-table)';
+          estilos.boxShadow = '2px 0 0 var(--blueBerryPastel)';
           
           if (props.stickyOffsets && props.stickyOffsets[index] !== undefined) {
             estilos.left = `${props.stickyOffsets[index]}px`;

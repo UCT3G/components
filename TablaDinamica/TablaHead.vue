@@ -148,7 +148,8 @@ export default defineComponent({
       
       if (props.columnaFija.includes(index + 1)) {
         estilos.position = 'sticky';
-        estilos.zIndex = 11;
+        estilos.zIndex = 14;
+        estilos.backgroundColor = 'var(--input-bg)';
         
         if (props.stickyOffsets && props.stickyOffsets[index] !== undefined) {
           estilos.left = `${props.stickyOffsets[index]}px`;
@@ -200,7 +201,7 @@ th .loaderSVG-contend-selected {
 }
 
 .sticky-col-header {
-  background-color: transparent !important;
+  background-color: var(--input-bg) !important;
 }
 
 .sticky-col-header::before {
@@ -210,8 +211,13 @@ th .loaderSVG-contend-selected {
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--purple-sb);
-  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    var(--purple-sb) 0%,
+    var(--bluelight-sb) 100%
+  );
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* Redondear esquina solo si es la primera columna fija */
