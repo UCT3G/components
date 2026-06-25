@@ -18,7 +18,9 @@
 
     <!-- Action Section -->
     <div class="card-action">
-      <span class="btn-action">{{ actionText }}</span>
+      <slot name="actions">
+        <span>{{ actionText }}</span>
+      </slot>
     </div>
   </div>
 </template>
@@ -113,14 +115,10 @@ export default defineComponent({
 
 .card-action {
   padding: 10px 16px 14px;
-  text-align: right;
-}
-
-.btn-action {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--bluelight-sb);
-  transition: letter-spacing 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .card-selection-preview:hover .btn-action {

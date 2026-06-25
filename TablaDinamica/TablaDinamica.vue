@@ -64,7 +64,7 @@
     :visible="visible_editor_tabla"
     @update:visible="visible_editor_tabla = $event"
     size="large"
-    titulo="Tabla Dinámica Propiedades"
+    titulo="Tabla DinÃ¡mica Propiedades"
     ref="modalEditar"
     :fullScreenHeight="false"
   >
@@ -79,7 +79,7 @@
     :visible="visibleFormCRUD"
     size="large"
     @update:visible="cerrarFormCrud"
-    titulo="Modifica la información"
+    titulo="Modifica la informaciÃ³n"
     :fullScreenHeight="false"
     ><!--JALA MALDITA SEA-->
     <div v-if="formularioBaseFilas != null"></div>
@@ -217,7 +217,7 @@ export default defineComponent({
       ths.forEach((th, index) => {
         newOffsets.push(currentLeft);
         if (props.columnaFija.includes(index + 1)) {
-          // Usamos getBoundingClientRect para precisión decimal con paddings y bordes
+          // Usamos getBoundingClientRect para precisiÃ³n decimal con paddings y bordes
           currentLeft += th.getBoundingClientRect().width;
         }
       });
@@ -230,7 +230,7 @@ export default defineComponent({
       }
       cargarFormularioBase();
 
-      // Usar ResizeObserver para recalcular si el contenido de la tabla cambia de tamaño
+      // Usar ResizeObserver para recalcular si el contenido de la tabla cambia de tamaÃ±o
       if (window.ResizeObserver) {
         resizeObserver = new ResizeObserver(() => {
           calculateOffsets();
@@ -370,19 +370,19 @@ export default defineComponent({
         json.value.registros_total = res.data.data_table.registros_total;
         json.value.registros_filtrados =  res.data.data_table.registros_filtrados;
         json.value.filas = res.data.data_table.json_actualizado.filas;
-        cargando.value = false; // Actualiza el estado cuando los datos están cargados
+        cargando.value = false; // Actualiza el estado cuando los datos estÃ¡n cargados
         emit("finalizarRenderBody");
         emit("filtroTotal", json.value.registros_filtrados);
       } catch (error) {
-        console.error("Ocurrió un error en filtrar:", error);
-        // Manejar el error adecuadamente aquí
-        cargando.value = false; // Asegurarse de que la indicación de carga se detenga en caso de error
-        alert("Error al filtrar los datos. Por favor, inténtelo de nuevo.");
+        console.error("OcurriÃ³ un error en filtrar:", error);
+        // Manejar el error adecuadamente aquÃ­
+        cargando.value = false; // Asegurarse de que la indicaciÃ³n de carga se detenga en caso de error
+        alert("Error al filtrar los datos. Por favor, intÃ©ntelo de nuevo.");
       }
     };
 
     watch(consultar_registros, (newValue) => {
-      //Cuando cambia el valor de consultar_registros, se ejecuta la función filtrar
+      //Cuando cambia el valor de consultar_registros, se ejecuta la funciÃ³n filtrar
       if (newValue === true) {
         filtrar();
         emit("update:consultar_registros", false);
@@ -405,16 +405,16 @@ export default defineComponent({
     watch(
       () => json.value.columnas.map((columna) => columna.valor),
       (nuevosValores, viejosValores) => {
-        // Función para verificar si todos los valores son nulos, vacíos o espacios en blanco
+        // FunciÃ³n para verificar si todos los valores son nulos, vacÃ­os o espacios en blanco
         const todosSonNulosOVacios = (valores) =>
           valores.every((valor) => valor === null || valor === '' || valor.trim?.() === '');
 
-        // Si ambos conjuntos (nuevos y viejos valores) son nulos/vacíos, no ejecuta filtrar()
+        // Si ambos conjuntos (nuevos y viejos valores) son nulos/vacÃ­os, no ejecuta filtrar()
         if (todosSonNulosOVacios(nuevosValores) && todosSonNulosOVacios(viejosValores)) {
           return; // No hacer nada
         }
 
-        // Verificar si hubo algún cambio significativo
+        // Verificar si hubo algÃºn cambio significativo
         const cambioSignificativo = nuevosValores.some(
           (valor, idx) => valor !== viejosValores[idx]
         );
@@ -427,7 +427,7 @@ export default defineComponent({
       },
       {
         deep: true, // Importante para observar cambios dentro de objetos/arrays
-        immediate: false, // Si deseas que se ejecute inmediatamente después del montaje, cambia a true
+        immediate: false, // Si deseas que se ejecute inmediatamente despuÃ©s del montaje, cambia a true
       }
     );
 
@@ -449,7 +449,7 @@ export default defineComponent({
       },
       {
         deep: true, // Importante para observar cambios dentro de objetos/arrays
-        immediate: false, // Si deseas que se ejecute inmediatamente después del montaje, cambia a true
+        immediate: false, // Si deseas que se ejecute inmediatamente despuÃ©s del montaje, cambia a true
       }
     );
 
@@ -460,7 +460,7 @@ export default defineComponent({
       },
       {
         deep: true, // Importante para observar cambios dentro de objetos/arrays
-        immediate: false, // Si deseas que se ejecute inmediatamente después del montaje, cambia a true
+        immediate: false, // Si deseas que se ejecute inmediatamente despuÃ©s del montaje, cambia a true
       }
     );
 
@@ -492,8 +492,8 @@ export default defineComponent({
     };
 
     const handleFilaClick = ({ fila, index }) => {
-      console.log("Fila seleccionada:", fila, "Índice:", index);
-      // Puedes emitir el evento hacia el padre o realizar alguna acción
+      console.log("Fila seleccionada:", fila, "Ãndice:", index);
+      // Puedes emitir el evento hacia el padre o realizar alguna acciÃ³n
       emit("filaSeleccionada", { fila, index });
     };
 
@@ -590,27 +590,34 @@ export default defineComponent({
 </script>
 
 <style>
-:root {
-  --border-radius-small: 15px;
-  --border-radius-large: 15px;
-}
-
 .TablaDinamica {
   position: relative;
 }
+
 .TablaDinamica .TablaDinamicabtn-filtrar {
   display: none;
 }
+
 .TablaDinamica_iconEditor_container {
   position: absolute;
-  right: 0;
-  top: 50px;
+  right: 13px;
+  top: 40px;
   z-index: 10;
 }
+
 .TablaDinamica_iconEditor {
   cursor: pointer;
-  fill: var(--babyBlue);
+  fill: var(--acceso0);
   background-color: var(--blueBerryPastel);
+  border-radius: 50%;
+}
+
+.TablaDinamica_iconEditor:hover {
+  cursor: pointer;
+  transform: scale(1.1);
+  transition: transform 0.3s ease-in-out;
+  fill: var(--acceso0);
+  background-color: var(--input);
   border-radius: 50%;
 }
 
@@ -628,15 +635,11 @@ export default defineComponent({
   min-width: 100px;
 }
 
-/** Estilos para liberar ancho de la tabla (SÓLO PC) */
 @media (min-width: 993px) {
   .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer {
     overflow-x: auto;
-    padding-bottom: 20px; /* Espacio para el scroll */
-    
-    /* Sombras de Scroll Dinámicas (CSS Only) */
+    padding-bottom: 20px;
     background:
-      /* Sombra izquierda (aparece al scrollear a la derecha) */
       linear-gradient(to right, white 30%, rgba(255, 255, 255, 0)),
       linear-gradient(to right, rgba(255, 255, 255, 0), white 70%) 100% 0,
       radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)),
@@ -652,40 +655,34 @@ export default defineComponent({
     min-width: 100%;
   }
 
-  /* ------ FIX TRUNCAMIENTO INTELIGENTE (Smart Truncation) ------ */
-  /* Limitar el contenedor principal del header y forzar alineación izquierda */
   .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table thead tr th .TablaDinamica_nombreCampo {
-    max-width: 250px !important; /* Ajuste final de producción */
-    justify-content: flex-start !important; /* Evitar que el centering corte el inicio */
+    max-width: 250px !important;
+    justify-content: flex-start !important;
     padding-left: 5px;
   }
 
-  /* El elemento P dentro del header debe truncarse correctamente */
   .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table thead tr th .TablaDinamica_nombreCampo p {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 0; /* CRUCIAL para que un hijo flex pueda truncarse */
-    width: 100%; 
+    min-width: 0;
+    width: 100%;
     text-align: left;
     margin: 0;
   }
 
-  /* Truncamiento para las celdas del body */
   .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table tbody tr td .conBorde,
   .TablaDinamica.liberar-ancho .TablaDinamica_scrollContainer table tbody tr td .conBordeCentrado {
     white-space: nowrap;
-    max-width: 250px !important; /* Ajuste final de producción */
-    display: block !important; /* Asegurar bloque para el text-overflow */
+    max-width: 250px !important;
+    display: block !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     text-align: left !important;
     padding-left: 5px;
     padding-right: 5px;
   }
-  /* ------------------------------------------------------------- */
 
-  /* Sticky Header corrigiendo identidad visual */
   .TablaDinamica.liberar-ancho table thead tr {
     position: sticky;
     top: 0;
@@ -694,57 +691,71 @@ export default defineComponent({
 
   .TablaDinamica.liberar-ancho table thead tr th {
     white-space: nowrap;
-    background-color: transparent; /* Evitar tapar el gradiente del tr::after */
+    background-color: var(--input-bg);
   }
 
-  /* Las reglas específicas de columnaFija se manejarán con estilos dinámicos o clases inyectadas en los subcomponentes */
-
   .TablaDinamica.liberar-ancho table thead tr::after {
-    z-index: 2; /* Mantener sobre el fondo pero bajo el texto */
+    z-index: 2;
+  }
+
+  .TablaDinamica.h-100 .TablaDinamica_scrollContainer table thead {
+    z-index: 20;
+  }
+
+  .TablaDinamica.h-100 .TablaDinamica_scrollContainer table thead tr th {
+    background-color: var(--input-bg);
   }
 }
 
 .TablaDinamica table {
   border-collapse: collapse;
-  border-spacing: 0; /* Esto es equivalente a cellspacing="0" en HTML */
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+  border-spacing: 0;
   border-radius: var(--border-radius-large);
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.10), 0px 1px 4px rgba(0, 0, 0, 0.08);
 }
+
 .TablaDinamica table thead {
   overflow: hidden;
   position: relative;
-  z-index: 0; /* Base z-index para asegurar contexto */
+  z-index: 1;
 }
+
 .TablaDinamica table thead tr th {
   position: relative;
   z-index: 3;
   background-color: unset;
-  color: var(--babyBlue);
+  color: var(--txt-table-title);
   font-family: "MonserratBoldItalic";
   padding: 0;
+  border-bottom: none !important;
 }
+
 .TablaDinamica table thead tr th:first-child {
   border-radius: var(--border-radius-small) 0px 0px 0px;
 }
+
 .TablaDinamica table thead tr th:last-child {
   border-radius: 0px var(--border-radius-large) 0px 0px;
 }
+
 .TablaDinamica .TablaDinamica_nombreCampo {
   z-index: 3;
   position: relative;
   min-height: 28px;
-  margin: 5px 16px;
+  margin: 5px 12.5px;
   text-align: center;
-  font-size: 14px;
+  font-size: 13.5px;
   margin-top: 8px;
   height: 30px;
   overflow-y: hidden;
   padding: 5px 0px;
 }
+
 .TablaDinamica table thead tr::after {
   content: "";
   width: 100%;
-  height: 35px;
+  height: 31px;
+  font-size: 12px;
   position: absolute;
   border-radius: var(--border-radius-large) var(--border-radius-large) 0px 0px;
   left: 0;
@@ -762,7 +773,7 @@ export default defineComponent({
   position: relative;
   background-color: unset;
   z-index: 3;
-  min-height: 60px;
+  min-height: 45px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -770,20 +781,21 @@ export default defineComponent({
 
 .TablaDinamica .TablaDinamica_contenedorFiltro .TablaDinamica_orderable div,
 .TablaDinamica .TablaDinamica_contenedorFiltro .TablaDinamica_iconfiltro div {
-  background-color: white;
+  background-color: var(--input);
   z-index: 3;
   width: 24px;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 38px;
+  height: 32px;
   margin-left: 15px;
   border-radius: 10px 0px 0px 10px;
 }
+
 .TablaDinamica .TablaDinamica_contenedorFiltro .TablaDinamica_orderable svg,
 .TablaDinamica .TablaDinamica_contenedorFiltro .TablaDinamica_iconfiltro svg {
-  fill: var(--black);
+  fill: var(--icon_color_table);
   width: 12px;
   font-size: 12px;
 }
@@ -798,6 +810,7 @@ export default defineComponent({
   align-items: center;
   width: 90%;
 }
+
 .TablaDinamica
   .TablaDinamica_contenedorFiltro
   .tablaDinamica-filtro-content
@@ -814,25 +827,27 @@ export default defineComponent({
   .tablaDinamica-filtro-content
   select {
   width: 90%;
-  height: 38px;
+  height: 32px;
   border-radius: 0px 10px 10px 0px;
   padding: 0 10px;
   margin: 5px 0;
-  font-size: 14px;
-  color: var(--black);
+  font-size: 12px;
+  color: var(--txt-table);
   border: unset;
+  background-color: var(--input);
 }
 
 .TablaDinamica table thead .TablaDinamica_contenedorFiltro::before {
   content: "";
   width: 100%;
-  height: 60px;
+  height: 45px;
   position: absolute;
   left: 0;
   bottom: 0;
   color: var(--babyBlue);
   z-index: 2;
-  background-color: var(--blueBerryPastel);
+  background-color: var(--input-bg);
+  box-shadow: 0px 8px 12px -6px rgba(0,0,0,0.15);
 }
 
 .TablaDinamica .TablaDinamica_orderable {
@@ -840,17 +855,17 @@ export default defineComponent({
 }
 
 .TablaDinamica table tbody tr td {
-  padding: 0px 5px;
+  padding: 0px 16px;
+  padding-top: 2px;
   border: unset;
-  font-size: 13px;
-  /*color: var(--black);*/
+  font-size: 12px;
+  background-color: var(--bg-table);
+  color: var(--txt-table);
   font-family: "MonserratSemiBold";
-  border-right: 4px solid var(--blueBerry);
-  border-bottom: 2px solid var(--blueBerryPastel);
+  border-bottom: 1.5px solid var(--blueBerryPastel);
 }
 
 .TablaDinamica table tbody tr td .conBorde {
-  /* Neblina en la parte inferior de la celda */
   min-height: 35px;
   max-height: 50px;
   display: flex;
@@ -859,62 +874,54 @@ export default defineComponent({
   position: relative;
   height: 50px;
   padding: 10px 0px 0px 0px;
-  position: relative;
 }
 
 .TablaDinamica table tbody tr td .conBordeCentrado {
   min-height: 35px;
   max-height: 50px;
   display: flex;
-  align-items: center; /* Centrar verticalmente */
-  justify-content: center; /* Centrar horizontalmente */
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   position: relative;
   height: 50px;
   padding: 10px 0px 0px 0px;
-  position: relative;
 }
 
 .TablaDinamica table tbody tr td .conBorde::before {
-  content: ""; /* Neblina en la parte inferior de la celda */
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 20px; /* Altura de la neblina */
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0) 0%,
-    var(--babyBlue) 100%
-  );
+  height: 20px;
   pointer-events: none;
 }
 
 .TablaDinamica table tbody tr td .conBorde.controles {
-  /* Sobrescribe los estilos o deja vacío para que no se apliquen */
-  all: unset; /* Esto desactiva cualquier estilo que se haya aplicado */
+  all: unset;
 }
 
 .TablaDinamica table tbody tr:hover td {
-  background: linear-gradient(
-    to bottom,
-    var(--babyBlue) 0%,
-    var(--blueBerryPastel) 70%,
-    rgba(255, 255, 255, 0.3) 100%
-  );
+  background: var(--bg-table-hover);
 }
+
 .TablaDinamica table tbody tr .td-titulo {
   display: none;
 }
+
 .TablaDinamica table tbody tr td:last-child {
   border-right: unset;
 }
+
 .TablaDinamica table tbody tr:last-child td {
   border-bottom: unset;
 }
+
 .TablaDinamica table tbody :last-child td:first-child {
   border-radius: 0px 0px 0px var(--border-radius-small);
 }
+
 .TablaDinamica table tbody :last-child td:last-child {
   border-radius: 0px 0px var(--border-radius-small) 0px;
 }
@@ -933,33 +940,29 @@ export default defineComponent({
   border-radius: 10px;
   background: var(--bluelight-sb-70);
 }
+
 .TablaDinamica .TablaDinamicaFooter_pagination nav .pagination .active a {
-  background-color: var(--purple-sb);
-  color: var(--babyBlue);
+  color: var(--purple-sb);
   border: unset;
-  /*border-radius: 10px;*/
-  background-image: linear-gradient(
-    90deg,
-    var(--purple-sb-70) 0%,
-    var(--bluelight-sb-70) 100%
-  );
-}
-.TablaDinamica .TablaDinamicaFooter_pagination nav .pagination li a {
-  background-color: unset;
-  color: var(--babyBlue);
-  font-family: "MonserratSemiBold";
 }
 
-/*estilos de a¿la tabla que aplican de 768px hacia abajo */
+.TablaDinamica .TablaDinamicaFooter_pagination nav .pagination li a {
+  background-color: var(--bg-table);
+  color: var(--footer-table-txt);
+  font-family: "MonserratSemiBold";
+  font-size: 14px;
+  border: var(--footer-table-bg);
+  transition: all .2s ease;
+}
+
+.TablaDinamica .TablaDinamicaFooter_pagination nav .pagination li a:hover {
+  transform: translateY(-1px);
+  opacity: .9;
+}
+
 @media (max-width: 576px) {
-  .TablaDinamica
-    table
-    tbody
-    tr
-    td
-    .conBorde::before
-    .TablaDinamica.break-sm
-    .TablaDinamicabtn-filtrar {
+  .TablaDinamica table tbody tr td .conBorde::before,
+  .TablaDinamica.break-sm .TablaDinamicabtn-filtrar {
     display: inline-block;
   }
   .TablaDinamica.break-sm table {
@@ -976,7 +979,7 @@ export default defineComponent({
     transition: max-height 0.5s ease;
   }
   .TablaDinamica.break-sm table .showHead {
-    max-height: 2000px; /* ajustar según sea necesario */
+    max-height: 2000px;
   }
   .TablaDinamica.break-sm table thead tr {
     display: flex;
@@ -1005,17 +1008,18 @@ export default defineComponent({
     padding: 0 15px;
     background: unset;
   }
-
   .TablaDinamica.break-sm .tablaDinamica-filtro-content select {
     min-width: 200px;
   }
   .TablaDinamica.break-sm .tablaDinamica-filtro-content input {
     width: 100%;
   }
+  .TablaDinamica.break-sm .TablaDinamica_iconEditor_container {
+    top: 5px;
+  }
   .TablaDinamica.break-sm .TablaDinamica_iconEditor {
     background-color: var(--blueBerry);
     border-radius: 50%;
-    top: 5px;
     z-index: 10;
     box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
       rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
@@ -1030,7 +1034,7 @@ export default defineComponent({
   .TablaDinamica.break-sm tbody tr {
     display: flex;
     flex-direction: column;
-    width: 100%; /**Ancho de la fila */
+    width: 100%;
     position: relative;
     margin: 10px;
     padding: 0px !important;
@@ -1038,12 +1042,6 @@ export default defineComponent({
     border: unset;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   }
-  /**Cancelar Hover en tr */
-  /* .TablaDinamica.break-sm tbody tr:hover {
-    background: unset;
-    background-color: unset;
-  } */
-
   .TablaDinamica.break-sm tbody tr td {
     background-color: unset;
     border-right: unset !important;
@@ -1056,7 +1054,7 @@ export default defineComponent({
   .TablaDinamica.break-sm table tbody tr .td-titulo {
     display: inline-block;
     background: var(--blueBerryPastel);
-    width: 30%; /**Ancho de la columna Titulo*/
+    width: 30%;
     min-width: 100px;
     text-align: end;
     padding: 0 10px 0px 5px;
@@ -1076,7 +1074,6 @@ export default defineComponent({
     padding: 0;
     font-family: "MonserratSemiBoldItalic";
   }
-
   .TablaDinamica.break-sm tbody tr td:nth-child(1) {
     position: relative;
     background: linear-gradient(
@@ -1092,12 +1089,10 @@ export default defineComponent({
   }
   .TablaDinamica.break-sm table {
     border-collapse: collapse;
-    border-spacing: 0; /* Equivalente a cellspacing="0" en HTML */
+    border-spacing: 0;
     box-shadow: unset;
     border-radius: 20px;
   }
-
-  /**SOLO PARA DropDownTrespuntos */
   .TablaDinamica.break-sm table .DropDownTrespuntos {
     position: absolute;
     right: 10px;
@@ -1131,7 +1126,7 @@ export default defineComponent({
     border-radius: var(--border-radius-large) var(--border-radius-large) 0px 0px;
   }
   .TablaDinamica.break-md table .showHead {
-    max-height: 2000px; /* ajustar según sea necesario */
+    max-height: 2000px;
   }
   .TablaDinamica.break-md table thead tr {
     display: flex;
@@ -1166,10 +1161,12 @@ export default defineComponent({
   .TablaDinamica.break-md .tablaDinamica-filtro-content input {
     width: 100%;
   }
+  .TablaDinamica.break-md .TablaDinamica_iconEditor_container {
+    top: 5px;
+  }
   .TablaDinamica.break-md .TablaDinamica_iconEditor {
     background-color: var(--blueBerry);
     border-radius: 50%;
-    top: 5px;
     z-index: 10;
     box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
       rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
@@ -1186,98 +1183,74 @@ export default defineComponent({
     flex-direction: column;
     width: 100%;
     position: relative;
-    margin: 10px 0;
+    margin: 10px;
     padding: 0px !important;
-    border-radius: 12px;
-    border: 1px solid #eef2f7;
-    background-color: #fff;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 20px;
+    border: unset;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   }
-
-  .TablaDinamica.break-md tbody tr:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-  }
-
   .TablaDinamica.break-md tbody tr td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: transparent;
+    background-color: unset;
     border-right: unset !important;
-    border-bottom: 1px solid #f1f3f5 !important;
-    width: 100%;
-    min-height: 40px;
-    font-size: 0.85rem;
-    padding: 12px 15px;
+    border-bottom: unset !important;
+    width: calc(100% - 20px);
+    min-height: 30px;
+    font-size: 12px;
+    padding: 10px;
   }
-
-  .TablaDinamica.break-md tbody tr td:last-child {
-    border-bottom: none !important;
-  }
-
   .TablaDinamica.break-md table tbody tr .td-titulo {
     display: inline-block;
-    background: transparent;
-    color: #6c757d;
-    font-weight: 600;
-    width: 40%;
-    text-align: left;
-    padding: 0;
-    margin: 0;
+    background: var(--blueBerryPastel);
+    width: 30%;
+    min-width: 100px;
+    text-align: end;
+    padding: 0 10px 0px 5px;
+    margin: 0 5px 0px 0px;
   }
-
   .TablaDinamica.break-md tbody tr td .conBorde {
-    width: 60%;
-    text-align: right;
-    border-bottom: unset;
-    color: #333;
-    font-weight: 500;
-    word-break: break-word;
+    border-bottom: solid 1px var(--blueBerryPastel);
   }
-
-  /* Card Header (1st Row) */
-  .TablaDinamica.break-md tbody tr td:nth-child(1) {
-    background-color: var(--blueBerry);
-    border-bottom: none !important;
-    border-radius: 12px 12px 0 0;
-    width: 100%;
-    padding: 15px;
-    display: flex;
-    justify-content: flex-start;
-  }
-  .TablaDinamica.break-md tbody tr td:nth-child(1) .td-titulo {
-    display: none;
-  }
+  .TablaDinamica.break-md tbody tr td:nth-child(1) .td-titulo,
   .TablaDinamica.break-md tbody tr td:nth-child(1) .conBorde {
-    color: #fff;
+    background: unset !important;
+    border-bottom: unset;
+    width: auto;
     font-size: 1rem;
-    font-weight: 700;
-    text-align: left;
-    width: 100%;
-    padding-right: 25px;
+    color: var(--babyBlue);
+    margin: 0;
+    padding: 0;
+    font-family: "MonserratSemiBoldItalic";
   }
-
+  .TablaDinamica.break-md tbody tr td:nth-child(1) {
+    position: relative;
+    background: linear-gradient(
+      90deg,
+      var(--purple-sb-70) 0%,
+      var(--bluelight-sb-70) 100%
+    );
+    border-bottom: unset;
+    border-radius: 15px 15px 0px 0px;
+    width: 100%;
+    top: 0;
+    left: 0;
+  }
   .TablaDinamica.break-md table {
     border-collapse: collapse;
     border-spacing: 0;
     box-shadow: unset;
     border-radius: 20px;
   }
-
-  /**SOLO PARA DropDownTrespuntos */
   .TablaDinamica.break-md table .DropDownTrespuntos {
     position: absolute;
-    right: 15px;
-    top: 15px;
-    color: #fff;
+    right: 10px;
+    top: 0;
+    color: var(--babyBlue);
   }
   .TablaDinamica.break-md table .DropDownTrespuntos .icon {
-    fill: #fff;
+    fill: var(--babyBlue);
   }
   .TablaDinamica.break-md table .dropstart .dropdown-toggle::before {
-    color: #fff;
+    color: var(--babyBlue);
   }
 }
 
@@ -1287,7 +1260,6 @@ export default defineComponent({
     background: unset;
     background-color: unset;
   }
-
   .TablaDinamica.break-lg .TablaDinamicabtn-filtrar {
     display: inline-block;
   }
@@ -1305,7 +1277,7 @@ export default defineComponent({
     transition: max-height 0.5s ease;
   }
   .TablaDinamica.break-lg table .showHead {
-    max-height: 2000px; /* o un valor adecuado */
+    max-height: 2000px;
   }
   .TablaDinamica.break-lg table thead tr {
     display: flex;
@@ -1326,12 +1298,10 @@ export default defineComponent({
   .TablaDinamica.break-lg table thead tr::after {
     display: none;
   }
-
   .TablaDinamica.break-lg .TablaDinamica_nombreCampo {
     font-family: "MonserratSemiBold";
     font-size: 0.8rem;
   }
-
   .TablaDinamica.break-lg table thead .TablaDinamica_contenedorFiltro {
     width: 60%;
     display: flex;
@@ -1342,23 +1312,22 @@ export default defineComponent({
   .TablaDinamica.break-lg table thead .TablaDinamica_contenedorFiltro::before {
     display: none;
   }
-
   .TablaDinamica.break-lg .tablaDinamica-filtro-content select {
     min-width: 200px;
   }
   .TablaDinamica.break-lg .tablaDinamica-filtro-content input {
     width: 100%;
   }
-
+  .TablaDinamica.break-lg .TablaDinamica_iconEditor_container {
+    top: 5px;
+  }
   .TablaDinamica.break-lg .TablaDinamica_iconEditor {
     background-color: var(--blueBerry);
     border-radius: 50%;
-    top: 5px;
     z-index: 10;
     box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
       rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
   }
-
   .TablaDinamica.break-lg tbody {
     display: flex;
     width: 100%;
@@ -1366,104 +1335,79 @@ export default defineComponent({
     flex-wrap: wrap;
     justify-content: center;
   }
-
   .TablaDinamica.break-lg tbody tr {
     display: flex;
     flex-direction: column;
     width: 100%;
     position: relative;
-    margin: 10px 0;
+    margin: 10px;
     padding: 0px !important;
-    border-radius: 12px;
-    border: 1px solid #eef2f7;
-    background-color: #fff;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 20px;
+    border: unset;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   }
-
-  .TablaDinamica.break-lg tbody tr:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-  }
-
   .TablaDinamica.break-lg tbody tr td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: transparent;
+    background-color: unset;
     border-right: unset !important;
-    border-bottom: 1px solid #f1f3f5 !important;
-    width: 100%;
-    min-height: 40px;
-    font-size: 0.85rem;
-    padding: 12px 15px;
+    border-bottom: unset !important;
+    width: calc(100% - 20px);
+    min-height: 30px;
+    font-size: 12px;
+    padding: 10px;
   }
-
-  .TablaDinamica.break-lg tbody tr td:last-child {
-    border-bottom: none !important;
-  }
-
   .TablaDinamica.break-lg table tbody tr .td-titulo {
     display: inline-block;
-    background: transparent;
-    color: #6c757d;
-    font-weight: 600;
-    width: 40%;
-    text-align: left;
-    padding: 0;
-    margin: 0;
+    background: var(--blueBerryPastel);
+    width: 30%;
+    min-width: 100px;
+    text-align: end;
+    padding: 0 10px 0px 5px;
+    margin: 0 5px 0px 0px;
   }
-
   .TablaDinamica.break-lg tbody tr td .conBorde {
-    width: 60%;
-    text-align: right;
-    border-bottom: unset;
-    color: #333;
-    font-weight: 500;
-    word-break: break-word;
+    border-bottom: solid 1px var(--blueBerryPastel);
   }
-
-  /* Card Header (1st Row) */
-  .TablaDinamica.break-lg tbody tr td:nth-child(1) {
-    background-color: var(--blueBerry);
-    border-bottom: none !important;
-    border-radius: 12px 12px 0 0;
-    width: 100%;
-    padding: 15px;
-    display: flex;
-    justify-content: flex-start;
-  }
-  .TablaDinamica.break-lg tbody tr td:nth-child(1) .td-titulo {
-    display: none;
-  }
+  .TablaDinamica.break-lg tbody tr td:nth-child(1) .td-titulo,
   .TablaDinamica.break-lg tbody tr td:nth-child(1) .conBorde {
-    color: #fff;
+    background: unset !important;
+    border-bottom: unset;
+    width: auto;
     font-size: 1rem;
-    font-weight: 700;
-    text-align: left;
-    width: 100%;
-    padding-right: 25px;
+    color: var(--babyBlue);
+    margin: 0;
+    padding: 0;
+    font-family: "MonserratSemiBoldItalic";
   }
-
+  .TablaDinamica.break-lg tbody tr td:nth-child(1) {
+    position: relative;
+    background: linear-gradient(
+      90deg,
+      var(--purple-sb-70) 0%,
+      var(--bluelight-sb-70) 100%
+    );
+    border-bottom: unset;
+    border-radius: 15px 15px 0px 0px;
+    width: 100%;
+    top: 0;
+    left: 0;
+  }
   .TablaDinamica.break-lg table {
     border-collapse: collapse;
     border-spacing: 0;
     box-shadow: unset;
     border-radius: 20px;
   }
-
-  /**SOLO PARA DropDownTrespuntos */
   .TablaDinamica.break-lg table .DropDownTrespuntos {
     position: absolute;
-    right: 15px;
-    top: 15px;
-    color: #fff;
+    right: 10px;
+    top: 0;
+    color: var(--babyBlue);
   }
   .TablaDinamica.break-lg table .DropDownTrespuntos .icon {
-    fill: #fff;
+    fill: var(--babyBlue);
   }
   .TablaDinamica.break-lg table .dropstart .dropdown-toggle::before {
-    color: #fff;
+    color: var(--babyBlue);
   }
 }
 </style>

@@ -248,8 +248,8 @@ export default defineComponent({
     const effectiveTrigger = computed(() => props.externalDataTrigger || internalTrigger.value);
 
     // Obtiene las vistas guardadas desde el store de DataCharts
-    const savedViews = computed(() => store.getters['DataCharts/getVistas']);
-
+    const savedViews = computed(() => store.getters['DataCharts/getVistas'](selectedTableName.value));
+    
     const { 
       selectedTableName, tableBase, isChartMode, chartOption, chartOptions, chartSections,
       visualizationType, xAxisColumn, yAxisColumns, groupByColumn, subGroupByColumn,
