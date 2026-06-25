@@ -150,6 +150,10 @@ export default defineComponent({
         estilos.position = 'sticky';
         estilos.zIndex = 14;
         estilos.backgroundColor = 'var(--input-bg)';
+        estilos.backgroundImage = 'linear-gradient(90deg, var(--purple-sb) 0%, var(--purple-sb) 100%)';
+        estilos.backgroundRepeat = 'no-repeat';
+        estilos.backgroundSize = '100% 31px';
+        estilos.backgroundPosition = 'top left';
         
         if (props.stickyOffsets && props.stickyOffsets[index] !== undefined) {
           estilos.left = `${props.stickyOffsets[index]}px`;
@@ -202,26 +206,13 @@ th .loaderSVG-contend-selected {
 
 .sticky-col-header {
   background-color: var(--input-bg) !important;
-}
-
-.sticky-col-header::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
+  background-image: linear-gradient(
     90deg,
     var(--purple-sb) 0%,
-    var(--bluelight-sb) 100%
-  );
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Redondear esquina solo si es la primera columna fija */
-th.sticky-col-header:first-child::before {
-  border-radius: var(--border-radius-large) 0 0 0;
+    var(--purple-sb) 100%
+  ) !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 31px !important;
+  background-position: top left !important;
 }
 </style>
