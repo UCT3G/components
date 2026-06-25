@@ -8,6 +8,11 @@
             <div class="m-0 TablaDinamicaFooter_pagination">
                 <nav aria-label="...">
                     <ul class="pagination">
+                        <!-- Boton INICIO -->
+                        <li class="page-item" :class="{ 'disabled': json.paginaActual === 1 }">
+                            <a class="page-link" href="#" @click="cambiarPagina(1)">Inicio</a>
+                        </li>
+
                         <li class="page-item" :class="{ 'disabled': json.paginaActual === 1 }">
                             <a class="page-link" href="#" @click="cambiarPagina(json.paginaActual - 1)">{{'<<'}}</a>
                         </li>
@@ -16,6 +21,11 @@
                         </li>
                         <li class="page-item" :class="{ 'disabled': json.paginaActual === totalPaginas }">
                             <a class="page-link" href="#" @click="cambiarPagina(json.paginaActual + 1)">{{'>>'}}</a>
+                        </li>
+
+                        <!-- Boton FIN -->
+                        <li class="page-item" :class="{ 'disabled': json.paginaActual === totalPaginas }">
+                            <a class="page-link" href="#" @click="cambiarPagina(totalPaginas)">Fin</a>
                         </li>
                     </ul>
                 </nav>
@@ -51,11 +61,13 @@ export default defineComponent({
 
         const paginasVisibles = computed(() => {
             let paginas = [];
-            let inicio = Math.max(props.json.paginaActual - 1, 1);
-            let fin = Math.min(inicio + 2, totalPaginas.value);
+
+            let maxPaginasVisibles = window.innerWidth < 576 ? 2 : 5;
+            let inicio = Math.max(props.json.paginaActual - Math.floor(maxPaginasVisibles / 2), 1);
+            let fin = Math.min(inicio + maxPaginasVisibles - 1, totalPaginas.value);
 
             if (fin === totalPaginas.value) {
-                inicio = Math.max(fin - 2, 1);
+                inicio = Math.max(fin - maxPaginasVisibles + 1, 1);
             }
 
             for (let i = inicio; i <= fin; i++) {
@@ -67,7 +79,6 @@ export default defineComponent({
        
 
         const cambiarPagina = (pagina) => {
-            console.log(pagina);
             if (pagina < 1 || pagina > totalPaginas.value){
                 return
             }

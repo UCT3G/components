@@ -602,7 +602,7 @@ export default defineComponent({
   position: absolute;
   right: 13px;
   top: 40px;
-  z-index: 10;
+  z-index: 40;
 }
 
 .TablaDinamica_iconEditor {
@@ -718,12 +718,22 @@ export default defineComponent({
   overflow: hidden;
   position: relative;
   z-index: 1;
+  background-color: var(--input-bg);
+  box-shadow: none;
 }
 
 .TablaDinamica table thead tr th {
   position: relative;
-  z-index: 3;
-  background-color: unset;
+  z-index: 0;
+  background-color: var(--input-bg);
+  background-image: linear-gradient(
+    90deg,
+    var(--purple-sb) 0%,
+    var(--purple-sb) 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 31px;
+  background-position: top left;
   color: var(--txt-table-title);
   font-family: "MonserratBoldItalic";
   padding: 0;
@@ -752,26 +762,12 @@ export default defineComponent({
 }
 
 .TablaDinamica table thead tr::after {
-  content: "";
-  width: 100%;
-  height: 31px;
-  font-size: 12px;
-  position: absolute;
-  border-radius: var(--border-radius-large) var(--border-radius-large) 0px 0px;
-  left: 0;
-  top: 0;
-  background: linear-gradient(
-    90deg,
-    var(--purple-sb) 0%,
-    var(--bluelight-sb) 100%
-  );
-  color: var(--babyBlue);
-  z-index: 2;
+  display: none;
 }
 
 .TablaDinamica .TablaDinamica_contenedorFiltro {
   position: relative;
-  background-color: unset;
+  background-color: var(--input-bg);
   z-index: 3;
   min-height: 45px;
   display: flex;
@@ -803,7 +799,7 @@ export default defineComponent({
 .TablaDinamica .TablaDinamica_contenedorFiltro .tablaDinamica-filtro-content {
   position: relative;
   z-index: 3;
-  background-color: unset;
+  background-color: var(--input-bg);
   min-width: 55px;
   display: flex;
   justify-content: center;
@@ -835,6 +831,11 @@ export default defineComponent({
   color: var(--txt-table);
   border: unset;
   background-color: var(--input);
+}
+
+.TablaDinamica table thead .tablaDinamica-filtro-content input:focus,
+.TablaDinamica table thead .tablaDinamica-filtro-content select:focus {
+  box-shadow: none !important;
 }
 
 .TablaDinamica table thead .TablaDinamica_contenedorFiltro::before {
@@ -989,7 +990,15 @@ export default defineComponent({
   }
   .TablaDinamica.break-sm table thead tr th {
     border-radius: unset;
-    background: unset;
+    background-color: var(--input-bg);
+    background-image: linear-gradient(
+      90deg,
+      var(--purple-sb) 0%,
+      var(--purple-sb) 100%
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 31px;
+    background-position: top left;
     width: 100% !important;
     position: relative;
     display: flex;
@@ -1006,7 +1015,7 @@ export default defineComponent({
     display: flex;
     justify-content: end;
     padding: 0 15px;
-    background: unset;
+    background: var(--input-bg);
   }
   .TablaDinamica.break-sm .tablaDinamica-filtro-content select {
     min-width: 200px;
@@ -1136,7 +1145,15 @@ export default defineComponent({
   }
   .TablaDinamica.break-md table thead tr th {
     border-radius: unset;
-    background: unset;
+    background-color: var(--input-bg);
+    background-image: linear-gradient(
+      90deg,
+      var(--purple-sb) 0%,
+      var(--purple-sb) 100%
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 31px;
+    background-position: top left;
     width: 100% !important;
     position: relative;
     display: flex;
@@ -1153,7 +1170,7 @@ export default defineComponent({
     display: flex;
     justify-content: end;
     padding: 0 15px;
-    background: unset;
+    background: var(--input-bg);
   }
   .TablaDinamica.break-md .tablaDinamica-filtro-content select {
     min-width: 200px;
@@ -1287,7 +1304,15 @@ export default defineComponent({
   }
   .TablaDinamica.break-lg table thead tr th {
     border-radius: unset;
-    background: unset;
+    background-color: var(--input-bg);
+    background-image: linear-gradient(
+      90deg,
+      var(--purple-sb) 0%,
+      var(--purple-sb) 100%
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 31px;
+    background-position: top left;
     width: 100% !important;
     position: relative;
     display: flex;
@@ -1307,7 +1332,7 @@ export default defineComponent({
     display: flex;
     justify-content: end;
     padding: 0 15px;
-    background: unset;
+    background: var(--input-bg);
   }
   .TablaDinamica.break-lg table thead .TablaDinamica_contenedorFiltro::before {
     display: none;
