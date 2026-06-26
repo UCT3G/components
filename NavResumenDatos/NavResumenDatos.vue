@@ -1,29 +1,30 @@
-<template>
+﻿<template>
   <section class="resumen-datos-panel bg-white shadow-sm">
     <div class="resumen-datos-grid">
-      
       <div
-        v-for="(item, index) in items"
-        :key="index"
-        class="resumen-dato-item resumen-dato-item-clickable"
-        :class="{ 'resumen-dato-item-activo': filtroActivo === item.valor }"
-        @click="seleccionarFiltro(item.valor)"
+        v-for="item in normalizedItems"
+        :key="item.id"
+        class="resumen-dato-item"
+        :class="{
+          'resumen-dato-item-clickable': item.clickeable,
+          'resumen-dato-item-activo': item.activo
+        }"
+        @click="seleccionarItem(item)"
       >
-        <div class="resumen-dato-icon" :class="getIconClass(index)">
-          <DynamicSvgLoader :fileName="item.icono" width="24px" height="24px" />
+        <div class="resumen-dato-icon" :class="getIconClass(item)">
+          <DynamicSvgLoader :fileName="item.icono" width_icon="24px" height_icon="24px" />
         </div>
         <div>
           <p class="resumen-dato-label">{{ item.titulo }}</p>
-          <p class="resumen-dato-value">{{ item.cantidad || 0 }}</p>
+          <p class="resumen-dato-value">{{ item.valor }}</p>
         </div>
       </div>
-
     </div>
   </section>
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent } from 'vue';
 import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 
 export default defineComponent({
@@ -32,38 +33,77 @@ export default defineComponent({
     DynamicSvgLoader
   },
   props: {
+    /**
+     * Contrato recomendado por item:
+     * {
+     *   id: String | Number,
+     *   titulo: String,
+     *   valor: String | Number,
+     *   icono: String,
+     *   activo?: Boolean,
+     *   clickeable?: Boolean,
+     *   variante?: String
+     * }
+     *
+     * Compatibilidad actual:
+     * - `cantidad` se sigue tomando como alias de `valor`
+     * - `valor` se sigue tomando como alias de `id` cuando `id` no viene definido
+     */
     items: {
       type: Array,
-      default: () => []
+      default: () => [],
+      validator: (items) =>
+        Array.isArray(items) &&
+        items.every((item) => item && typeof item === 'object')
+    },
+    activeItemId: {
+      type: [String, Number, null],
+      default: null
     }
   },
-  emits: ['filtro-seleccionado'],
+  emits: ['item-click', 'filtro-seleccionado'],
   setup(props, { emit }) {
-    const filtroActivo = ref(null);
+    const normalizedItems = computed(() =>
+      props.items.map((item, index) => {
+        const fallbackId = item.id ?? item.valor ?? `item-${index}`;
+        const displayValue = item.cantidad ?? item.valor ?? 0;
 
-    const seleccionarFiltro = (filtroId) => {
-      if (filtroActivo.value === filtroId) {
-        filtroActivo.value = null; // Toggle
-      } else {
-        filtroActivo.value = filtroId;
+        return {
+          id: fallbackId,
+          titulo: item.titulo ?? '',
+          valor: displayValue,
+          icono: item.icono ?? '',
+          activo: typeof item.activo === 'boolean' ? item.activo : props.activeItemId === fallbackId,
+          clickeable: item.clickeable !== false,
+          variante: item.variante ?? ''
+        };
+      })
+    );
+
+    const seleccionarItem = (item) => {
+      if (!item.clickeable) {
+        return;
       }
-      emit('filtro-seleccionado', filtroActivo.value);
+
+      emit('item-click', item);
+      emit('filtro-seleccionado', item.id);
     };
 
-    const getIconClass = (index) => {
-      const classes = [
-        'resumen-dato-icon-contratados',
-        'resumen-dato-icon-accidentes',
-        'resumen-dato-icon-ingresos',
-        'resumen-dato-icon-historico',
-        'resumen-dato-icon-eficiencia'
-      ];
-      return classes[index % classes.length];
+    const getIconClass = (item) => {
+      const variantClassMap = {
+        success: 'resumen-dato-icon-contratados',
+        warning: 'resumen-dato-icon-accidentes',
+        info: 'resumen-dato-icon-ingresos',
+        history: 'resumen-dato-icon-historico',
+        primary: 'resumen-dato-icon-eficiencia'
+      };
+
+      return item.variante ? variantClassMap[item.variante] || item.variante : '';
     };
 
     return {
-      filtroActivo,
-      seleccionarFiltro,
+      normalizedItems,
+      seleccionarItem,
       getIconClass
     };
   }
