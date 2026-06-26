@@ -122,6 +122,11 @@ export default defineComponent({
       }
     });
 
+    // Sincronizar el archivo inicial con el estado local
+    watch(() => props.initialFile, (newFile) => {
+      selectedFile.value = newFile;
+    }, { immediate: true });
+
     // Watch para obtener el tamaño del archivo remoto
     watch(existingFileUrl, async (newUrl) => {
       if (newUrl) {

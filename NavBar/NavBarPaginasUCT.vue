@@ -158,7 +158,7 @@ export default defineComponent({
 
 /* Modificaciones para el dropdown-item */
 .NavbarUCT-dropdown ::v-deep .dropdown-item {
-    color: var(--blanco) !important;
+    color: var(--txt-navbar) !important;
     text-transform: uppercase;
     font-weight: bolder;    
    

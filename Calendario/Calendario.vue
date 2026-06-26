@@ -556,6 +556,10 @@ onMounted(async () => {
 .type-border-3 { border-left-color: var(--durazno, #f59e0b); }
 .type-border-4 { border-left-color: var(--bluePerry, #10b981); }
 .type-border-area { border-left-color: var(--blueBerry, #A49EEE); }
+.type-border-success { border-left-color: var(--bs-success); }
+.type-border-warning { border-left-color: var(--bs-warning); }
+.type-border-danger { border-left-color: var(--bs-danger); }
+.type-border-info { border-left-color: var(--bs-info); }
 
 .card-mini-img { height: var(--cal-card-img-height); border-radius: 12px; overflow: hidden; position: relative; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 .card-mini-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
