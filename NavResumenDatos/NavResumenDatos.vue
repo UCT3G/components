@@ -1,6 +1,12 @@
 ﻿<template>
-  <section class="resumen-datos-panel bg-white shadow-sm">
-    <div class="resumen-datos-grid">
+  <div class="resumen-datos-nav">
+    <div v-if="hasActions" class="resumen-datos-actions">
+      <slot name="actions"></slot>
+    </div>
+    <div
+      class="resumen-datos-grid"
+      :class="{ 'resumen-datos-grid-con-acciones': hasActions }"
+    >
       <div
         v-for="item in normalizedItems"
         :key="item.id"
@@ -12,15 +18,19 @@
         @click="seleccionarItem(item)"
       >
         <div class="resumen-dato-icon" :class="getIconClass(item)">
-          <DynamicSvgLoader :fileName="item.icono" width_icon="24px" height_icon="24px" />
+          <DynamicSvgLoader
+            :fileName="item.icono"
+            width_icon="24px"
+            height_icon="24px"
+          />
         </div>
-        <div>
+        <div class="resumen-dato-content">
           <p class="resumen-dato-label">{{ item.titulo }}</p>
           <p class="resumen-dato-value">{{ item.valor }}</p>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <script>
@@ -39,7 +49,7 @@ export default defineComponent({
      *   id: String | Number,
      *   titulo: String,
      *   valor: String | Number,
-     *   icono: String,
+     *   icono: String, // formato: "icons/nombre_icono" sin ".svg"
      *   activo?: Boolean,
      *   clickeable?: Boolean,
      *   variante?: String
@@ -48,6 +58,7 @@ export default defineComponent({
      * Compatibilidad actual:
      * - `cantidad` se sigue tomando como alias de `valor`
      * - `valor` se sigue tomando como alias de `id` cuando `id` no viene definido
+     * - si `icono` llega con extension ".svg", se normaliza automaticamente
      */
     items: {
       type: Array,
@@ -62,7 +73,17 @@ export default defineComponent({
     }
   },
   emits: ['item-click', 'filtro-seleccionado'],
-  setup(props, { emit }) {
+  setup(props, { emit, slots }) {
+    const normalizarIcono = (icono) => {
+      const iconoNormalizado = String(icono ?? '').trim();
+
+      if (!iconoNormalizado) {
+        return '';
+      }
+
+      return iconoNormalizado.replace(/\.svg$/i, '');
+    };
+
     const normalizedItems = computed(() =>
       props.items.map((item, index) => {
         const fallbackId = item.id ?? item.valor ?? `item-${index}`;
@@ -72,7 +93,7 @@ export default defineComponent({
           id: fallbackId,
           titulo: item.titulo ?? '',
           valor: displayValue,
-          icono: item.icono ?? '',
+          icono: normalizarIcono(item.icono),
           activo: typeof item.activo === 'boolean' ? item.activo : props.activeItemId === fallbackId,
           clickeable: item.clickeable !== false,
           variante: item.variante ?? ''
@@ -101,7 +122,10 @@ export default defineComponent({
       return item.variante ? variantClassMap[item.variante] || item.variante : '';
     };
 
+    const hasActions = computed(() => Boolean(slots.actions));
+
     return {
+      hasActions,
       normalizedItems,
       seleccionarItem,
       getIconClass
@@ -111,10 +135,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.resumen-datos-panel {
-  border-left: 6px solid var(--blueBerry);
-  border-radius: 8px;
-  overflow: hidden;
+.resumen-datos-nav {
+  width: 100%;
 }
 
 .resumen-datos-actions {
@@ -172,6 +194,23 @@ export default defineComponent({
   font-size: 1.35rem;
 }
 
+.resumen-dato-icon :deep(.loaderSVG-contend),
+.resumen-dato-icon :deep(.loaderSVG-contend-selected) {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.resumen-dato-icon :deep(svg) {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
 .resumen-dato-icon-contratados {
   color: #1f7a4d;
   background-color: #e7f5ee;
@@ -205,11 +244,16 @@ export default defineComponent({
   text-transform: uppercase;
 }
 
+.resumen-dato-content {
+  min-width: 0;
+}
+
 .resumen-dato-value {
   margin: 0;
   color: var(--blueBerry);
   font-size: 1.75rem;
   line-height: 1;
   font-family: "MonserratBold";
+  word-break: break-word;
 }
 </style>
