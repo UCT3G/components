@@ -4,8 +4,8 @@
     <tr v-for="(fila_data,nofila) in data_table.valor" :key="`fila-${nofila}`" @click="filaClick(fila_data, nofila)">      
       <td v-for="(fila_estrutura, index) in json.filas" :key="`fila-${nofila}-columna-${index}`" :class="getIndicadorClass(fila_data)" :style="getEstilosFila(index)">
         <!-- Verifica el tipo de contenido de la fila -->
-        <div v-if="fila_estrutura.type == 'label' && filaDataAsArray(fila_data)[index] != null" :class="Indicadores ? 'conBordeCentrado' : 'conBorde'" :title="filaDataAsArray(fila_data)[index]">          
-            <span v-if = "filaDataAsArray(fila_data)[index] != null" class="td-titulo">{{ obtenerNombreColumna(json,index) }}: </span>{{ filaDataAsArray(fila_data)[index] }} 
+        <div v-if="fila_estrutura.type == 'label' && getCellValue(fila_data, index) != null" :class="Indicadores ? 'conBordeCentrado' : 'conBorde'" :title="getCellValue(fila_data, index)">          
+            <span v-if = "getCellValue(fila_data, index) != null" class="td-titulo">{{ obtenerNombreColumna(json,index) }}: </span>{{ getCellValue(fila_data, index) }} 
         </div>        
         <div v-else-if="fila_estrutura.type == 'teleport'" class="conBorde">
           <span :name="`fila_estrutura-${nofila}-${index}`" :index="index"></span>
@@ -39,7 +39,7 @@
         </div>
         <!-- Carga dinámicamente el componente si el tipo es 'componente' -->
         <!--<component v-else-if="fila_estrutura.type === 'componente'" :is="getComponent(fila_estrutura.componente)" :data="fila_estrutura.data"></component>-->
-        <div v-else class="conBorde controles" :title="filaDataAsArray(fila_data)[index]"> 
+        <div v-else class="conBorde controles" :title="getCellValue(fila_data, index)"> 
             <span ></span>  
         </div>
       </td>
@@ -131,7 +131,7 @@
       }
 
       const AbrirPestaña =(fila_data, index, index_componente, path)=>{
-        let data = filaDataAsArray(fila_data)[index][index_componente]
+        let data = fila_data?.[`col-${index}`]?.[index_componente] || []
         //el data esta compuesto por objetos con los campos name_campo, valor que sedeveran agregar a la url
         let url = path
         data.forEach(element => {           
@@ -143,8 +143,39 @@
       }
 
       const filaDataAsArray = (fila_data)=> {
-        // console.log(fila_data);
-        return Object.values(fila_data);
+        return Object.values(fila_data ?? {});
+      }
+
+      const normalizarClave = (valor = '') => {
+        return valor.toString().trim().toLowerCase().replace(/\s+/g, '_');
+      }
+
+      const getColumna = (json, index) => {
+        return json?.columnas?.[index] ?? null;
+      }
+
+      const getFieldKey = (columna) => {
+        if (!columna) {
+          return '';
+        }
+
+        return normalizarClave(columna.campo_nombre || columna.titulo || '');
+      }
+
+      const getCellValue = (fila_data, index) => {
+        const columna = getColumna(props.json, index);
+        const fieldKey = getFieldKey(columna);
+
+        if (fieldKey && Object.prototype.hasOwnProperty.call(fila_data, fieldKey)) {
+          return fila_data[fieldKey];
+        }
+
+        const legacyKey = normalizarClave(columna?.titulo || '');
+        if (legacyKey && Object.prototype.hasOwnProperty.call(fila_data, legacyKey)) {
+          return fila_data[legacyKey];
+        }
+
+        return filaDataAsArray(fila_data)[index] ?? null;
       }
 
       const CambiarMayuscula = (cadena)=>{
@@ -199,7 +230,7 @@
       });     
 
       const obtenerNombreColumna = (json,index) => {
-        return json.columnas[index].titulo
+        return getColumna(json, index)?.titulo || ''
       }
 
       const filaClick = (fila, index) => {
@@ -240,6 +271,7 @@
         getComponent,
         turnOnFormularioCRUD,
         filaDataAsArray,
+        getCellValue,
         AbrirPestaña,
         CambiarMayuscula,
         button_evento,

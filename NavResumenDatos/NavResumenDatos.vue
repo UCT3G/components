@@ -149,7 +149,7 @@ export default defineComponent({
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 1rem;
-  padding: 1rem 1.5rem 1.5rem;
+  padding: 1.1rem 1.25rem 1.25rem;
 }
 
 .resumen-datos-grid-con-acciones {
@@ -161,10 +161,10 @@ export default defineComponent({
   align-items: center;
   min-height: 96px;
   gap: 1rem;
-  padding: 1rem;
+  padding: 1rem 1.05rem;
   border: 1px solid #e9edf3;
-  border-radius: 8px;
-  background-color: #fbfcfe;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fbfcfe 0%, #f7faff 100%);
 }
 
 .resumen-dato-item-clickable {
@@ -180,7 +180,7 @@ export default defineComponent({
 .resumen-dato-item-activo {
   border-color: var(--blueBerry);
   box-shadow: 0 0 0 1px rgba(68, 90, 128, 0.12);
-  background-color: #f7faff;
+  background: linear-gradient(180deg, #f7faff 0%, #eef4ff 100%);
 }
 
 .resumen-dato-icon {
@@ -242,6 +242,7 @@ export default defineComponent({
   font-size: 0.85rem;
   font-family: "MonserratSemiBold";
   text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .resumen-dato-content {
@@ -255,5 +256,16 @@ export default defineComponent({
   line-height: 1;
   font-family: "MonserratBold";
   word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .resumen-datos-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .resumen-dato-item {
+    min-height: 88px;
+  }
 }
 </style>
