@@ -6,6 +6,7 @@
     <div class="row align-items-stretch" :class="stacked ? 'g-2' : 'g-3'">
       <!-- Zona drag & drop -->
       <div 
+        v-if="!disabled"
         :class="(hasAnyFile && !stacked) ? 'col-md-8' : 'col-12'"
       >
         <div 
@@ -34,8 +35,17 @@
         </div>
       </div>
 
+      <!-- Zona cuando está deshabilitado y no hay archivo -->
+      <div v-else-if="!hasAnyFile" class="col-12">
+        <div class="file-drop-zone disabled h-100 py-4 text-center border border-dashed rounded-3 bg-light bg-opacity-50">
+          <div class="drop-zone-content py-2">
+            <p class="mb-0 text-muted small fw-medium">Sin archivo de evidencia registrado</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Columna para información del archivo -->
-      <div v-if="hasAnyFile" :class="stacked ? 'col-12' : 'col-md-4'">
+      <div v-if="hasAnyFile" :class="(stacked || disabled) ? 'col-12' : 'col-md-4'">
         <!-- Archivo seleccionado -->
         <div v-if="selectedFile" class="file-info p-3 bg-light rounded h-100 d-flex flex-column justify-content-center">
           <p class="mb-0 fw-bold text-truncate" :title="selectedFile.name">{{ selectedFile.name }}</p>
@@ -89,7 +99,8 @@ export default defineComponent({
     getterPath: { type: String, default: null }, // ruta del getter en el store
     basePath: { type: String, default: "" }, // ej: "media/psicometricos/pyxoom/competencias/"
     directUrl: { type: String, default: null }, // URL directa del archivo existente (alternativa a getterPath)
-    stacked: { type: Boolean, default: false } // Forzar diseño vertical
+    stacked: { type: Boolean, default: false }, // Forzar diseño vertical
+    disabled: { type: Boolean, default: false }
   },
 
   emits: ["file-selected"],
