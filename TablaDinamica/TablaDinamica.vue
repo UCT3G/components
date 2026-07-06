@@ -518,29 +518,29 @@ export default defineComponent({
       });
 
       const response = await axios.post("/Imprimibles/crear_excel", {
-          columnas: json.value.columnas,
+          columnas: jsonTabla.columnas,
           datos: res.data.data_table.registros,
+          tabla_nombre: props.tabla_nombre,
+          nombreArchivo: props.tabla_nombre ? `Reporte_${props.tabla_nombre}` : 'Reporte_TablaDinamica',
       }, {
+          headers: {
+            Authorization: `Bearer ${store.state.user.token}`,
+          },
           responseType: 'blob'
       });
+
+      const contentDisposition = response.headers?.['content-disposition'] || '';
+      const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+      const fileName = fileNameMatch?.[1] || 'ReporteTablaDinamica.xlsx';
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'ReporteSucursal.xlsx');
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      recalcular();
-    };
-
-    const recalcular = async() => {
-      json.value.paginaActual = 1;
-      json.value.fin = 10;
-      json.value.inicio = 0;
-      selectedLimit.value = 5; // Reset selector
-      filtrar();
+      window.URL.revokeObjectURL(url);
     };
     onUnmounted(() => {
       if (!store.getters["reporteador/getTablaPorNombre"](props.tabla_nombre)) {
