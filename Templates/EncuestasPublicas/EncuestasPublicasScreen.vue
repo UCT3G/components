@@ -221,7 +221,7 @@ export default defineComponent({
         const id_form = ref('');
         const id_user = ref('');
         const tok = ref('');
-        const t = route.query.t;
+        const t = route.query.c;
 
         store.dispatch('tema/actualizarTema', props.tema);
         const CerrarEncuesta = async () => { verEncuesta.value = false; }
@@ -370,17 +370,17 @@ export default defineComponent({
         };
 
         const configurarMensajeError = (data) => {
-            let titulo = "Link No Válido";
+            let titulo = "Link no válido";
             let cuerpo = "El link que estás usando no es válido o ha expirado.";
 
             if (data.error_code === 'PERIODO_CONCLUIDO') {
-                titulo = "Periodo Concluido";
+                titulo = "Periodo concluido";
                 cuerpo = `Esta evaluación ya no recibe respuestas. ${data.mensaje}.`;
             } else if (data.error_code === 'NO_INICIADA') {
-                titulo = "Evaluación No Disponible";
+                titulo = "Evaluación no disponible";
                 cuerpo = `Aún no es tiempo de contestar. ${data.mensaje}.`;
             } else if (data.error_code === 'TOKEN_INVALIDO') {
-                titulo = "Acceso Restringido";
+                titulo = "Acceso restringido";
                 cuerpo = "El link es incorrecto o ha sido modificado.";
             }
 
