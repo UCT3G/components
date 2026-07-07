@@ -1,11 +1,9 @@
-<!-- FileSelector.vue -->
 <template>
   <div class="file-selector-container">
-
-    <!-- Contenedor con grid de Bootstrap -->
     <div class="row align-items-stretch" :class="stacked ? 'g-2' : 'g-3'">
       <!-- Zona drag & drop -->
       <div 
+        v-if="!disabled"
         :class="(hasAnyFile && !stacked) ? 'col-md-8' : 'col-12'"
       >
         <div 
@@ -18,7 +16,9 @@
         >
           <div class="drop-zone-content">
             <div class="file-icon"></div>
-            <p class="drop-text">Arrastra tu archivo o haz clic para seleccionar</p>
+            <p class="drop-text">
+              {{ multiple ? 'Arrastra tus archivos o haz clic para seleccionar' : 'Arrastra tu archivo o haz clic para seleccionar' }}
+            </p>
             <p class="file-types">
               {{ acceptText }}
             </p>
@@ -30,34 +30,85 @@
             class="d-none"
             @change="handleFile"
             :accept="accept"
+            :multiple="multiple"
           />
         </div>
       </div>
 
-      <!-- Columna para información del archivo -->
-      <div v-if="hasAnyFile" :class="stacked ? 'col-12' : 'col-md-4'">
-        <!-- Archivo seleccionado -->
-        <div v-if="selectedFile" class="file-info p-3 bg-light rounded h-100 d-flex flex-column justify-content-center">
-          <p class="mb-0 fw-bold text-truncate" :title="selectedFile.name">{{ selectedFile.name }}</p>
-          <p class="mb-0 text-muted small">{{ formatFileSize(selectedFile.size) }}</p>
-        </div>
-
-        <!-- Archivo existente desde el store -->
-        <div v-if="existingFileUrl && !selectedFile" class="file-info p-3 bg-light rounded d-flex justify-content-between align-items-center h-100">
-          <div class="text-truncate me-2">
-            <p class="mb-0 fw-bold text-truncate" :title="existingFileName">{{ existingFileName }}</p>
-            <p class="mb-0 text-muted small">{{ existingFileSize ? formatFileSize(existingFileSize) : 'Archivo actual' }}</p>
+      <!-- Zona cuando está deshabilitado y no hay archivo -->
+      <div v-else-if="!hasAnyFile" class="col-12">
+        <div class="file-drop-zone disabled h-100 py-4 text-center border border-dashed rounded-3 bg-light bg-opacity-50">
+          <div class="drop-zone-content py-2">
+            <p class="mb-0 text-muted small fw-medium">Sin archivo de evidencia registrado</p>
           </div>
-          <DynamicSvgLoader 
-            @click.stop.prevent="downloadFile"
-            fileName="icons/CloudArrowDown" 
-            title="Descargar archivo"
-            class="iconBtn flex-shrink-0"
-            width_icon="32px"
-            height_icon="32px"
-          >
-          </DynamicSvgLoader>
         </div>
+      </div>
+
+      <!-- Columna para información del archivo -->
+      <div v-if="hasAnyFile" :class="(stacked || disabled) ? 'col-12' : 'col-md-4'">
+        <!-- MODO INDIVIDUAL -->
+        <template v-if="!multiple">
+          <!-- Archivo seleccionado -->
+          <div v-if="selectedFile" class="file-info p-3 bg-light rounded h-100 d-flex flex-column justify-content-center">
+            <p class="mb-0 fw-bold text-truncate" :title="selectedFile.name">{{ selectedFile.name }}</p>
+            <p class="mb-0 text-muted small">{{ formatFileSize(selectedFile.size) }}</p>
+          </div>
+
+          <!-- Archivo existente desde el store -->
+          <div v-if="existingFileUrl && !selectedFile" class="file-info p-3 bg-light rounded d-flex justify-content-between align-items-center h-100">
+            <div class="text-truncate me-2">
+              <p class="mb-0 fw-bold text-truncate" :title="existingFileName">{{ existingFileName }}</p>
+              <p class="mb-0 text-muted small">{{ existingFileSize ? formatFileSize(existingFileSize) : 'Archivo actual' }}</p>
+            </div>
+            <DynamicSvgLoader 
+              @click.stop.prevent="downloadFile()"
+              fileName="icons/CloudArrowDown" 
+              title="Descargar archivo"
+              class="iconBtn flex-shrink-0"
+              width_icon="32px"
+              height_icon="32px"
+            >
+            </DynamicSvgLoader>
+          </div>
+        </template>
+
+        <!-- MODO MÚLTIPLE -->
+        <template v-else>
+          <div class="d-flex flex-column gap-2" :class="{ 'scroll-horizontal-mode': !stacked }">
+            <!-- Archivos ya existentes en el servidor -->
+            <div 
+              v-for="file in existingFiles" 
+              :key="file.id" 
+              class="file-info p-2 bg-light rounded d-flex justify-content-between align-items-center"
+            >
+              <div class="text-truncate me-2">
+                <p class="mb-0 fw-bold text-truncate small" :title="file.name">{{ file.name }}</p>
+                <p class="mb-0 text-muted small">{{ file.size ? formatFileSize(file.size) : '' }}</p>
+              </div>
+              <div class="d-flex align-items-center gap-1">
+                <DynamicSvgLoader 
+                  @click.stop.prevent="downloadFile(file)"
+                  fileName="icons/CloudArrowDown" 
+                  title="Descargar archivo"
+                  class="iconBtn flex-shrink-0"
+                  width_icon="24px"
+                  height_icon="24px"
+                >
+                </DynamicSvgLoader>
+                <DynamicSvgLoader 
+                  v-if="!disabled"
+                  @click.stop.prevent="deleteExistingFile(file)"
+                  fileName="icons/UCT_Kanban/eliminar" 
+                  title="Eliminar archivo"
+                  class="iconBtn flex-shrink-0"
+                  width_icon="24px"
+                  height_icon="24px"
+                >
+                </DynamicSvgLoader>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -89,10 +140,13 @@ export default defineComponent({
     getterPath: { type: String, default: null }, // ruta del getter en el store
     basePath: { type: String, default: "" }, // ej: "media/psicometricos/pyxoom/competencias/"
     directUrl: { type: String, default: null }, // URL directa del archivo existente (alternativa a getterPath)
-    stacked: { type: Boolean, default: false } // Forzar diseño vertical
+    stacked: { type: Boolean, default: false }, // Forzar diseño vertical
+    disabled: { type: Boolean, default: false },
+    multiple: { type: Boolean, default: false },
+    existingFiles: { type: Array, default: () => [] }
   },
 
-  emits: ["file-selected"],
+  emits: ["file-selected", "files-selected", "delete-file"],
 
   setup(props, { emit }) {
     const store = useStore();
@@ -102,7 +156,12 @@ export default defineComponent({
     const existingFileSize = ref(null);
 
     // Determinar si hay algún archivo presente (nuevo o remoto)
-    const hasAnyFile = computed(() => !!selectedFile.value || !!existingFileUrl.value);
+    const hasAnyFile = computed(() => {
+      if (props.multiple) {
+        return props.existingFiles && props.existingFiles.length > 0;
+      }
+      return !!selectedFile.value || !!existingFileUrl.value;
+    });
 
     // Obtener URL del archivo: directUrl tiene prioridad sobre getterPath
     const existingFileUrl = computed(() => {
@@ -121,6 +180,11 @@ export default defineComponent({
         return null;
       }
     });
+
+    // Sincronizar el archivo inicial con el estado local
+    watch(() => props.initialFile, (newFile) => {
+      selectedFile.value = newFile;
+    }, { immediate: true });
 
     // Watch para obtener el tamaño del archivo remoto
     watch(existingFileUrl, async (newUrl) => {
@@ -148,33 +212,35 @@ export default defineComponent({
       return path.split('/').pop();
     });
 
-    const downloadFile = async () => {
-      if (!existingFileUrl.value || !existingFileName.value) {
+    const downloadFile = async (file = null) => {
+      const url = file ? file.url : existingFileUrl.value;
+      const name = file ? file.name : existingFileName.value;
+
+      if (!url || !name) {
         toast.error('No se pudo descargar el archivo');
         return;
       }
 
       try {
-        const response = await fetch(existingFileUrl.value);
+        const response = await fetch(url);
         if (!response.ok) throw new Error("Error al descargar archivo");
 
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        const blobUrl = window.URL.createObjectURL(blob);
 
         const link = document.createElement("a");
-        link.href = url;
-        link.download = existingFileName.value;
+        link.href = blobUrl;
+        link.download = name;
         document.body.appendChild(link);
         link.click();
         link.remove();
 
-        window.URL.revokeObjectURL(url);
+        window.URL.revokeObjectURL(blobUrl);
       } catch (error) {
         toast.error("No se pudo descargar el archivo");
         console.error(error);
       }
     };
-
 
     const triggerFileInput = () => fileInput.value.click();
 
@@ -195,30 +261,53 @@ export default defineComponent({
 
     const handleDrop = (e) => {
       isDragOver.value = false;
+      const files = Array.from(e.dataTransfer.files);
+      if (!files.length) return;
 
-      const file = e.dataTransfer.files[0];
-      if (!file) return;
-
-      if (!isValidFileType(file)) {
-        toast.error(`Archivo no válido. Formatos permitidos: ${acceptExtensions.value}`);
-        return;
+      if (props.multiple) {
+        const validFiles = files.filter(file => isValidFileType(file));
+        if (validFiles.length < files.length) {
+          toast.error(`Algunos archivos no son válidos. Formatos permitidos: ${acceptExtensions.value}`);
+        }
+        if (validFiles.length) {
+          emit("files-selected", validFiles);
+        }
+      } else {
+        const file = files[0];
+        if (!isValidFileType(file)) {
+          toast.error(`Archivo no válido. Formatos permitidos: ${acceptExtensions.value}`);
+          return;
+        }
+        selectedFile.value = file;
+        emit("file-selected", file);
       }
-
-      selectedFile.value = file;
-      emit("file-selected", file);
     };
 
     const handleFile = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
 
-      if (!isValidFileType(file)) {
-        toast.error(`Archivo no válido. Formatos permitidos: ${acceptExtensions.value}`);
-        return;
+      if (props.multiple) {
+        const validFiles = files.filter(file => isValidFileType(file));
+        if (validFiles.length < files.length) {
+          toast.error(`Algunos archivos no son válidos. Formatos permitidos: ${acceptExtensions.value}`);
+        }
+        if (validFiles.length) {
+          emit("files-selected", validFiles);
+        }
+      } else {
+        const file = files[0];
+        if (!isValidFileType(file)) {
+          toast.error(`Archivo no válido. Formatos permitidos: ${acceptExtensions.value}`);
+          return;
+        }
+        selectedFile.value = file;
+        emit("file-selected", file);
       }
+    };
 
-      selectedFile.value = file;
-      emit("file-selected", file);
+    const deleteExistingFile = (file) => {
+      emit("delete-file", file);
     };
 
     const formatFileSize = (bytes) => {
@@ -239,6 +328,7 @@ export default defineComponent({
       handleFile,
       formatFileSize,
       downloadFile,
+      deleteExistingFile,
       existingFileName,
       existingFileUrl,
       hasAnyFile,
@@ -288,6 +378,28 @@ export default defineComponent({
 
 .file-info {
   border-left: 4px solid var(--purple-sb);
+}
+
+.scroll-horizontal-mode {
+  max-height: 160px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.file-info :deep(.iconBtn) {
+  --icon_color: black;       
+  --icon_color_hover: var(--bs-danger);  
+  padding: 4px !important;   /* Reducir padding de 10px a 4px para acercar los iconos */
+}
+
+.file-info :deep(.iconBtn svg) {
+  fill: var(--icon_color) !important;
+  color: var(--icon_color) !important;
+}
+
+.file-info :deep(.iconBtn:hover svg) {
+  fill: var(--icon_color_hover) !important;
+  color: var(--icon_color_hover) !important;
 }
 
 :deep(.iconBtn svg) {
