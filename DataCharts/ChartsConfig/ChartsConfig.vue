@@ -21,6 +21,10 @@
       :value-column="valueColumn"
       :max-records="maxRecords"
       :max-records-locked="maxRecordsLocked"
+      :aggregation-type="aggregationType"
+      :visualization-type="visualizationType"
+      :sort-by="sortBy"
+      :sort-order="sortOrder"
       @update:selected-table-name="handleUpdate('update:selectedTableName', $event)"
       @update:x-axis-column="handleUpdate('update:xAxisColumn', $event)"
       @update:y-axis-columns="handleUpdate('update:yAxisColumns', $event)"
@@ -29,6 +33,9 @@
       @update:dimension-column="handleUpdate('update:dimensionColumn', $event)"
       @update:value-column="handleUpdate('update:valueColumn', $event)"
       @update:max-records="handleUpdate('update:maxRecords', $event)"
+      @update:aggregation-type="handleUpdate('update:aggregationType', $event)"
+      @update:sort-by="handleUpdate('update:sortBy', $event)"
+      @update:sort-order="handleUpdate('update:sortOrder', $event)"
     />
 
     <!-- PESTAÑA: ESTILO -->
@@ -42,6 +49,8 @@
       :is-chart-mode="isChartMode"
       :current-y-cols="currentYCols"
       :series-configs="seriesConfigs"
+      :dimension-column="dimensionColumn"
+      :value-column="valueColumn"
       @update:active-config-key="handleUpdate('update:activeConfigKey', $event)"
       @update:visualization-type="handleUpdate('update:visualizationType', $event)"
       @update:configs="handleUpdate('update:configs', $event)"
@@ -85,7 +94,10 @@ export default defineComponent({
     maxRecords: { type: Number, default: 20 },
     tableLocked: { type: Boolean, default: false },
     maxRecordsLocked: { type: Boolean, default: false },
-    resetConfigToGlobal: { type: Function, default: null }
+    resetConfigToGlobal: { type: Function, default: null },
+    aggregationType: { type: String, default: 'AVG' },
+    sortBy: { type: String, default: 'natural' },
+    sortOrder: { type: String, default: 'asc' }
   },
   emits: [
     'update:selectedTableName', 
@@ -102,7 +114,10 @@ export default defineComponent({
     'update:seriesConfigs',
     'update:configs',
     'reset-to-global',
-    'refresh'
+    'refresh',
+    'update:aggregationType',
+    'update:sortBy',
+    'update:sortOrder'
   ],
   setup(props, { emit }) {
     const activeTab = ref('consulta');

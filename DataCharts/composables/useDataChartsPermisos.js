@@ -7,7 +7,7 @@ import { useStore } from 'vuex';
  * isDataChartsAdmin → true si el usuario es administrador del módulo DataCharts.
  * Un administrador tiene acceso completo.
  * La verificación se basa en el permiso con id_permiso = 23
- * Un usuario tiene acceso si su id_perfil_fk está en "Perfil" O su id_usuario está en "Usuario".
+ * Un usuario tiene acceso si su id_perfil_fk está en "Perfil" o su id_usuario está en "Usuario".
  */
 export function useDataChartsPermisos() {
     const store = useStore();
@@ -17,10 +17,10 @@ export function useDataChartsPermisos() {
         const permiso = permisos.find(p => p.id_permiso === 23);
         if (!permiso || !permiso.json) return false;
 
-        const idPerfil  = store.state.user.userProfile?.id_perfil_fk ?? null;
-        const idUsuario = store.state.user.userProfile?.id_usuario   ?? null;
+        const idPerfil = store.state.user.userProfile?.id_perfil_fk ?? null;
+        const idUsuario = store.state.user.userProfile?.id_usuario ?? null;
 
-        const perfilesPermitidos = permiso.json.Perfil  || [];
+        const perfilesPermitidos = permiso.json.Perfil || [];
         const usuariosPermitidos = permiso.json.Usuario || [];
 
         return (
