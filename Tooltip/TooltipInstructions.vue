@@ -9,7 +9,7 @@
       @click="visible = !visible"
     />
     
-    <div v-if="visible" class="tooltip-card animate__animated animate__fadeIn">
+    <div v-if="visible" :class="['tooltip-card animate__animated animate__fadeIn', `align-${align}`]">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h6 class="mb-0 fw-bold tooltip-header">{{ title }}</h6>
         <button @click="visible = false" class="btn-close btn-close-sm" style="font-size: 0.7rem;"></button>
@@ -48,6 +48,11 @@ export default defineComponent({
     iconSize: {
       type: String,
       default: '25px'
+    },
+    align: {
+      type: String,
+      default: 'left',
+      validator: (val) => ['left', 'right'].includes(val)
     }
   },
   setup() {
@@ -109,6 +114,11 @@ export default defineComponent({
   backdrop-filter: blur(4px);
 }
 
+.tooltip-card.align-right {
+  left: auto;
+  right: 0;
+}
+
 .tooltip-header {
   color: var(--bluelight-sb);
   letter-spacing: 0.5px;
@@ -125,6 +135,11 @@ export default defineComponent({
   transform: rotate(45deg);
   border-top: 1px solid var(--bs-gray-400);
   border-left: 1px solid var(--bs-gray-400);
+}
+
+.tooltip-card.align-right::before {
+  left: auto;
+  right: 14px;
 }
 
 .tooltip-content {
