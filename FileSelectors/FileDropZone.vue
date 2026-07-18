@@ -273,6 +273,10 @@ export default defineComponent({
           emit("files-selected", validFiles);
         }
       } else {
+        if (files.length > 1) {
+          toast.warning("Solo se permite subir un archivo.");
+          return;
+        }
         const file = files[0];
         if (!isValidFileType(file)) {
           toast.error(`Archivo no válido. Formatos permitidos: ${acceptExtensions.value}`);
@@ -296,6 +300,10 @@ export default defineComponent({
           emit("files-selected", validFiles);
         }
       } else {
+        if (files.length > 1) {
+          toast.warning("Solo se permite subir un único archivo.");
+          return;
+        }
         const file = files[0];
         if (!isValidFileType(file)) {
           toast.error(`Archivo no válido. Formatos permitidos: ${acceptExtensions.value}`);

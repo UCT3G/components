@@ -88,12 +88,13 @@ export default defineComponent({
 .icon-btn-info {
   cursor: pointer;
   padding: unset;
-  fill: var(--blueBerryPastel);
+  fill: var(--bluelight-sb);
   transition: fill 0.2s ease;
+  z-index: 1;
 }
 
 .icon-btn-info:hover {
-  fill: var(--bluelight-sb);
+  fill: var(--bluelight-sb-70);
 }
 
 .tooltip-icon.active {
@@ -109,7 +110,7 @@ export default defineComponent({
   border-radius: 14px;
   box-shadow: 0 12px 30px rgba(0,0,0,0.25);
   padding: 18px;
-  z-index: 1050;
+  z-index: 1;
   border: 1px solid var(--bs-gray-400);
   backdrop-filter: blur(4px);
 }
