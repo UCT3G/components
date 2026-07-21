@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="resumen-datos-nav">
     <div v-if="hasActions" class="resumen-datos-actions">
       <slot name="actions"></slot>
