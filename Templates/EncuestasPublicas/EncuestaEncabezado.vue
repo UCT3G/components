@@ -55,7 +55,9 @@ export default defineComponent({
         isEditMode: { type: Boolean, default: false },
         configData: { type: Object, required: true },
         previews: { type: Object, default: () => ({}) },
-        headerMode: { type: String, default: 'split' }
+        headerMode: { type: String, default: 'split' },
+        idModulo: { type: [Number, String], default: null },
+        idTemplate: { type: [Number, String], default: null }
     },
     emits: ['image-selected'],
     setup(props, { emit }) {
@@ -66,13 +68,13 @@ export default defineComponent({
         };
 
         const hasLeft = computed(() => 
-            !!(props.previews.header_img_left || props.configData.header_img_left)
+            !!(props.previews.header_img_left || (props.configData.header_img_left && props.configData.header_img_left.startsWith('.')))
         );
         const hasRight = computed(() => 
-            !!(props.previews.header_img_right || props.configData.header_img_right)
+            !!(props.previews.header_img_right || (props.configData.header_img_right && props.configData.header_img_right.startsWith('.')))
         );
         const hasFull = computed(() => 
-            !!(props.previews.header_img_full || props.configData.header_img_full)
+            !!(props.previews.header_img_full || (props.configData.header_img_full && props.configData.header_img_full.startsWith('.')))
         );
 
         onMounted(() => {
@@ -91,14 +93,18 @@ export default defineComponent({
         const sessionTimestamp = new Date().getTime();
 
         const getImageUrl = (campo) => {
-            const val = props.previews[campo] || props.configData[campo];
-            if (!val) return '';
-            if (val.startsWith('blob:') || val.startsWith('http')) return val;
+            // Si hay un preview local (blob), usarlo directamente
+            const preview = props.previews[campo];
+            if (preview) return preview;
 
+            // El valor guardado en configData es la extensión (ej: '.jpeg') o null
+            const ext = props.configData[campo];
+            if (!ext || !ext.startsWith('.')) return '';
+
+            // Reconstruir la ruta: modulo_{id_modulo}/images/{id_template}_{campo}{ext}
+            const rel = `modulo_${props.idModulo}/images/${props.idTemplate}_${campo}${ext}`;
             const cacheBuster = `?t=${sessionTimestamp}`;
-            if (val.startsWith('media')) return `${val}${cacheBuster}`;
-            if (val.includes('/')) return `${DEV_BASE_URL}media/Templates/EncuestasPublicas/${val}${cacheBuster}`;
-            return `${DEV_BASE_URL}media/Templates/EncuestasPublicas/templateBienvenida/images/${val}${cacheBuster}`;
+            return `${DEV_BASE_URL}media/templates/encuestas_publicas/${rel}${cacheBuster}`;
         };
 
         return {

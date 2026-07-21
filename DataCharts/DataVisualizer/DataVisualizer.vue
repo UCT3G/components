@@ -19,6 +19,9 @@
       v-model:seriesConfigs="seriesConfigs"
       v-model:configs="configs"
       v-model:maxRecords="maxRecords"
+      v-model:aggregationType="aggregationType"
+      v-model:sortBy="sortBy"
+      v-model:sortOrder="sortOrder"
       :currentYCols="currentYCols"
       :availableConfigKeys="availableConfigKeys"
       :tableLocked="!!fixedTableName"
@@ -253,7 +256,7 @@ export default defineComponent({
     const { 
       selectedTableName, tableBase, isChartMode, chartOption, chartOptions, chartSections,
       visualizationType, xAxisColumn, yAxisColumns, groupByColumn, subGroupByColumn,
-      dimensionColumn, valueColumn, maxRecords,
+      dimensionColumn, valueColumn, maxRecords, aggregationType, sortBy, sortOrder,
       activeConfigKey, availableConfigKeys, configs, seriesConfigs, currentYCols,
       activeView, currentPermission, availableTables, selectDataTable, resetToNew, generateEChartsOption,
       getSerializableConfig, applySavedConfig, resetConfigToGlobal
@@ -466,7 +469,9 @@ export default defineComponent({
       }
     }, { immediate: true });
     
-    watch([configs, activeConfigKey, isChartMode, groupByColumn, dimensionColumn, valueColumn], () => { if (isChartMode.value) updateChart(); }, { deep: true });
+    watch([() => configs.value, activeConfigKey, isChartMode, groupByColumn, dimensionColumn, valueColumn], 
+      () => { if (isChartMode.value) updateChart(); }, 
+      { deep: true });
 
     // Watcher para auto-cargar la vista por defecto/pública cuando se obtienen las vistas
     watch(savedViews, async (newViews) => {
@@ -518,6 +523,9 @@ export default defineComponent({
       dimensionColumn, 
       valueColumn, 
       maxRecords,
+      aggregationType,
+      sortBy,
+      sortOrder,
       activeConfigKey, 
       availableConfigKeys, 
       configs, 

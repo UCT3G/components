@@ -4,6 +4,13 @@
       <p class="text-muted small">Selecciona una tabla primero</p>
     </div>
 
+    <div v-else-if="!isChartMode" class="d-flex flex-column align-items-center justify-content-center text-center p-3 mt-4">
+
+      <div class="mt-3 text-secondary small bg-light p-2 rounded-3 border border-light-subtle">
+        Cambia al modo de <strong>Gráfica</strong> en la barra superior derecha para editar el diseño.
+      </div>
+    </div>
+
     <div v-else>
       <!-- ALCANCE DE DISEÑO -->
       <ConfigSection 
@@ -42,8 +49,12 @@
           <div v-for="type in chartTypes" :key="type.id" class="col-6">
             <div 
               class="chart-option-card p-3 rounded-3 border text-center transition-all cursor-pointer small text-muted"
-              :class="visualizationType === type.id ? 'active border-primary shadow-sm bg-light' : 'bg-white'"
-              @click="handleUpdate('update:visualizationType', type.id)"
+              :class="[
+                visualizationType === type.id ? 'active border-primary shadow-sm bg-light' : 'bg-white',
+                isTypeDisabled(type.id) ? 'disabled-card opacity-50 cursor-not-allowed bg-light' : ''
+              ]"
+              @click="!isTypeDisabled(type.id) && handleUpdate('update:visualizationType', type.id)"
+              :title="isTypeDisabled(type.id) ? 'No disponible en el modo de pivote activo' : ''"
             >
               <span class="small fw-bold">{{ type.label }}</span>
             </div>
@@ -113,7 +124,7 @@
         </div>
 
         <div v-else class="small text-muted">
-          La grafica de pastel usa la categoria del eje X y la primera serie seleccionada como valor.
+          La gráfica de pastel divide los sectores por la categoría elegida y utiliza la métrica seleccionada como su valor.
         </div>
       </ConfigSection>
 
@@ -124,19 +135,36 @@
         class="pb-5"
       >
         <div v-for="col in currentYCols" :key="col" class="style-config-row p-3 border rounded-3 mb-3 bg-white shadow-sm transition-all">
+          <!-- Modo de Color exclusivo para Pastel -->
+          <div v-if="visualizationType === 'pie'" class="mb-3 border-bottom pb-2">
+            <label class="form-label small text-muted mb-1 fw-bold">Modo de Color (Pastel)</label>
+            <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white"
+                    :value="scaleConfig.pieColorMode || 'multicolor'"
+                    @change="onScaleUpdate('pieColorMode', $event.target.value)">
+              <option value="multicolor">Multicolor (Automático)</option>
+              <option value="monochromatic">Monocromático (Degradado)</option>
+            </select>
+          </div>
+
           <div class="d-flex align-items-center justify-content-between mb-2 text-muted small">
             <span class="small fw-bold text-truncate" :title="col">{{ col }}</span>
-            <div class="color-picker-wrapper rounded-circle overflow-hidden shadow-sm border">
+            <div v-if="visualizationType !== 'pie' || scaleConfig.pieColorMode === 'monochromatic'" class="color-picker-wrapper rounded-circle overflow-hidden shadow-sm border">
               <input type="color" class="color-input" 
-                     :value="seriesConfigs?.[col]?.color || '#4e73df'"
+                     :value="seriesConfigs?.[col]?.color || (visualizationType === 'pie' ? '#ffa500' : '#4e73df')"
                      @input="updateSeriesAttr(col, 'color', $event.target.value)">
             </div>
+            <div v-else class="text-muted small">
+              <span class="badge bg-light text-secondary border">Paleta Automática</span>
+            </div>
           </div>
-          <div class="input-group input-group-sm">
+          <div v-if="visualizationType !== 'pie'" class="input-group input-group-sm">
             <input type="text" class="form-control small border-start-0 ps-0" 
                    placeholder="Nombre visible"
                    :value="seriesConfigs?.[col]?.alias || ''"
                    @input="updateSeriesAttr(col, 'alias', $event.target.value)">
+          </div>
+          <div v-if="visualizationType === 'pie' && scaleConfig.pieColorMode === 'monochromatic'" class="form-text small text-muted lh-sm mt-2 border-top pt-2">
+            Se generará un degradado monocromático a partir del color base seleccionado.
           </div>
         </div>
       </ConfigSection>
@@ -147,6 +175,21 @@
 <script>
 import { defineComponent, computed } from 'vue';
 import ConfigSection from '../../PanelGeneral/ConfigSection.vue';
+
+// Función pura auxiliar para formatear los valores de configuración según su tipo esperado
+function parseConfigValue(field, value) {
+    if (value === '' || value === null || value === undefined) {
+        return null;
+    }
+
+    const numericFields = ['yMin', 'yMax', 'yInterval', 'radarMin', 'radarMax', 'radarSplitNumber'];
+    if (numericFields.includes(field)) {
+        const parsed = parseFloat(value);
+        return Number.isNaN(parsed) ? null : parsed;
+    }
+
+    return value;
+}
 
 export default defineComponent({
   name: 'TabEstilo',
@@ -159,7 +202,9 @@ export default defineComponent({
     visualizationType: String,
     isChartMode: Boolean,
     currentYCols: Array,
-    seriesConfigs: Object
+    seriesConfigs: Object,
+    dimensionColumn: String,
+    valueColumn: String
   },
   emits: [
     'update:activeConfigKey',
@@ -189,7 +234,6 @@ export default defineComponent({
     });
 
     const onScaleUpdate = (field, value) => {
-        const parsedValue = value === '' || value === null ? null : parseFloat(value);
         const key = props.activeConfigKey || 'Global';
         const updatedConfigs = JSON.parse(JSON.stringify(props.configs));
         
@@ -197,7 +241,7 @@ export default defineComponent({
             updatedConfigs[key] = { ...updatedConfigs.Global };
         }
         
-        updatedConfigs[key][field] = parsedValue;
+        updatedConfigs[key][field] = parseConfigValue(field, value);
         emit('update:configs', updatedConfigs);
     };
 
@@ -215,6 +259,14 @@ export default defineComponent({
         emit('reset-to-global');
     };
 
+    const isTypeDisabled = (typeId) => {
+        const hasPivot = !!props.dimensionColumn && !!props.valueColumn;
+        if (hasPivot && (typeId === 'pie' || typeId === 'radar')) {
+            return true;
+        }
+        return false;
+    };
+
     return {
       chartTypes,
       scaleConfig,
@@ -222,7 +274,8 @@ export default defineComponent({
       onScaleUpdate,
       updateSeriesAttr,
       handleUpdate,
-      handleReset
+      handleReset,
+      isTypeDisabled
     };
   }
 });

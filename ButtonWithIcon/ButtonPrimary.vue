@@ -87,11 +87,10 @@ export default {
   justify-content: center;
   gap: 5px;
   color: #fff;
-  background-color: #007bff;
   border-color: unset;
   padding: 3px 12px!important;
   border-radius: 5px !important;
-  background: linear-gradient(90deg, var(--purple-sb) 0%, var(--bluelight-sb) 100%);
+  background: var(--button-primary-bg);
   cursor: pointer;
   border: none;
   outline: none;
@@ -110,13 +109,14 @@ export default {
 }
 
 .icon {
-  fill: var(--babyBlue);
+  fill: var(--blanco);
   min-height: 25px;
   padding: 3px;
 }
 
 .btn-primary:disabled {
-  background: var(--purple-sb)!important;
+  /* background: var(--purple-sb)!important; */
   cursor: not-allowed;
+  opacity: .5
 }
 </style>

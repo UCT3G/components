@@ -18,6 +18,8 @@
                             :configData="localConfig"
                             :previews="imagePreviews"
                             :headerMode="localHeaderMode"
+                            :idModulo="localConfig.id_modulo_fk"
+                            :idTemplate="localConfig.id_template"
                             @image-selected="uploadHeaderImage"
                         />
 
@@ -166,9 +168,9 @@ export default defineComponent({
                 welcome_title: '¡Bienvenido a tu evaluación!', 
                 welcome_tag: 'Evaluación pública',
                 welcome_body: 'A continuación, te pedimos responder las siguientes preguntas. Cuando estes listo para comenzar, presiona el botón:',
-                header_img_left: '',
-                header_img_right: '',
-                header_img_full: '',
+                header_img_left: null,
+                header_img_right: null,
+                header_img_full: null,
                 header_mode: 'split',
                 show_yowi: true,
                 show_header: false
@@ -187,9 +189,9 @@ export default defineComponent({
             welcome_title: '¡Bienvenido a tu evaluación!', 
             welcome_tag: 'Evaluación pública',
             welcome_body: 'A continuación, te pedimos responder las siguientes preguntas. Cuando estes listo para comenzar, presiona el botón:',
-            header_img_left: '',
-            header_img_right: '',
-            header_img_full: '',
+            header_img_left: null,
+            header_img_right: null,
+            header_img_full: null,
             header_mode: 'split',
             show_yowi: true,
             show_header: true
@@ -221,6 +223,7 @@ export default defineComponent({
         const id_form = ref('');
         const id_user = ref('');
         const tok = ref('');
+        const jwtToken = ref('');
         const t = route.query.c;
 
         store.dispatch('tema/actualizarTema', props.tema);
@@ -280,8 +283,10 @@ export default defineComponent({
             else if (campo === 'header_img_right') previewImgRight.value = previewUrl;
             else if (campo === 'header_img_full') previewImgFull.value = previewUrl;
             
-            // Sincronizar localmente
-            localConfig.value[campo] = file.name;
+            // Guardar solo la extensión en localConfig (ej: '.jpeg')
+            // La ruta completa se reconstruye en EncuestaEncabezado con id_modulo e id_template
+            const ext = file.name.substring(file.name.lastIndexOf('.'));
+            localConfig.value[campo] = ext;
             // Guardar binario internamente
             internalFiles.value[campo] = file;
         };
@@ -305,12 +310,12 @@ export default defineComponent({
             try {
                 const respuesta = await store.dispatch('EncuestasPublicas/verificarEstado', {
                     url: props.endpointVerificar,
-                    token: t
+                    token: jwtToken.value
                 });
                 const conteo = respuesta.count.count;
                 
                 if (conteo === 0) {
-                    tok.value = t;
+                    tok.value = jwtToken.value;
                     verEncuesta.value = true;
                 } else if (conteo === 1) {
                     mostrarMensajeEstado('Gracias por participar.', 'Ya contestaste esta evaluación. ¡Gracias!');
@@ -343,6 +348,7 @@ export default defineComponent({
 
                         id_form.value = data.payload.id_encuesta_fk;
                         id_user.value = data.payload.id_usuario_evaluador;
+                        jwtToken.value = data.token;
                         mostrarTexto();
                     } else {
                         configurarMensajeError(data);

@@ -1,4 +1,4 @@
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 import { useStore } from 'vuex';
 import { TablaBase } from '@/store/ReporteadorReactive/TablaDinamica.js';
 import { createStaticOption, generateEChartsOption } from './chartOptionsFactory.js';
@@ -11,7 +11,7 @@ import { createStaticOption, generateEChartsOption } from './chartOptionsFactory
  */
 export function useDataCharts() {
     const store = useStore();
-    
+
     // Estado Central
     const selectedTableName = ref(null); // Nombre de la tabla de datos seleccionada
     const isChartMode = ref(false);      // Define si se muestra la tabla o las gráficas
@@ -19,7 +19,7 @@ export function useDataCharts() {
     const chartOptions = ref([]);        // Array de opciones para múltiples mini-gráficas
     const loading = ref(false);          // Estado de carga
     const maxRecords = ref(10);         // Cantidad máxima de registros a solicitar
-    
+
     const groupByColumn = ref(null);     // Columna principal para agrupar (Secciones del Dashboard)
     const dimensionColumn = ref(null);   // Columna de dimensión para pivot → series (Escenario 4)
     const valueColumn = ref(null);       // Columna de valor para pivot → series (Escenario 4)
@@ -36,6 +36,7 @@ export function useDataCharts() {
             yAxisColumns: [],
             subGroupByColumn: null,
             seriesConfigs: {}, // Colores y alias por cada serie
+            aggregationType: 'AVG',
             // Configuración de escala para gráficas de barras/líneas
             yMin: null,
             yMax: null,
@@ -43,7 +44,11 @@ export function useDataCharts() {
             // Configuración de escala para radar
             radarMin: null,
             radarMax: null,
-            radarSplitNumber: null
+            radarSplitNumber: null,
+            // Configuración de color para pastel
+            pieColorMode: 'multicolor',
+            sortBy: 'natural',
+            sortOrder: 'asc'
         }
     });
 
@@ -88,6 +93,42 @@ export function useDataCharts() {
         set: (val) => { ensureConfig(activeConfigKey.value).seriesConfigs = val; }
     });
 
+    const aggregationType = computed({
+        get: () => configs.value[activeConfigKey.value]?.aggregationType || configs.value.Global.aggregationType || 'AVG',
+        set: (val) => {
+            const newConfigs = JSON.parse(JSON.stringify(configs.value));
+            if (!newConfigs[activeConfigKey.value]) {
+                newConfigs[activeConfigKey.value] = { ...newConfigs.Global };
+            }
+            newConfigs[activeConfigKey.value].aggregationType = val;
+            configs.value = newConfigs;
+        }
+    });
+
+    const sortBy = computed({
+        get: () => configs.value[activeConfigKey.value]?.sortBy || configs.value.Global.sortBy || 'natural',
+        set: (val) => {
+            const newConfigs = JSON.parse(JSON.stringify(configs.value));
+            if (!newConfigs[activeConfigKey.value]) {
+                newConfigs[activeConfigKey.value] = { ...newConfigs.Global };
+            }
+            newConfigs[activeConfigKey.value].sortBy = val;
+            configs.value = newConfigs;
+        }
+    });
+
+    const sortOrder = computed({
+        get: () => configs.value[activeConfigKey.value]?.sortOrder || configs.value.Global.sortOrder || 'asc',
+        set: (val) => {
+            const newConfigs = JSON.parse(JSON.stringify(configs.value));
+            if (!newConfigs[activeConfigKey.value]) {
+                newConfigs[activeConfigKey.value] = { ...newConfigs.Global };
+            }
+            newConfigs[activeConfigKey.value].sortOrder = val;
+            configs.value = newConfigs;
+        }
+    });
+
     const currentYCols = computed(() => {
         const config = configs.value[activeConfigKey.value] || configs.value.Global;
 
@@ -111,6 +152,15 @@ export function useDataCharts() {
             return [...fixedCols, ...uniqueDims];
         }
 
+        // Si es pastel, solo usar la primera columna de valor seleccionada (o de fallback)
+        if (config.visualizationType === 'pie') {
+            const excludeCols = [xCol, groupByColumn.value, config.subGroupByColumn, dimensionColumn.value, valueColumn.value];
+            const cols = (config.yAxisColumns && config.yAxisColumns.length > 0)
+                ? [config.yAxisColumns[0]]
+                : [allKeys.filter(k => !excludeCols.includes(k))[0]];
+            return cols.filter(Boolean);
+        }
+
         // Escenario estándar
         if (config.yAxisColumns && config.yAxisColumns.length > 0) return config.yAxisColumns;
         const excludeCols = [xCol, groupByColumn.value, config.subGroupByColumn, dimensionColumn.value, valueColumn.value];
@@ -121,28 +171,28 @@ export function useDataCharts() {
         const keys = new Set(['Global']);
         chartSections.value.forEach(s => { if (s.configKey) keys.add(s.configKey); });
         chartOptions.value.forEach(o => { if (o.configKey) keys.add(o.configKey); });
-        
+
         // Mantener la llave activa actual si ya existe en configs
         if (activeConfigKey.value && !keys.has(activeConfigKey.value)) {
             if (configs.value[activeConfigKey.value]) keys.add(activeConfigKey.value);
         }
-        
+
         return Array.from(keys);
     });
 
     // Getters from store
     const availableTables = computed(() => store.state.reporteador.tablas_nombres);
-    
+
     // --- ACCIONES ---
     const selectDataTable = async (tableName) => {
         loading.value = true;
         selectedTableName.value = tableName;
-        
+
         const existingTable = store.getters['reporteador/getTablaPorNombre'](tableName);
         if (!existingTable) {
             console.warn(`Table ${tableName} not found in store.`);
         }
-        
+
         loading.value = false;
     };
 
@@ -157,19 +207,19 @@ export function useDataCharts() {
     const resetToNew = () => {
         activeView.value = null;
         currentPermission.value = 'propietario';
-        
+
         // Reset de agrupaciones
         groupByColumn.value = null;
         dimensionColumn.value = null;
         valueColumn.value = null;
         maxRecords.value = 10;
         activeConfigKey.value = 'Global';
-        
+
         // Limpiar configuraciones adicionales (por sección)
         Object.keys(configs.value).forEach(key => {
             if (key !== 'Global') delete configs.value[key];
         });
-        
+
         // Reset de configuración Global
         configs.value.Global.visualizationType = 'bar';
         configs.value.Global.xAxisColumn = null;
@@ -182,7 +232,10 @@ export function useDataCharts() {
         configs.value.Global.radarMin = null;
         configs.value.Global.radarMax = null;
         configs.value.Global.radarSplitNumber = null;
-        
+        configs.value.Global.pieColorMode = 'multicolor';
+        configs.value.Global.sortBy = 'natural';
+        configs.value.Global.sortOrder = 'asc';
+
         // Limpiar filtros de la tabla directamente en el store
         if (tableBase.value.json_tabla) {
             try {
@@ -191,7 +244,7 @@ export function useDataCharts() {
                     json.columnas.forEach(col => col.valor = null);
                     tableBase.value.json_tabla = JSON.stringify(json);
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
     };
 
@@ -223,24 +276,28 @@ export function useDataCharts() {
             maxRecords: maxRecords.value,
             activeConfigKey: activeConfigKey.value,
             seriesConfigs: JSON.parse(JSON.stringify(seriesConfigs.value)),
-            // Configuraciones de escala
+            // Configuraciones de escala y agregación
+            aggregationType: configs.value[activeConfigKey.value]?.aggregationType ?? 'AVG',
             yMin: configs.value[activeConfigKey.value]?.yMin ?? null,
             yMax: configs.value[activeConfigKey.value]?.yMax ?? null,
             yInterval: configs.value[activeConfigKey.value]?.yInterval ?? null,
             radarMin: configs.value[activeConfigKey.value]?.radarMin ?? null,
             radarMax: configs.value[activeConfigKey.value]?.radarMax ?? null,
             radarSplitNumber: configs.value[activeConfigKey.value]?.radarSplitNumber ?? null,
+            pieColorMode: configs.value[activeConfigKey.value]?.pieColorMode ?? 'multicolor',
+            sortBy: configs.value[activeConfigKey.value]?.sortBy ?? 'natural',
+            sortOrder: configs.value[activeConfigKey.value]?.sortOrder ?? 'asc',
             tableFilters
         };
     };
 
     const applySavedConfig = async (config, viewInfo = null) => {
         if (!config) return;
-        
+
         // 0. Registrar vista activa y sus permisos
         if (viewInfo && viewInfo.id_vista) {
-            activeView.value = { 
-                id_vista: viewInfo.id_vista, 
+            activeView.value = {
+                id_vista: viewInfo.id_vista,
                 nombre: viewInfo.nombre,
                 propietario_nombre: viewInfo.propietario_nombre,
                 ultima_fecha: viewInfo.ultima_fecha,
@@ -262,7 +319,7 @@ export function useDataCharts() {
                 if (json && json.columnas) {
                     // PRIMERO: Limpiar TODOS los filtros existentes
                     json.columnas.forEach(col => col.valor = null);
-                    
+
                     // SEGUNDO: Aplicar los filtros guardados en la vista (si existen)
                     if (config.tableFilters && config.tableFilters.length > 0) {
                         config.tableFilters.forEach(f => {
@@ -270,7 +327,7 @@ export function useDataCharts() {
                             if (col) col.valor = f.valor;
                         });
                     }
-                    
+
                     tableBase.value.json_tabla = JSON.stringify(json);
                 }
             } catch (e) {
@@ -292,15 +349,19 @@ export function useDataCharts() {
         if (config.seriesConfigs) {
             seriesConfigs.value = JSON.parse(JSON.stringify(config.seriesConfigs));
         }
-        
-        // Restaurar configuraciones de escala
+
+        // Restaurar configuraciones de escala y agregación
         const currentConfig = ensureConfig(activeConfigKey.value);
+        if (config.aggregationType !== undefined) currentConfig.aggregationType = config.aggregationType;
         if (config.yMin !== undefined) currentConfig.yMin = config.yMin;
         if (config.yMax !== undefined) currentConfig.yMax = config.yMax;
         if (config.yInterval !== undefined) currentConfig.yInterval = config.yInterval;
         if (config.radarMin !== undefined) currentConfig.radarMin = config.radarMin;
         if (config.radarMax !== undefined) currentConfig.radarMax = config.radarMax;
         if (config.radarSplitNumber !== undefined) currentConfig.radarSplitNumber = config.radarSplitNumber;
+        if (config.pieColorMode !== undefined) currentConfig.pieColorMode = config.pieColorMode;
+        if (config.sortBy !== undefined) currentConfig.sortBy = config.sortBy;
+        if (config.sortOrder !== undefined) currentConfig.sortOrder = config.sortOrder;
     };
 
     /**
@@ -313,6 +374,16 @@ export function useDataCharts() {
             // El watcher de configs en DataVisualizer se encargará del refresh
         }
     };
+
+    // Watcher de incompatibilidades de Pivot (Escenario 4) con Pie y Radar
+    watch([dimensionColumn, valueColumn], ([newDim, newVal]) => {
+        if (newDim && newVal) {
+            const currentConfig = configs.value[activeConfigKey.value] || configs.value.Global;
+            if (currentConfig.visualizationType === 'pie' || currentConfig.visualizationType === 'radar') {
+                currentConfig.visualizationType = 'bar';
+            }
+        }
+    });
 
     // Crear un objeto de estado para pasar al factory
     const state = {
@@ -334,7 +405,7 @@ export function useDataCharts() {
     return {
         selectedTableName, tableBase, isChartMode, chartOption, chartOptions, chartSections,
         visualizationType, xAxisColumn, yAxisColumns, groupByColumn, subGroupByColumn,
-        dimensionColumn, valueColumn, maxRecords,
+        dimensionColumn, valueColumn, maxRecords, aggregationType, sortBy, sortOrder,
         activeConfigKey, availableConfigKeys, configs, seriesConfigs, currentYCols,
         activeView, currentPermission, loading, availableTables, selectDataTable, toggleViewMode, resetToNew,
         generateEChartsOption: generateChartOptions, createStaticOption, getSerializableConfig, applySavedConfig, resetConfigToGlobal

@@ -14,7 +14,7 @@ const chartBuilders = {
         if (config.yMin !== null && config.yMin !== undefined) valueAxis.min = config.yMin;
         if (config.yMax !== null && config.yMax !== undefined) valueAxis.max = config.yMax;
         if (config.yInterval !== null && config.yInterval !== undefined) valueAxis.interval = config.yInterval;
-        
+
         return {
             title: { text: title, left: 'center', top: '10px', textStyle: { color: '#333333', fontSize: 14 } },
             tooltip: { trigger: 'axis' },
@@ -78,7 +78,7 @@ const chartBuilders = {
         if (config.yMin !== null && config.yMin !== undefined) valueAxis.min = config.yMin;
         if (config.yMax !== null && config.yMax !== undefined) valueAxis.max = config.yMax;
         if (config.yInterval !== null && config.yInterval !== undefined) valueAxis.interval = config.yInterval;
-        
+
         return {
             title: { text: title, left: 'center', top: '10px', textStyle: { color: '#333333', fontSize: 14 } },
             tooltip: { trigger: 'axis' },
@@ -96,7 +96,7 @@ const chartBuilders = {
     radar: (aggregatedDataset, config, xAxisData, yCols, title) => {
         const rMin = config.radarMin !== null && config.radarMin !== undefined ? config.radarMin : 0;
         const rMax = config.radarMax !== null && config.radarMax !== undefined ? config.radarMax : 100;
-        
+
         const indicator = xAxisData.map(xVal => ({ name: xVal, min: rMin, max: rMax }));
         const radarData = yCols.map(yCol => {
             const sConf = config.seriesConfigs?.[yCol] || {};
@@ -113,15 +113,15 @@ const chartBuilders = {
                 itemStyle: sConf.color ? { color: sConf.color } : undefined
             };
         });
-        
+
         let labelCounter = 0;
         const ticksPerAxis = (config.radarSplitNumber || 5) + 1;
 
-        const radarConfig = { 
-            indicator, 
-            center: ['50%', '55%'], 
+        const radarConfig = {
+            indicator,
+            center: ['50%', '55%'],
             shape: 'polygon',
-            axisLabel: { 
+            axisLabel: {
                 show: true,
                 color: '#999',
                 fontSize: 10,
@@ -138,11 +138,11 @@ const chartBuilders = {
                 }
             }
         };
-        
+
         if (config.radarSplitNumber !== null && config.radarSplitNumber !== undefined) {
             radarConfig.splitNumber = config.radarSplitNumber;
         }
-        
+
         return {
             title: { text: title || 'Radar', left: 'center', top: '5%', textStyle: { color: '#333333', fontSize: 14 } },
             tooltip: {},
@@ -245,50 +245,182 @@ function buildDimensionToSeriesOption(registros, state, config, allKeys) {
 }
 
 /**
- * Prepara y agrega los datos para la gráfica.
- * Agrupa por xCol y calcula promedios para cada yCol.
+ * Ordena un conjunto de datos agregados por categoría (Eje X) o valor de métrica (Eje Y).
  */
-function prepareChartData(dataset, config, allKeys, groupByColumn) {
-    const xCol = config.xAxisColumn || allKeys[0];
+function sortDataset(dataset, xCol, valueCol, sortBy, sortOrder) {
+    if (!sortBy || sortBy === 'natural' || dataset.length === 0) return dataset;
     
-    // Excluir columnas de agrupación
-    const excludeCols = [xCol, groupByColumn, config.subGroupByColumn];
-    const yCols = (config.yAxisColumns && config.yAxisColumns.length > 0)
-        ? config.yAxisColumns 
-        : allKeys.filter(k => !excludeCols.includes(k));
+    const isDesc = sortOrder === 'desc';
     
-    // Agregación y promedio de datos
+    return [...dataset].sort((a, b) => {
+        if (sortBy === 'category') {
+            const valA = String(a[xCol] || '');
+            const valB = String(b[xCol] || '');
+            return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
+        }
+        
+        if (sortBy === 'value' && valueCol) {
+            let valA = parseFloat(a[valueCol]);
+            let valB = parseFloat(b[valueCol]);
+            
+            // Tolerancia a valores nulos o inválidos
+            if (Number.isNaN(valA)) valA = isDesc ? -Infinity : Infinity;
+            if (Number.isNaN(valB)) valB = isDesc ? -Infinity : Infinity;
+            
+            return isDesc ? valB - valA : valA - valB;
+        }
+        
+        return 0;
+    });
+}
+
+/**
+ * Agrega un conjunto de datos agrupando por una columna y aplicando la operación correspondiente.
+ */
+function aggregateDataset(dataset, xCol, yCols, aggregationType = 'AVG', sortBy = 'natural', sortOrder = 'asc') {
     const groupedData = {};
     dataset.forEach(r => {
-        const xVal = r[xCol] || 'N/A';
-        if (!groupedData[xVal]) groupedData[xVal] = { _count: 0 };
+        const xVal = String(r[xCol] ?? 'N/A');
+        if (!groupedData[xVal]) {
+            groupedData[xVal] = { _count: 0 };
+            yCols.forEach(yCol => {
+                groupedData[xVal][yCol] = {
+                    sum: 0,
+                    count: 0,
+                    min: Infinity,
+                    max: -Infinity
+                };
+            });
+        }
+
         yCols.forEach(yCol => {
-            const val = parseFloat(r[yCol]) || 0;
-            groupedData[xVal][yCol] = (groupedData[xVal][yCol] || 0) + val;
+            const val = parseFloat(r[yCol]);
+            if (Number.isFinite(val)) {
+                const node = groupedData[xVal][yCol];
+                node.sum += val;
+                node.count++;
+                if (val < node.min) node.min = val;
+                if (val > node.max) node.max = val;
+            }
         });
         groupedData[xVal]._count++;
     });
 
-    const xAxisData = Object.keys(groupedData);
-    const aggregatedDataset = xAxisData.map(xVal => {
+    const xAxisDataRaw = Object.keys(groupedData);
+    const aggregatedDataset = xAxisDataRaw.map(xVal => {
         const row = { [xCol]: xVal };
         yCols.forEach(yCol => {
-            row[yCol] = groupedData[xVal][yCol] / groupedData[xVal]._count;
+            const node = groupedData[xVal][yCol];
+            if (node.count === 0) {
+                row[yCol] = 0;
+            } else {
+                switch (aggregationType) {
+                    case 'SUM':
+                        row[yCol] = node.sum;
+                        break;
+                    case 'COUNT':
+                        row[yCol] = node.count;
+                        break;
+                    case 'MIN':
+                        row[yCol] = node.min;
+                        break;
+                    case 'MAX':
+                        row[yCol] = node.max;
+                        break;
+                    case 'AVG':
+                    default:
+                        row[yCol] = node.sum / node.count;
+                        break;
+                }
+            }
         });
         return row;
     });
+
+    // Aplicar ordenamiento
+    const sortedDataset = sortDataset(aggregatedDataset, xCol, yCols[0], sortBy, sortOrder);
+    
+    // Mapear los nombres de categoría resultantes del ordenamiento
+    const xAxisData = sortedDataset.map(row => row[xCol]);
+
+    return { xAxisData, aggregatedDataset: sortedDataset, yCols };
+}
+
+/**
+ * Prepara y agrega los datos para la gráfica.
+ * Agrupa por xCol y calcula el valor de agregación para cada yCol.
+ */
+function prepareChartData(dataset, config, allKeys, groupByColumn) {
+    const xCol = config.xAxisColumn || allKeys[0];
+
+    // Excluir columnas de agrupación
+    const excludeCols = [xCol, groupByColumn, config.subGroupByColumn];
+    const yCols = (config.yAxisColumns && config.yAxisColumns.length > 0)
+        ? config.yAxisColumns
+        : allKeys.filter(k => !excludeCols.includes(k));
+
+    const aggType = config.aggregationType || 'AVG';
+    const sortBy = config.sortBy || 'natural';
+    const sortOrder = config.sortOrder || 'asc';
+    
+    const { xAxisData, aggregatedDataset } = aggregateDataset(dataset, xCol, yCols, aggType, sortBy, sortOrder);
 
     return { xAxisData, aggregatedDataset, yCols };
 }
 
 /**
- * Prepara los datos para una grÃ¡fica de pastel usando:
- * - eje X como categorÃ­a
- * - primera serie seleccionada como valor
+ * Convierte un color en formato HEX (ej: '#FFA500') a HSL (Hue, Saturation, Lightness).
  */
-function preparePieChartData(dataset, config, allKeys) {
+function hexToHsl(hex) {
+    if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) {
+        return { h: 220, s: 70, l: 50 }; // Fallback azul
+    }
+    let r = parseInt(hex.slice(1, 3), 16) / 255;
+    let g = parseInt(hex.slice(3, 5), 16) / 255;
+    let b = parseInt(hex.slice(5, 7), 16) / 255;
+
+    let max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+        h = s = 0;
+    } else {
+        let d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+/**
+ * Genera una paleta de colores degradados monocromáticos a partir de un color HEX base.
+ * Va desde el tono más oscuro (para los valores más grandes) al más claro.
+ */
+function generateMonochromaticPalette(hexColor, steps) {
+    const { h, s, l } = hexToHsl(hexColor);
+    const colors = [];
+    if (steps <= 0) return colors;
+    if (steps === 1) return [`hsl(${h}, ${s}%, ${l}%)`];
+
+    const startL = Math.max(25, l - 15);
+    const endL = Math.min(85, l + 30);
+    const stepL = (endL - startL) / (steps - 1);
+
+    for (let i = 0; i < steps; i++) {
+        const currentL = Math.round(startL + (stepL * i));
+        colors.push(`hsl(${h}, ${s}%, ${currentL}%)`);
+    }
+    return colors;
+}
+
+function preparePieChartData(dataset, config, allKeys, groupByColumn = null) {
     const xCol = config.xAxisColumn || allKeys[0];
-    const excludeCols = [xCol, config.subGroupByColumn];
+    const excludeCols = [xCol, groupByColumn, config.subGroupByColumn];
     const yCols = (config.yAxisColumns && config.yAxisColumns.length > 0)
         ? config.yAxisColumns
         : allKeys.filter(k => !excludeCols.includes(k));
@@ -298,15 +430,35 @@ function preparePieChartData(dataset, config, allKeys) {
         return { series: [], valueCol: null };
     }
 
-    const groupedData = {};
-    dataset.forEach(row => {
-        const category = String(row[xCol] ?? 'N/A');
-        const value = parseFloat(row[valueCol]);
-        if (!groupedData[category]) {
-            groupedData[category] = 0;
-        }
-        groupedData[category] += Number.isFinite(value) ? value : 0;
-    });
+    const aggType = config.aggregationType || 'AVG';
+    const colorMode = config.pieColorMode || 'multicolor';
+
+    // Para pastel monocromático forzamos orden por valor descendente, de lo contrario usamos la config de la vista
+    const sortBy = colorMode === 'monochromatic' ? 'value' : (config.sortBy || 'natural');
+    const sortOrder = colorMode === 'monochromatic' ? 'desc' : (config.sortOrder || 'asc');
+
+    const { aggregatedDataset } = aggregateDataset(dataset, xCol, [valueCol], aggType, sortBy, sortOrder);
+
+    let chartData;
+    if (colorMode === 'monochromatic') {
+        const sConf = config.seriesConfigs?.[valueCol] || {};
+        const baseColor = sConf.color || '#ffa500';
+        const colors = generateMonochromaticPalette(baseColor, aggregatedDataset.length);
+
+        chartData = aggregatedDataset.map((row, index) => ({
+            name: row[xCol],
+            value: row[valueCol],
+            itemStyle: {
+                color: colors[index]
+            }
+        }));
+    } else {
+        // Modo Multicolor: ECharts aplica su paleta automática sobre el set ordenado
+        chartData = aggregatedDataset.map(row => ({
+            name: row[xCol],
+            value: row[valueCol]
+        }));
+    }
 
     const sConf = config.seriesConfigs?.[valueCol] || {};
     return {
@@ -314,10 +466,7 @@ function preparePieChartData(dataset, config, allKeys) {
         series: [
             {
                 name: sConf.alias || valueCol,
-                data: Object.entries(groupedData).map(([name, value]) => ({
-                    name,
-                    value
-                }))
+                data: chartData
             }
         ]
     };
@@ -329,7 +478,7 @@ function preparePieChartData(dataset, config, allKeys) {
 function buildSeries(aggregatedDataset, yCols, config, vizType) {
     return yCols.map(yCol => {
         const sConf = config.seriesConfigs?.[yCol] || {};
-        
+
         return {
             name: sConf.alias || yCol,
             type: vizType === 'horizontal_line' ? 'line' : vizType,
@@ -362,7 +511,7 @@ export function createStaticOption(dataset, title = '', config, allKeys = [], gr
 
     if (vizType === 'pie') {
         const builder = chartBuilders.pie;
-        const { series } = preparePieChartData(dataset, config, allKeys);
+        const { series } = preparePieChartData(dataset, config, allKeys, groupByColumn);
         return builder(dataset, config, [], series, title);
     }
 
@@ -370,12 +519,12 @@ export function createStaticOption(dataset, title = '', config, allKeys = [], gr
 
     // Strategy Pattern: Seleccionar el builder correcto
     const builder = chartBuilders[vizType] || chartBuilders.bar;
-    
+
     // El builder de radar tiene una firma diferente
     if (vizType === 'radar') {
         return builder(aggregatedDataset, config, xAxisData, yCols, title);
     }
-    
+
     // Para otros tipos, construir series primero
     const series = buildSeries(aggregatedDataset, yCols, config, vizType);
     return builder(aggregatedDataset, config, xAxisData, series, title);
@@ -388,8 +537,8 @@ export function createStaticOption(dataset, title = '', config, allKeys = [], gr
  */
 export function generateEChartsOption(state, data_table) {
     if (!data_table || !data_table.registros || data_table.registros.length === 0) {
-        state.chartOption.value = {}; 
-        state.chartOptions.value = []; 
+        state.chartOption.value = {};
+        state.chartOptions.value = [];
         state.chartSections.value = [];
         return;
     }
@@ -422,7 +571,7 @@ export function generateEChartsOption(state, data_table) {
             const sectionData = sections[sKey];
             const sectionConfig = state.configs.value[sKey] || state.configs.value.Global;
             const subGroupCol = sectionConfig.subGroupByColumn;
-            
+
             // Si la sección tiene además una sub-agrupación (Dimensiones)
             if (subGroupCol && allKeys.includes(subGroupCol)) {
                 const subGroups = {};
@@ -431,7 +580,7 @@ export function generateEChartsOption(state, data_table) {
                     if (!subGroups[subKey]) subGroups[subKey] = [];
                     subGroups[subKey].push(row);
                 });
-                
+
                 return {
                     title: `${state.groupByColumn.value}: ${sKey}`,
                     configKey: sKey,
@@ -446,15 +595,15 @@ export function generateEChartsOption(state, data_table) {
             return {
                 title: `${state.groupByColumn.value}: ${sKey}`,
                 configKey: sKey,
-                charts: [{ 
-                    id: sKey, 
-                    option: createStaticOption(sectionData, '', sectionConfig, allKeys, state.groupByColumn.value) 
+                charts: [{
+                    id: sKey,
+                    option: createStaticOption(sectionData, '', sectionConfig, allKeys, state.groupByColumn.value)
                 }]
             };
         });
-        state.chartOption.value = {}; 
+        state.chartOption.value = {};
         state.chartOptions.value = [];
-    } 
+    }
     // ESCENARIO 2: No hay secciones, pero hay sub-agrupación global (Dimensiones)
     else if (state.configs.value.Global.subGroupByColumn && allKeys.includes(state.configs.value.Global.subGroupByColumn)) {
         const subGroupCol = state.configs.value.Global.subGroupByColumn;
@@ -473,19 +622,19 @@ export function generateEChartsOption(state, data_table) {
                 option: createStaticOption(subGroups[subKey], subKey, subConfig, allKeys, state.groupByColumn.value)
             };
         });
-        state.chartOption.value = {}; 
+        state.chartOption.value = {};
         state.chartSections.value = [];
     }
     // ESCENARIO 3: Gráfica única (Vista estándar)
     else {
         state.chartOption.value = createStaticOption(
-            data_table.registros, 
-            '', 
-            state.configs.value.Global, 
+            data_table.registros,
+            '',
+            state.configs.value.Global,
             allKeys,
             state.groupByColumn.value
         );
-        state.chartOptions.value = []; 
+        state.chartOptions.value = [];
         state.chartSections.value = [];
     }
 }
