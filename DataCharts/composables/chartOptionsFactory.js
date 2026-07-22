@@ -46,8 +46,8 @@ const chartBuilders = {
                 {
                     name: pieSeries.name || 'Serie',
                     type: 'pie',
-                    radius: ['42%', '70%'],
-                    center: ['50%', title ? '48%' : '45%'],
+                    radius: ['40%', '68%'],
+                    center: ['50%', title ? '46%' : '43%'],
                     avoidLabelOverlap: true,
                     itemStyle: {
                         borderRadius: 6,
@@ -65,6 +65,19 @@ const chartBuilders = {
                         }
                     },
                     data: pieSeries.data || []
+                }
+            ],
+            media: [
+                {
+                    query: { maxHeight: 280 },
+                    option: {
+                        series: [
+                            {
+                                radius: ['28%', '44%'],
+                                center: ['50%', title ? '42%' : '40%']
+                            }
+                        ]
+                    }
                 }
             ]
         };
@@ -119,7 +132,8 @@ const chartBuilders = {
 
         const radarConfig = {
             indicator,
-            center: ['50%', '55%'],
+            radius: '65%',
+            center: ['50%', '48%'],
             shape: 'polygon',
             axisLabel: {
                 show: true,
@@ -144,11 +158,22 @@ const chartBuilders = {
         }
 
         return {
-            title: { text: title || 'Radar', left: 'center', top: '5%', textStyle: { color: '#333333', fontSize: 14 } },
+            title: { text: title || '', left: 'center', top: '5%', textStyle: { color: '#333333', fontSize: 14 } },
             tooltip: {},
             legend: { bottom: 0, type: 'scroll' },
             radar: radarConfig,
-            series: [{ type: 'radar', data: radarData }]
+            series: [{ type: 'radar', data: radarData }],
+            media: [
+                {
+                    query: { maxHeight: 280 },
+                    option: {
+                        radar: {
+                            radius: '58%',
+                            center: ['50%', '42%']
+                        }
+                    }
+                }
+            ]
         };
     }
 };
