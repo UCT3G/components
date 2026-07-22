@@ -1,13 +1,8 @@
 <template>
   <div class="container-fluid py-2">
     <!-- Overlay de pantalla completa -->
-    <div v-if="loading" class="loading-overlay-fullscreen">
-      <LoadingUCT
-        :blockFullScreem="true"
-        class="position-fixed top-0 start-0"
-        v-if="loading"
-      />
-    </div>
+    <LoadingUCT :blockFullScreem="true" v-if="loading"/>
+
     <!-- Card de selects y botón editar -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
