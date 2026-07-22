@@ -167,12 +167,7 @@ export default defineComponent({
   display: block;
 }
 
-.cd-icon.expanded {
-  background: linear-gradient(135deg, var(--acceso1), var(--bluelight-sb));
-}
-
 .cd-icon.expanded :deep(.loaderSVG-contend) {
-  color: white !important;
   transform: rotate(180deg);
 }
 
