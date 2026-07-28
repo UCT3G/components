@@ -19,8 +19,13 @@
 
 <script>
 import { defineComponent, computed } from 'vue';
-import { QuillEditor } from '@vueup/vue-quill';
+import { QuillEditor, Quill } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.bubble.css';
+
+// Configurar attributor de tamaño en píxeles (inline styles) para Quill
+const Size = Quill.import('attributors/style/size');
+Size.whitelist = ['12px', '14px', '16px', '18px', '20px', '24px', '28px'];
+Quill.register(Size, true);
 
 export default defineComponent({
   name: 'EditorTexto',
@@ -43,6 +48,7 @@ export default defineComponent({
     toolbarOptions: {
       type: Array,
       default: () => [
+        [{ 'size': [false,'14px', '16px', '18px', '20px', '24px', '28px'] }],
         ['bold', 'italic', 'underline', 'link'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         [{ 'align': [] }],
@@ -215,6 +221,7 @@ export default defineComponent({
   width: max-content !important;
   min-width: 120px !important;
   transform: translateX(-10px); 
+  z-index: 1000 !important;
 }
 
 /* Estilos para el input de URL al crear un link */
@@ -307,16 +314,23 @@ export default defineComponent({
   background-color: var(--bs-gray-200) !important;
 }
 
-/* Estilos para el selector desplegable (ej. alineación) */
+/* Estilos para el selector desplegable (ej. alineación y tamaño) */
 :deep(.ql-bubble .ql-picker-options) {
   background-color: var(--blueBerryPastel) !important;
   border: 1px solid var(--blueBerry) !important;
   border-radius: 4px !important;
   padding: 5px !important;
+  z-index: 1050 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+:deep(.ql-bubble .ql-picker-item) {
+  color: #000 !important;
 }
 
 :deep(.ql-bubble .ql-picker-item:hover) {
   background-color: var(--bs-gray-200) !important;
+  color: #000 !important;
 }
 
 :deep(.ql-bubble .ql-picker-item svg .ql-stroke) {
@@ -325,5 +339,33 @@ export default defineComponent({
 
 :deep(.ql-bubble .ql-picker-item svg .ql-fill) {
   fill: #000 !important;
+}
+
+/* Estilos para el selector de tamaño de fuente (ql-size) */
+:deep(.ql-bubble .ql-picker.ql-size) {
+  width: 75px !important;
+}
+
+:deep(.ql-bubble .ql-picker.ql-size .ql-picker-label) {
+  padding: 0 4px !important;
+  color: #000 !important;
+  display: flex !important;
+  align-items: center;
+}
+
+:deep(.ql-bubble .ql-picker.ql-size .ql-picker-label::before),
+:deep(.ql-bubble .ql-picker.ql-size .ql-picker-item[data-value]::before) {
+  content: attr(data-value) !important;
+  color: #000 !important;
+}
+
+:deep(.ql-bubble .ql-picker.ql-size .ql-picker-label:not([data-value])::before) {
+  content: 'Tamaño' !important;
+  color: #000 !important;
+}
+
+:deep(.ql-bubble .ql-picker.ql-size .ql-picker-item:not([data-value])::before) {
+  content: 'Normal' !important;
+  color: #000 !important;
 }
 </style>
