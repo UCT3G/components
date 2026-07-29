@@ -9,7 +9,7 @@
         :disabled="disabled && modelValue !== tab.value"
         @click="handleTabClick(tab.value)"
       >
-        <span class="tab-label texto-caja">{{ tab.label }}</span>
+        <span class="tab-label">{{ tab.label }}</span>
         <span class="tab-indicator"></span>
       </button>
     </div>
@@ -123,7 +123,7 @@ export default defineComponent({
 .tabs-nav {
   display: flex;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   border: 1.5px solid var(--bs-gray-200);
   background: var(--bs-gray-200);
@@ -133,12 +133,12 @@ export default defineComponent({
 
 .tab-button {
   flex: 1;
-  padding: 12px 10px;
+  padding: 5px 10px;
   border: none;
   outline: none;
   color: var(--bs-gray-500);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
