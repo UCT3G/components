@@ -125,6 +125,15 @@ export default defineComponent({
       const activePanel = props.panels.find(p => p.id === activePanelId.value)
       if (activePanel?.preventOutsideCollapse) return
 
+      // Detectamos si el click fue dentro de un modal, overlay o toast secundario (que no contenga a nuestro panel)
+      const modalSecundario = event.target?.closest?.(
+        '.Popup-cont, .pop-up, .modal-haze, .modal, .modal-backdrop, .swal2-container, .toast'
+      );
+
+      if (modalSecundario && sidebarContainer.value && !modalSecundario.contains(sidebarContainer.value)) {
+        return;
+      }
+
       if (sidebarContainer.value && !sidebarContainer.value.contains(event.target) && !isCollapsed.value) {
         isCollapsed.value = true
       }
@@ -143,9 +152,18 @@ export default defineComponent({
     })
 
     return { 
-      handleClick, activePanelId, isCollapsed, panelWidth, activePanel, 
-      sidebarContainer, scrollContainer, showUpArrow, showDownArrow,
-      checkScroll, scrollUp, scrollDown 
+      handleClick, 
+      activePanelId, 
+      isCollapsed, 
+      panelWidth, 
+      activePanel, 
+      sidebarContainer, 
+      scrollContainer, 
+      showUpArrow, 
+      showDownArrow,
+      checkScroll, 
+      scrollUp, 
+      scrollDown 
     }
   }
 })

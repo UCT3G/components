@@ -56,30 +56,59 @@
           </div>
         </section>
 
-        <section class="module-shell-grid">
-          <button
-            v-for="section in availableSections"
-            :key="section.id"
-            type="button"
-            class="module-shell-card"
-            :class="{ 'module-shell-card-wide': availableSections.length === 1 }"
-            @click="selectSection(section.id)"
-          >
-            <div class="module-shell-card-icon">
-              <DynamicSvgLoader
-                v-if="section.icon"
-                :fileName="section.icon"
-                width_icon="34px"
-                :icon_active="true"
-              />
-              <i v-else class="bi bi-grid"></i>
-            </div>
-            <div class="module-shell-card-body">
-              <div class="module-shell-card-title">{{ section.title || section.label }}</div>
-              <p v-if="section.description" class="module-shell-card-text">{{ section.description }}</p>
-              <span class="module-shell-card-action">{{ section.actionLabel || 'Entrar' }}</span>
-            </div>
-          </button>
+        <section v-if="standardSections.length" class="module-shell-home-group">
+          <div v-if="sectionsLabel" class="module-shell-group-heading">{{ sectionsLabel }}</div>
+          <div class="module-shell-grid">
+            <button
+              v-for="section in standardSections"
+              :key="section.id"
+              type="button"
+              class="module-shell-card"
+              :class="{ 'module-shell-card-wide': standardSections.length === 1 }"
+              @click="selectSection(section.id)"
+            >
+              <div class="module-shell-card-icon">
+                <DynamicSvgLoader
+                  v-if="section.icon"
+                  :fileName="section.icon"
+                  width_icon="34px"
+                  :icon_active="true"
+                />
+                <i v-else class="bi bi-grid"></i>
+              </div>
+              <div class="module-shell-card-body">
+                <div class="module-shell-card-title">{{ section.title || section.label }}</div>
+                <p v-if="section.description" class="module-shell-card-text">{{ section.description }}</p>
+                <span class="module-shell-card-action">{{ section.actionLabel || 'Entrar' }}</span>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <section v-if="chartsCard" class="module-shell-home-group module-shell-home-group-charts">
+          <div class="module-shell-group-heading">{{ chartsGroupTitle }}</div>
+          <div class="module-shell-grid module-shell-grid-charts">
+            <button
+              type="button"
+              class="module-shell-card module-shell-card-charts"
+              @click="selectSection(chartsCard.id)"
+            >
+              <div class="module-shell-card-icon">
+                <DynamicSvgLoader
+                  v-if="chartsCard.icon"
+                  :fileName="chartsCard.icon"
+                  width_icon="34px"
+                  :icon_active="true"
+                />
+                <i v-else class="bi bi-grid"></i>
+              </div>
+              <div class="module-shell-card-body">
+                <div class="module-shell-card-title">{{ chartsCard.title || chartsCard.label }}</div>
+                <p v-if="chartsCard.description" class="module-shell-card-text">{{ chartsCard.description }}</p>
+                <span class="module-shell-card-action">{{ chartsCard.actionLabel || 'Entrar' }}</span>
+              </div>
+            </button>
+          </div>
         </section>
 
         <slot name="home-extra" />
@@ -121,22 +150,32 @@ export default defineComponent({
     accountClass: { type: [String, Array, Object], default: '' },
     showHomeButton: { type: Boolean, default: true },
     height: { type: String, default: '100vh' },
+    sectionsLabel: { type: String, default: '' },
   },
   emits: ['update:modelValue', 'section-change'],
   setup(props, { emit }) {
+    const standardSections = computed(() =>
+      props.sections.filter((section) => section && section.id && section.visible !== false)
+    );
+
+    const chartsCard = computed(() => {
+      if (!props.chartsSection?.id || props.chartsSection.visible === false) return null;
+      return {
+        label: 'Graficas',
+        title: 'Graficas',
+        description: 'Consulta indicadores y visualizaciones del modulo.',
+        icon: 'icons/graph',
+        ...props.chartsSection,
+      };
+    });
+
     const availableSections = computed(() => {
-      const sections = props.sections.filter((section) => section && section.id && section.visible !== false);
-      if (props.chartsSection?.id && props.chartsSection.visible !== false) {
-        sections.push({
-          label: 'Graficas',
-          title: 'Graficas',
-          description: 'Consulta indicadores y visualizaciones del modulo.',
-          icon: 'icons/graph',
-          ...props.chartsSection,
-        });
-      }
+      const sections = [...standardSections.value];
+      if (chartsCard.value) sections.push(chartsCard.value);
       return sections;
     });
+
+    const chartsGroupTitle = computed(() => chartsCard.value?.groupTitle || 'Graficas e informes');
 
     const activeSection = computed(() => props.modelValue || props.homeId);
     const currentSection = computed(() =>
@@ -156,8 +195,11 @@ export default defineComponent({
     return {
       activeSection,
       availableSections,
+      chartsCard,
+      chartsGroupTitle,
       currentSection,
       selectSection,
+      standardSections,
     };
   },
 });
@@ -225,6 +267,22 @@ export default defineComponent({
   overflow: auto;
 }
 
+.module-shell-home-group {
+  margin-bottom: 1.5rem;
+}
+
+.module-shell-home-group-charts {
+  padding-top: 0.25rem;
+}
+
+.module-shell-group-heading {
+  color: var(--blueBerry);
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 0.85rem;
+  text-align: center;
+}
+
 .module-shell-welcome {
   display: flex;
   justify-content: space-between;
@@ -284,6 +342,10 @@ export default defineComponent({
   gap: 1rem;
 }
 
+.module-shell-grid-charts {
+  align-items: start;
+}
+
 .module-shell-card {
   grid-column: span 4;
   display: flex;
@@ -307,6 +369,11 @@ export default defineComponent({
 
 .module-shell-card-wide {
   grid-column: span 12;
+  max-width: 520px;
+}
+
+.module-shell-card-charts {
+  grid-column: span 4;
   max-width: 520px;
 }
 
@@ -385,7 +452,8 @@ export default defineComponent({
   }
 
   .module-shell-card,
-  .module-shell-card-wide {
+  .module-shell-card-wide,
+  .module-shell-card-charts {
     grid-column: span 12;
   }
 }

@@ -40,7 +40,9 @@
         title="Definición de Ejes" 
       >
         <div class="mb-3">
-          <label class="form-label small text-muted mb-2 fw-bold">Eje X (Categorías): </label>
+          <label class="form-label small text-muted mb-2 fw-bold">
+            {{ visualizationType === 'pie' ? 'Segmentar por (Categoría):' : 'Eje X (Categorías):' }}
+          </label>
           <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
                   :value="xAxisColumn"
                   @change="handleUpdate('update:xAxisColumn', $event.target.value)">
@@ -48,12 +50,24 @@
           </select>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-4">
           <label class="form-label small text-muted mb-2 d-flex justify-content-between fw-bold">
-            Series (Valores):
-            <span class="badge bg-light text-dark border fw-normal">{{ yAxisColumns.length }}</span>
+            {{ visualizationType === 'pie' ? 'Valor (Métrica):' : 'Series (Valores):' }}
+            <span v-if="visualizationType !== 'pie'" class="badge bg-light text-dark border fw-normal">{{ yAxisColumns.length }}</span>
           </label>
-          <div class="series-list-container p-2 border rounded-3 bg-light-subtle">
+          
+          <!-- Modo Pastel: Selección Única -->
+          <div v-if="visualizationType === 'pie'">
+            <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white"
+                    :value="yAxisColumns[0] || ''"
+                    @change="handleUpdate('update:yAxisColumns', [$event.target.value])">
+              <option value="" disabled>Selecciona una columna...</option>
+              <option v-for="col in availableColumns" :key="col" :value="col">{{ col }}</option>
+            </select>
+          </div>
+          
+          <!-- Modo Estándar: Selección Múltiple -->
+          <div v-else class="series-list-container p-2 border rounded-3 bg-light-subtle">
             <div v-for="col in availableColumns" :key="col" class="form-check custom-check py-1">
               <input class="form-check-input" type="checkbox" :id="'chk-'+col" 
                      :checked="yAxisColumns.includes(col)" 
@@ -61,6 +75,49 @@
               <label class="form-check-label small text-dark text-truncate d-block" :for="'chk-'+col">{{ col }}</label>
             </div>
           </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small text-muted mb-2 fw-bold">Operación (Agregación):</label>
+          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+                  :value="aggregationType"
+                  @change="handleUpdate('update:aggregationType', $event.target.value)">
+            <option value="AVG">Promedio (Media)</option>
+            <option value="SUM">Suma Total</option>
+            <option value="COUNT">Recuento (Cantidad)</option>
+            <option value="MIN">Valor Mínimo</option>
+            <option value="MAX">Valor Máximo</option>
+          </select>
+        </div>
+      </ConfigSection>
+
+      <!-- SECCIÓN: ORDEN DE DATOS -->
+      <ConfigSection 
+        v-if="isChartMode && (yAxisColumns.length > 0 || (dimensionColumn && valueColumn))"
+        title="Orden de Datos" 
+      >
+        <div class="mb-3">
+          <label class="form-label small text-muted mb-2 fw-bold">Ordenar por:</label>
+          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+                  :value="sortBy"
+                  @change="handleUpdate('update:sortBy', $event.target.value)">
+            <option value="natural">Por Defecto</option>
+            <option value="category">Categoría (Eje X)</option>
+            <option value="value">Valor (Métrica)</option>
+          </select>
+        </div>
+        
+        <div v-if="sortBy !== 'natural'" class="mb-3">
+          <label class="form-label small text-muted mb-2 fw-bold">Dirección:</label>
+          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+                  :value="sortOrder"
+                  @change="handleUpdate('update:sortOrder', $event.target.value)">
+            <option value="asc">Ascendente (Menor a Mayor / A-Z)</option>
+            <option value="desc">Descendente (Mayor a Menor / Z-A)</option>
+          </select>
+        </div>
+        
+        <div v-if="sortBy === 'value' && yAxisColumns.length > 1" class="form-text small text-muted lh-sm mt-1">
+          Se ordenará de acuerdo al valor de la primera serie seleccionada.
         </div>
       </ConfigSection>
 
@@ -134,7 +191,11 @@ export default defineComponent({
     dimensionColumn: String,
     valueColumn: String,
     maxRecords: { type: Number, default: 20 },
-    maxRecordsLocked: { type: Boolean, default: false }
+    maxRecordsLocked: { type: Boolean, default: false },
+    aggregationType: { type: String, default: 'AVG' },
+    visualizationType: String,
+    sortBy: { type: String, default: 'natural' },
+    sortOrder: { type: String, default: 'asc' }
   },
   emits: [
     'update:selectedTableName',
@@ -144,7 +205,10 @@ export default defineComponent({
     'update:subGroupByColumn',
     'update:dimensionColumn',
     'update:valueColumn',
-    'update:maxRecords'
+    'update:maxRecords',
+    'update:aggregationType',
+    'update:sortBy',
+    'update:sortOrder'
   ],
   setup(props, { emit }) {
 

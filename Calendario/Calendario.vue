@@ -4,12 +4,15 @@
     <aside v-if="showSidebar" class="calendar-sidebar">
       <div class="sidebar-header">
         <slot name="sidebar-header">
-          <h3>
-            <span class="sidebar-icon-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" class="calendar-icon-svg"><path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.229 1.744 3 2.75 3h10.5c1.006 0 1.75.229 1.75.857v10.286c0 .628-.744.857-1.75.857H2.75C1.744 15 1 14.771 1 14.143V3.857z"/><path d="M2 7h12V6H2v1zm0 3h12V9H2v1zm0 3h12v-1H2v1z"/></svg>
-            </span>
-            Agenda
-          </h3>
+          <div class="sidebar-title-row">
+            <h3>
+              <span class="sidebar-icon-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" class="calendar-icon-svg"><path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.229 1.744 3 2.75 3h10.5c1.006 0 1.75.229 1.75.857v10.286c0 .628-.744.857-1.75.857H2.75C1.744 15 1 14.771 1 14.143V3.857z"/><path d="M2 7h12V6H2v1zm0 3h12V9H2v1zm0 3h12v-1H2v1z"/></svg>
+              </span>
+              Agenda
+            </h3>
+            <slot name="sidebar-title-actions"></slot>
+          </div>
           <p>Navega el mes para ver el cronograma</p>
         </slot>
       </div>
@@ -389,6 +392,8 @@ onMounted(async () => {
   box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.8), 0 10px 30px rgba(0,0,0,0.02);
 }
 .sidebar-header { margin-bottom: var(--cal-gap); }
+.sidebar-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.sidebar-title-row h3 { margin: 0; }
 .sidebar-header h3 {
   font-family: 'Outfit', sans-serif;
   font-size: var(--cal-font-title);
@@ -560,6 +565,7 @@ onMounted(async () => {
 .type-border-warning { border-left-color: var(--bs-warning); }
 .type-border-danger { border-left-color: var(--bs-danger); }
 .type-border-info { border-left-color: var(--bs-info); }
+.type-border-secondary { border-left-color: var(--gris); }
 
 .card-mini-img { height: var(--cal-card-img-height); border-radius: 12px; overflow: hidden; position: relative; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 .card-mini-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }

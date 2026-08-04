@@ -345,7 +345,7 @@ export default defineComponent({
 }
 
 .group-header {
-  background-color: var(--blueBerryPastel);
+  background-color: var(--blueBerry);
   color: white;
   font-weight: bold;
   padding: 0.5rem 1rem;

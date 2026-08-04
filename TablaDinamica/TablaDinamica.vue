@@ -590,6 +590,10 @@ export default defineComponent({
 </script>
 
 <style>
+:root {
+  --border-radius-small: 12px;
+  --border-radius-large: 16px;
+}
 .TablaDinamica {
   position: relative;
 }
@@ -699,7 +703,7 @@ export default defineComponent({
   }
 
   .TablaDinamica.h-100 .TablaDinamica_scrollContainer table thead {
-    z-index: 20;
+    z-index: 10;
   }
 
   .TablaDinamica.h-100 .TablaDinamica_scrollContainer table thead tr th {

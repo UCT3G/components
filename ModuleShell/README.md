@@ -10,6 +10,7 @@ Incluye:
 - area de acciones contextual
 - indicador opcional de cuenta o perfil
 - seccion opcional de graficas mediante `chartsSection`
+- separacion visual entre sistemas del modulo y graficas/informes
 - slots nombrados para que cada modulo conserve su logica de negocio
 
 ## Uso basico
@@ -52,4 +53,17 @@ Incluye:
 }
 ```
 
-`chartsSection` usa la misma estructura y es opcional. Si es `null`, el modulo no muestra una seccion de graficas.
+## Estructura de `chartsSection`
+
+```js
+{
+  id: 'graficas',
+  label: 'Graficas',
+  title: 'Graficas',
+  description: 'Consulta indicadores y visualizaciones del modulo.',
+  icon: 'icons/graph',
+  groupTitle: 'Graficas e informes'
+}
+```
+
+`chartsSection` usa la misma estructura y es opcional. Si existe, se muestra en una fila separada dentro del home del modulo.

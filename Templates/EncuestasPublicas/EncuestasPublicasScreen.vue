@@ -1,6 +1,6 @@
 <template>
-    <div class="col-12 fondo" :class="{'modo-edicion': isEditMode}">
-        <div class="row d-flex justify-content-center align-items-center pb-5" :class="isEditMode ? 'h-100' : 'vh-100'">
+    <div class="w-100 fondo" :class="{'modo-edicion': isEditMode}">
+        <div class="row m-0 d-flex justify-content-center align-items-center pb-5" :class="isEditMode ? 'h-100' : 'min-vh-100'">
             <div class="col-11 col-sm-10 col-md-8 col-lg-7">
                 <LoadingScreen :visible="loadingConfig" />
                 
@@ -18,6 +18,8 @@
                             :configData="localConfig"
                             :previews="imagePreviews"
                             :headerMode="localHeaderMode"
+                            :idModulo="currentIdModulo"
+                            :idTemplate="currentIdTemplate"
                             @image-selected="uploadHeaderImage"
                         />
 
@@ -32,11 +34,11 @@
                                 @update:configData="updateConfigData"
                             />
 
-                            <!-- Botón condicional: Deshabilitado en modo edición -->
+                            <!-- Botón condicional: Deshabilitado en modo edición o verificación -->
                             <div v-if="MostrarBotonInicio || isEditMode" class="text-center mt-4">
                                 <button 
-                                    @click="!isEditMode && mostrarFormularioAddUsuario()" 
-                                    :disabled="isEditMode"
+                                    @click="!isEditMode && !isVerificando && mostrarFormularioAddUsuario()" 
+                                    :disabled="isEditMode || isVerificando"
                                     class="btn btn-comenzar-evaluacion"
                                 >
                                     Comenzar evaluación
@@ -158,6 +160,8 @@ export default defineComponent({
     props: {
         isEditMode: { type: Boolean, default: false },
         tema: { type: String, default: 'TRESGUERRAS' },
+        idModulo: { type: [Number, String], default: null },
+        idTemplate: { type: [Number, String], default: null },
         endpointVerificar: { type: String, default: '' },
         endpointValidarAcceso: { type: String, default: '/FormularioDinamico/validarAccesoEncuesta' },
         configData: { 
@@ -166,9 +170,9 @@ export default defineComponent({
                 welcome_title: '¡Bienvenido a tu evaluación!', 
                 welcome_tag: 'Evaluación pública',
                 welcome_body: 'A continuación, te pedimos responder las siguientes preguntas. Cuando estes listo para comenzar, presiona el botón:',
-                header_img_left: '',
-                header_img_right: '',
-                header_img_full: '',
+                header_img_left: null,
+                header_img_right: null,
+                header_img_full: null,
                 header_mode: 'split',
                 show_yowi: true,
                 show_header: false
@@ -182,14 +186,21 @@ export default defineComponent({
         const showCard = ref(props.isEditMode); // Si es edición, mostrar de inmediato
         const loadingConfig = ref(!props.isEditMode); // Si no es edición, mostrar cargador inicial
 
+        // IDs relacionales independientes de la configuración visual (config_json)
+        const currentIdModulo = ref(props.idModulo);
+        const currentIdTemplate = ref(props.idTemplate);
+
+        watch(() => props.idModulo, (newVal) => { currentIdModulo.value = newVal; });
+        watch(() => props.idTemplate, (newVal) => { currentIdTemplate.value = newVal; });
+
         // Valores por defecto internos
         const initialDefaults = {
             welcome_title: '¡Bienvenido a tu evaluación!', 
             welcome_tag: 'Evaluación pública',
             welcome_body: 'A continuación, te pedimos responder las siguientes preguntas. Cuando estes listo para comenzar, presiona el botón:',
-            header_img_left: '',
-            header_img_right: '',
-            header_img_full: '',
+            header_img_left: null,
+            header_img_right: null,
+            header_img_full: null,
             header_mode: 'split',
             show_yowi: true,
             show_header: true
@@ -217,10 +228,12 @@ export default defineComponent({
         const animatedEstadoCuerpo = ref('');
         const velocidadAnimacion = ref(7);
         const MostrarBotonInicio = ref(false);
+        const isVerificando = ref(false);
         const verEncuesta = ref(false);
         const id_form = ref('');
         const id_user = ref('');
         const tok = ref('');
+        const jwtToken = ref('');
         const t = route.query.c;
 
         store.dispatch('tema/actualizarTema', props.tema);
@@ -280,8 +293,10 @@ export default defineComponent({
             else if (campo === 'header_img_right') previewImgRight.value = previewUrl;
             else if (campo === 'header_img_full') previewImgFull.value = previewUrl;
             
-            // Sincronizar localmente
-            localConfig.value[campo] = file.name;
+            // Guardar solo la extensión en localConfig (ej: '.jpeg')
+            // La ruta completa se reconstruye en EncuestaEncabezado con id_modulo e id_template
+            const ext = file.name.substring(file.name.lastIndexOf('.'));
+            localConfig.value[campo] = ext;
             // Guardar binario internamente
             internalFiles.value[campo] = file;
         };
@@ -302,23 +317,29 @@ export default defineComponent({
         };
 
         const mostrarFormularioAddUsuario = async() => {
+            if (isVerificando.value) return;
+            isVerificando.value = true;
             try {
                 const respuesta = await store.dispatch('EncuestasPublicas/verificarEstado', {
                     url: props.endpointVerificar,
-                    token: t
+                    token: jwtToken.value
                 });
                 const conteo = respuesta.count.count;
                 
                 if (conteo === 0) {
-                    tok.value = t;
+                    tok.value = jwtToken.value;
                     verEncuesta.value = true;
                 } else if (conteo === 1) {
+                    MostrarBotonInicio.value = false;
                     mostrarMensajeEstado('Gracias por participar.', 'Ya contestaste esta evaluación. ¡Gracias!');
                 } else if (conteo === 2) {
+                    MostrarBotonInicio.value = false;
                     mostrarMensajeEstado('Acceso no válido', 'Esta evaluación ha sido reprogramada o reasignada.');
                 }
             } catch (error) {
                 console.error('Error al verificar encuesta:', error);
+            } finally {
+                isVerificando.value = false;
             }
         };
 
@@ -332,7 +353,11 @@ export default defineComponent({
                     });
                     
                     if (data.valido) {
-                        // Aplicar configuración de template si existe en el token
+                        // Asignar IDs relacionales explícitos desde la respuesta de la BD / token
+                        currentIdTemplate.value = data.payload?.id_template_fk || props.idTemplate;
+                        currentIdModulo.value = data.id_modulo_fk || props.idModulo;
+
+                        // Aplicar configuración de diseño pura
                         if (data.template_config) {
                             localConfig.value = { ...localConfig.value, ...data.template_config };
                             // Sincronizar estados reactivos internos
@@ -343,6 +368,7 @@ export default defineComponent({
 
                         id_form.value = data.payload.id_encuesta_fk;
                         id_user.value = data.payload.id_usuario_evaluador;
+                        jwtToken.value = data.token;
                         mostrarTexto();
                     } else {
                         configurarMensajeError(data);
@@ -394,6 +420,7 @@ export default defineComponent({
             imagePreviews, 
             mensajeEstado,
             MostrarBotonInicio, 
+            isVerificando,
             mostrarFormularioAddUsuario, 
             verEncuesta,
             id_form, 
@@ -412,7 +439,9 @@ export default defineComponent({
             poweredYowi_image, 
             yowi_image, 
             iconTag,
-            localConfig
+            localConfig,
+            currentIdModulo,
+            currentIdTemplate
         };
     }
 });
@@ -469,9 +498,11 @@ export default defineComponent({
     }
     @keyframes aparecemsg { from { opacity: 0; } to { opacity: 1; } }
     .fondo {       
-        height: 100vh; 
+        min-height: 100vh; 
+        height: auto;
+        width: 100%;
+        overflow-x: hidden;
         background: radial-gradient(circle, var(--azulNormal) 0%, var(--azulDark) 100%);
-        overflow: hidden;
         position: relative;
     }
     .fondo.modo-edicion { height: 100% !important; max-height: 100% !important; overflow-y: auto; overflow-x: hidden; }
