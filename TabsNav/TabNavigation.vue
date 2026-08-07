@@ -137,8 +137,10 @@ export default defineComponent({
   border: none;
   outline: none;
   color: var(--bs-gray-500);
+  background: white;
   font-weight: 500;
   font-size: 14px;
+  font-style: italic;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;

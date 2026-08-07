@@ -20,7 +20,7 @@
         @input="onInput"
         autocomplete="off"
       />
-      <span class="input-group-text bg-white border-start-0 chevron-container">
+      <span class="input-group-text border-0 chevron-container">
         <DynamicSvgLoader 
           fileName="icons/chevron-down" 
           width_icon="15px" 
@@ -183,39 +183,35 @@ export default defineComponent({
 
 .input-container {
   cursor: pointer;
-  border-radius: 7px;
+  border-radius: 25px;
   overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.input-container:focus-within {
-  border-color: var(--acceso1);
-  box-shadow: 0 0 0 0.2rem rgba(var(--acceso1-rgb), 0.15);
 }
 
 .select-inner-input {
-  border-radius: 7px 0 0 7px !important;
+  border-radius: 25px 0 0 25px !important;
   border-right: none;
-  padding: 7px;
+  padding: 7px 15px;
   cursor: pointer;
-  background-color: white !important;
 }
 
 .select-inner-input:focus {
   cursor: text;
-  box-shadow: none;
-  border-color: var(--bs-gray-400);
 }
 
 .chevron-container {
-  border-radius: 0 7px 7px 0 !important;
-  border: 1px solid var(--blueBerry);
-  border-left: none;
-  padding: 0 12px;
+  border-radius: 0 25px 25px 0 !important;
+  background-color: var(--input);
+  color: var(--input-txt);
+  padding: 0 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+}
+
+.input-container:focus-within .chevron-container {
+  background-color: var(--blueBerryPastel);
 }
 
 /* Override DynamicSvgLoader internal padding to prevent enlarging the select */
@@ -254,13 +250,13 @@ export default defineComponent({
 }
 
 .dropdown-item:hover {
-  background-color: var(--bs-gray-200);
+  background-color:  var(--blueBerryPastel);
   color: var(--purple-sb);
 }
 
 .dropdown-item.active {
   background-color: var(--blueBerryPastel) !important;
-  color: white !important;
+  color: var(--purple-sb) !important;
 }
 
 .disabled {
