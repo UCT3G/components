@@ -215,7 +215,8 @@ export default defineComponent({
   border: 1px solid var(--bs-gray-200);
   background: white;
   color: var(--bs-gray-500);
-  font-size: 0.85rem;
+  font-size: 13px;
+  font-style: italic;
   cursor: pointer;
   transition: all 0.25s ease;
   position: relative;
