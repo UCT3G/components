@@ -3,7 +3,7 @@
     <!-- Lado izquierdo: Selector de archivo -->
     <div class="col-12 col-md-4 mb-1">
       <div class="sticky-top" style="top:1rem;">
-        <FileDropZone stacked accept=".xlsx,.xls" @file-selected="processFile" />
+        <FileDropZone stacked accept=".xlsx,.xls" @file-selected="processFile" :disabled="disabled" />
       </div>
     </div>
 
@@ -57,7 +57,8 @@ export default defineComponent({
   components:{FileDropZone},
   props: {
     grupos: { type: Array, default: () => ["Datos"] },
-    extraComplexGroups: { type: Array, default: () => [] }
+    extraComplexGroups: { type: Array, default: () => [] },
+    disabled: { type: Boolean, default: false }
   },
   emits: ["update:json", "excel-loaded"],
   setup(props, { emit }) {
@@ -150,6 +151,41 @@ export default defineComponent({
             if (subCell) subHeaders.push({ nombre: subCell.v, columna: XLSX.utils.encode_col(subCol) });
           }
           if (mainHeader && !headers.find(h => h.nombre === mainHeader)) headers.push({ nombre: mainHeader, campos: subHeaders });
+        }
+      }
+
+      // Fallback: Si no se detectaron grupos por merges reales (ej. Excel exportado que usa pseudo-merges visuales en lugar de merges reales de Excel), escanear la fila de
+      // encabezado buscando el patrón: celda con valor + celda adyacente vacía = pseudo-grupo.
+      // Los sub-encabezados se leen de la fila inmediata inferior (range.s.r + 1).
+      if (headers.length === 0) {
+        const extraGroupNames = props.extraComplexGroups.map(g => g.nombre.trim().toLowerCase());
+        for (let col = range.s.c; col <= range.e.c; col++) {
+          const cell = sheet[XLSX.utils.encode_cell({ r: range.s.r, c: col })];
+          if (!cell?.v) continue;
+
+          // Ignorar celdas que son nombres de extraComplexGroups
+          if (extraGroupNames.includes(String(cell.v).trim().toLowerCase())) continue;
+
+          // Patrón pseudo-merge: la celda siguiente en la misma fila está vacía
+          const nextCell = sheet[XLSX.utils.encode_cell({ r: range.s.r, c: col + 1 })];
+          if (nextCell?.v !== undefined && nextCell.v !== '') continue;
+
+          // Recoger sub-columnas desde range.s.r + 1
+          const subHeaders = [];
+          for (let subCol = col; subCol <= range.e.c; subCol++) {
+            // Si avanzamos a la siguiente columna y encontramos el título de otro grupo, nos detenemos
+            if (subCol > col) {
+              const nextGroupCell = sheet[XLSX.utils.encode_cell({ r: range.s.r, c: subCol })];
+              if (nextGroupCell?.v !== undefined && nextGroupCell.v !== '') break;
+            }
+            const subCell = sheet[XLSX.utils.encode_cell({ r: range.s.r + 1, c: subCol })];
+            if (!subCell?.v) break; // Dejar de leer sub-columnas cuando ya no hay valor
+            subHeaders.push({ nombre: String(subCell.v), columna: XLSX.utils.encode_col(subCol) });
+          }
+
+          if (subHeaders.length > 0) {
+            headers.push({ nombre: String(cell.v), campos: subHeaders });
+          }
         }
       }
 
