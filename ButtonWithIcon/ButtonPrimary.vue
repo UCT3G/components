@@ -81,7 +81,7 @@ export default {
 </script>
 
 <style scoped>
-.btn-primary {
+/* .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -115,8 +115,7 @@ export default {
 }
 
 .btn-primary:disabled {
-  /* background: var(--purple-sb)!important; */
   cursor: not-allowed;
   opacity: .5
-}
+} */
 </style>

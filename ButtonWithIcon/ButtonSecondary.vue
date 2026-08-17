@@ -81,7 +81,7 @@ export default {
 </script>
 
 <style scoped>
-.btn-secondary {
+/* .btn-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -128,5 +128,5 @@ export default {
 
 .btn-secondary-contenido{
   width: 70%;
-}
+} */
 </style>

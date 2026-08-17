@@ -132,29 +132,62 @@ export default defineComponent({
 .DropDownTrespuntos {
   padding: 5px 0px;
 }
+
 .DropDownTrespuntos button {
   background-color: transparent;
   border: none;
-  color: var(--babyBlue);
+  color: var(--txttitulo);
   transition: 0.5s linear;
 }
-.DropDownTrespuntos .dropdown-menu button:hover {
-  background-color: var(--bluePerry);
-}
+
 .DropDownTrespuntos .icon {
   display: inline-block;
   width: 1.5rem;
   height: 1.5rem;
-  fill: var(--blueBerry);
+  fill: var(--blueBerry); 
 }
+
+.DropDownTrespuntos .dropdown-menu button:hover {
+  background-color: var(--dropdown-hover);
+}
+
+
 .dropdown-menu.show {
-  background: linear-gradient(
-    90deg,
-    var(--purple-sb-70) 0%,
-    var(--bluelight-sb-70) 100%
-  );
-  border: 1px solid var(--babyBlue);
-  backdrop-filter: blur(5px);
-  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    font-size: 13.5px;
+    background: linear-gradient(
+        45deg,
+        rgba(var(--dropdown-bg), 0.60) 0%,
+        rgba(214, 214, 231, 0.30) 40%
+    );
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(11px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 12px;
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.20),
+        0 2px 8px rgba(0, 0, 0, 0.11),
+        inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+.dropdown-item {
+    position: relative;
+    transition: all .2s ease;
+}
+
+.dropdown-item::before {
+    content: "";
+    position: absolute;
+    left: 1px;
+    top: 20%;
+    width: 3px;
+    height: 70%;
+    border-radius: 999px;
+    background: var(--purple-sb-70);
+    transform: scaleY(0);
+    transition: transform .2s ease;
+}
+
+.dropdown-item:hover::before {
+    transform: scaleY(1);
 }
 </style>

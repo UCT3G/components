@@ -9,7 +9,7 @@
         <div v-if="tableLocked" class="locked-table-display p-2 rounded-3 border bg-light w-100 overflow-hidden">
           <span class="small fw-bold text-secondary text-truncate d-block" :title="selectedTableName">{{ selectedTableName }}</span>
         </div>
-        <select v-else class="form-select border-light-subtle shadow-sm px-2 py-1" 
+        <select v-else class="form-select px-2 py-1" 
                 :value="selectedTableName || ''" 
                 @change="handleUpdate('update:selectedTableName', $event.target.value)">
           <option value="" disabled>Selecciona una base...</option>
@@ -43,7 +43,7 @@
           <label class="form-label small text-muted mb-2 fw-bold">
             {{ visualizationType === 'pie' ? 'Segmentar por (Categoría):' : 'Eje X (Categorías):' }}
           </label>
-          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+          <select class="form-select form-select-sm" 
                   :value="xAxisColumn"
                   @change="handleUpdate('update:xAxisColumn', $event.target.value)">
             <option v-for="col in availableColumns" :key="col" :value="col">{{ col }}</option>
@@ -58,7 +58,7 @@
           
           <!-- Modo Pastel: Selección Única -->
           <div v-if="visualizationType === 'pie'">
-            <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white"
+            <select class="form-select form-select-sm"
                     :value="yAxisColumns[0] || ''"
                     @change="handleUpdate('update:yAxisColumns', [$event.target.value])">
               <option value="" disabled>Selecciona una columna...</option>
@@ -78,7 +78,7 @@
         </div>
         <div class="mb-3">
           <label class="form-label small text-muted mb-2 fw-bold">Operación (Agregación):</label>
-          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+          <select class="form-select form-select-sm" 
                   :value="aggregationType"
                   @change="handleUpdate('update:aggregationType', $event.target.value)">
             <option value="AVG">Promedio (Media)</option>
@@ -97,7 +97,7 @@
       >
         <div class="mb-3">
           <label class="form-label small text-muted mb-2 fw-bold">Ordenar por:</label>
-          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+          <select class="form-select form-select-sm" 
                   :value="sortBy"
                   @change="handleUpdate('update:sortBy', $event.target.value)">
             <option value="natural">Por Defecto</option>
@@ -108,7 +108,7 @@
         
         <div v-if="sortBy !== 'natural'" class="mb-3">
           <label class="form-label small text-muted mb-2 fw-bold">Dirección:</label>
-          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+          <select class="form-select form-select-sm" 
                   :value="sortOrder"
                   @change="handleUpdate('update:sortOrder', $event.target.value)">
             <option value="asc">Ascendente (Menor a Mayor / A-Z)</option>
@@ -127,7 +127,7 @@
       >
         <div class="mb-3">
           <label class="form-label small text-muted mb-2 fw-bold">Agrupar por:</label>
-          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+          <select class="form-select form-select-sm" 
                   :value="groupByColumn || ''"
                   @change="handleUpdate('update:groupByColumn', $event.target.value)">
             <option value="">Sin agrupación</option>
@@ -136,7 +136,7 @@
         </div>
         <div v-if="isChartMode" class="mb-3">
           <label class="form-label small text-muted mb-2 fw-bold">Sub-agrupar por:</label>
-          <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white" 
+          <select class="form-select form-select-sm" 
                   :value="subGroupByColumn || ''"
                   @change="handleUpdate('update:subGroupByColumn', $event.target.value)">
             <option value="">Sin sub-agrupación</option>
@@ -149,7 +149,7 @@
           <label class="small text-muted mb-2 fw-bold">Pivot <b>Dimensión → Series</b></label>
           <div class="mb-3">
             <label class="form-label small text-muted mb-2 fw-bold">Dimensión (crea series):</label>
-            <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white"
+            <select class="form-select form-select-sm"
                     :value="dimensionColumn || ''"
                     @change="handleUpdate('update:dimensionColumn', $event.target.value)">
               <option value="">Sin pivot</option>
@@ -158,7 +158,7 @@
           </div>
           <div v-if="dimensionColumn" class="mb-3">
             <label class="form-label small text-muted mb-2 fw-bold">Valor de la dimensión:</label>
-            <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white"
+            <select class="form-select form-select-sm"
                     :value="valueColumn || ''"
                     @change="handleUpdate('update:valueColumn', $event.target.value)">
               <option value="">--</option>

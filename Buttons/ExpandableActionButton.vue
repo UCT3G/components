@@ -42,7 +42,7 @@
             :style="action.disabled ? '' : 'cursor: pointer;'"
           >
             <button
-              class="btn btn-sm w-100 py-2 btn-action-item"
+              class="btn w-100 py-2 btn-action-item"
               :class="[
                 action.variant || '',
                 { 'bg-purple-active': action.label === selectedActionLabel }

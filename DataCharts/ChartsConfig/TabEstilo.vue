@@ -19,7 +19,7 @@
       >
         <div class="mb-3">
           <label class="form-label small text-muted mb-2">Configurar para:</label>
-          <select class="form-select form-select-sm  shadow-sm bg-white" 
+          <select class="form-select form-select-sm" 
                   :value="activeConfigKey"
                   @change="handleUpdate('update:activeConfigKey', $event.target.value)">
             <option v-for="key in availableConfigKeys" :key="key" :value="key">
@@ -138,7 +138,7 @@
           <!-- Modo de Color exclusivo para Pastel -->
           <div v-if="visualizationType === 'pie'" class="mb-3 border-bottom pb-2">
             <label class="form-label small text-muted mb-1 fw-bold">Modo de Color (Pastel)</label>
-            <select class="form-select form-select-sm border-light-subtle shadow-sm bg-white"
+            <select class="form-select form-select-sm"
                     :value="scaleConfig.pieColorMode || 'multicolor'"
                     @change="onScaleUpdate('pieColorMode', $event.target.value)">
               <option value="multicolor">Multicolor (Automático)</option>
