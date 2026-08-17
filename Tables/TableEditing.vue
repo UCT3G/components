@@ -4,68 +4,66 @@
     <LoadingUCT :blockFullScreem="true" v-if="loading"/>
 
     <!-- Card de selects y botón editar -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <div class="row align-items-center g-3">
-          <!-- Checkbox que permite activar/desactivar la edición -->
-          <div class="col-12 col-md-auto">
-            <div v-if="editable" class="d-flex align-items-center gap-1">
-              <div class="d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" v-if="canEdit && (catalogoOptions.length || useCustomAddEvent)">
-                <DynamicSvgLoader 
-                  @click.stop.prevent="handleAddClick"
-                  fileName="icons/AGREGAR-24" 
-                  :title="addCustomTitle"
-                  width_icon="16px"
-                  class="iconBtn"
-                >
-                </DynamicSvgLoader>
-              </div>
-              <!-- Switch -->
-              <div class="form-check form-switch d-flex align-items-center mb-0">
-                <input 
-                  type="checkbox" 
-                  class="form-check-input" 
-                  role="switch"
-                  id="editToggle" 
-                  v-model="editar" 
-                  :disabled="!requiredSelected"
-                >
-                <label 
-                  class="form-check-label label ms-2 small" 
-                  for="editToggle"
-                >
-                  {{ editar ? 'Editando' : 'Editar' }}
-                </label>
-              </div>
+    <div class="mb-4 mt-3">
+      <div class="row align-items-center g-3">
+        <!-- Checkbox que permite activar/desactivar la edición -->
+        <div class="col-12 col-md-auto">
+          <div v-if="editable" class="d-flex align-items-center gap-1">
+            <div class="d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" v-if="canEdit && (catalogoOptions.length || useCustomAddEvent)">
+              <DynamicSvgLoader 
+                @click.stop.prevent="handleAddClick"
+                fileName="icons/AGREGAR-24" 
+                :title="addCustomTitle"
+                width_icon="16px"
+                class="iconBtn"
+              >
+              </DynamicSvgLoader>
+            </div>
+            <!-- Switch -->
+            <div class="form-check form-switch d-flex align-items-center mb-0">
+              <input 
+                type="checkbox" 
+                class="form-check-input" 
+                role="switch"
+                id="editToggle" 
+                v-model="editar" 
+                :disabled="!requiredSelected"
+              >
+              <label 
+                class="form-check-label label ms-2 small" 
+                for="editToggle"
+              >
+                {{ editar ? 'Editando' : 'Editar' }}
+              </label>
             </div>
           </div>
+        </div>
 
-          <!-- Render dinámico de selects -->
-          <div class="col-12 col-md d-flex flex-wrap justify-content-md-end gap-3">
-            <!-- Si hay selects, renderizarlos -->
-            <template v-if="selects.length > 0">
-              <div 
-                v-for="sel in selects" 
-                :key="sel.key"
-                class="d-flex flex-column "
-              >
-                <div v-if="sel.visible" >
-                  <!-- <label class="small text-muted mb-1">Selecciona {{ sel.label }}:</label> -->
-                  <select v-model="selectedValues[sel.key]" class="form-select form-select-sm">
-                    <option disabled value="">Selecciona {{ sel.label }} </option>
-                    <option v-for="opt in sel.options" :key="opt" :value="opt">
-                    {{ opt }}
-                    </option>
-                  </select>
-                </div>
+        <!-- Render dinámico de selects -->
+        <div class="col-12 col-md d-flex flex-wrap justify-content-md-end gap-3">
+          <!-- Si hay selects, renderizarlos -->
+          <template v-if="selects.length > 0">
+            <div 
+              v-for="sel in selects" 
+              :key="sel.key"
+              class="d-flex flex-column "
+            >
+              <div v-if="sel.visible" >
+                <!-- <label class="small text-muted mb-1">Selecciona {{ sel.label }}:</label> -->
+                <select v-model="selectedValues[sel.key]" class="form-select">
+                  <option disabled value="">Selecciona {{ sel.label }} </option>
+                  <option v-for="opt in sel.options" :key="opt" :value="opt">
+                  {{ opt }}
+                  </option>
+                </select>
               </div>
-            </template>
+            </div>
+          </template>
 
-            <!-- Si no hay selects, usar slot personalizado -->
-            <template v-else>
-              <slot name="header-content"></slot>
-            </template>
-          </div>
+          <!-- Si no hay selects, usar slot personalizado -->
+          <template v-else>
+            <slot name="header-content"></slot>
+          </template>
         </div>
       </div>
     </div>
@@ -77,13 +75,13 @@
       </div>
     </div>
 
-    <!-- Card de la tabla -->
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <form @submit.prevent="save">
-          <!-- Tabla dinámica -->
-          <table class="table">
-            <thead>
+    <div>
+      <!-- tabla -->
+      <form @submit.prevent="save">
+        <!-- Tabla -->
+        <div class="table-responsive border rounded-4 mb-4" :style="{ maxHeight: tablaMaxHeight }">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light sticky-top">
               <tr>
                 <!-- Renderiza los encabezados a partir de props.columns -->
                 <th v-for="col in columns" :key="col.key" :class="col.headerAlign || 'text-center'">{{ col.label }}</th>
@@ -176,18 +174,18 @@
 
             </tbody>
           </table>
+        </div>
 
-          <!-- Botón guardar y cancelar aparece solo si editable y canEdit y NO hideActions -->
-          <div v-if="editable && canEdit && !hideActions" class="d-flex justify-content-center gap-2 mt-3">
-            <button type="submit" class="btn btn-primary"> 
-              Guardar
-            </button> 
-            <button type="button" class="btn btn-secondary"  @click="cancel">
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </div>
+        <!-- Botón guardar y cancelar sticky solo con utilerías de Bootstrap -->
+        <div v-if="showBottomActions" class="sticky-bottom bg-white d-flex justify-content-center gap-1 mt-3">
+          <button type="submit" class="btn btn-primary px-4"> 
+            Guardar
+          </button> 
+          <button type="button" class="btn btn-secondary px-3" @click="cancel">
+            Cancelar
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- Modal para el catalogo -->
@@ -298,6 +296,16 @@ export default defineComponent({
     // condición general para habilitar edición
     const canEdit = computed(() => {
         return editar.value && requiredSelected.value;
+    });
+
+    const showBottomActions = computed(() => {
+      return props.editable && canEdit.value && !props.hideActions;
+    });
+
+    const tablaMaxHeight = computed(() => {
+      return showBottomActions.value 
+        ? 'calc(100vh - 350px)' 
+        : 'calc(100vh - 290px)';
     });
 
     // observar cambios en cualquiera de los selects
@@ -425,13 +433,15 @@ export default defineComponent({
       actionButton,
       handleDropdownSelection,
       handleAddClick,
+      showBottomActions,
+      tablaMaxHeight
     };
   }
 });
 </script>
 
 <style scoped>
-.checkbox-hover label:hover {color: var(--bluelight-sb) !important;}
+/* .checkbox-hover label:hover {color: var(--bluelight-sb) !important;}
 .checkbox-hover {
   padding: 0.5rem;
   border-radius: 0.5rem;
@@ -444,25 +454,14 @@ input[type="checkbox"]:focus {box-shadow: 0 0 5px var(--bluelight-sb);border-col
 .iconBtn{padding: unset;fill: var(--bs-gray-700);}
 .iconBtn:hover {fill: var(--bluelight-sb);}
 .boton-color{fill:var(--bs-gray-500)}
-.boton-color:hover {fill: var(--acceso1);transform: scale(1.1);}
+.boton-color:hover {fill: var(--acceso1);transform: scale(1.1);} */
 
 /* ===== Contenedor principal ===== */
-.container-fluid {font-family: 'Inter', sans-serif;color: var(--bs-gray-700);}
+/* .container-fluid {font-family: 'Inter', sans-serif;color: var(--bs-gray-700);} */
 
-/* ===== Cards ===== */
-.card {
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  margin-bottom: 1.5rem;
-  background-color: white;
-}
-.card:hover {transform: translateY(-3px);box-shadow: 0 6px 20px rgba(0,0,0,0.12);}
-.card-body {padding: 1rem 1.5rem;}
 
 /* ===== Overlay de Loading ===== */
-.loading-overlay-fullscreen {
+/* .loading-overlay-fullscreen {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: var(--bs-gray-100);
@@ -471,9 +470,9 @@ input[type="checkbox"]:focus {box-shadow: 0 0 5px var(--bluelight-sb);border-col
   justify-content: center;
   z-index: 100;
   backdrop-filter: blur(4px);
-}
+} */
 
-/* ===== Selects e Inputs ===== */
+/* ===== Selects e Inputs =====
 .form-select,
 .form-control {
   border-radius: 8px;
@@ -503,29 +502,8 @@ input[type="checkbox"]:focus {box-shadow: 0 0 5px var(--bluelight-sb);border-col
   display: inline-block;
   text-align: center;
   margin: 0 auto;
-}
-/* ===== Tabla ===== */
-.table {width: 100%;}
-.table th {
-  background-color: var(--bs-gray-100);
-  color: var(--bs-gray-800);
-  font-weight: 600;
-  text-align: center;
-  padding: 10px 12px;
-  border-top: none;
-}
-.table thead th {border-right: 2px solid var(--bs-gray-300) ;}
-.table td {
-  background-color: white;
-  border-top: none;
-  border-right: 2px solid var(--bs-gray-300); 
-  padding: 10px 12px;
-  text-align: center;
-  vertical-align: middle;
-}
-.table td:last-child {border-right: none; }
-.table thead th:last-child {border-right: none; }
-.table tr:hover td { background-color: var(--bs-gray-100); transition: background-color 0.2s ease;}
+} */
+
 .total-row {
   background-color: var(--bs-gray-100);
   border-top: 2px solid var(--bs-gray-300);
@@ -534,7 +512,7 @@ input[type="checkbox"]:focus {box-shadow: 0 0 5px var(--bluelight-sb);border-col
 .total-row td {padding: 12px 8px;}
 .total-valid {color: var(--bs-green); }
 .total-invalid {color: var(--bs-red); }
-.form-check-input:checked {background-color: var(--bluelight-sb);border-color: var(--bluelight-sb);}
+/* .form-check-input:checked {background-color: var(--bluelight-sb);border-color: var(--bluelight-sb);} */
 .text-muted {color: var(--bs-gray-600);}
 .color-preview-circle {
   width: 22px;
