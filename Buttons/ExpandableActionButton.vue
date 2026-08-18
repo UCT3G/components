@@ -129,11 +129,13 @@ export default defineComponent({
 .btn-action-item {
   transition: all 0.2s ease;
   border: 1px solid transparent;
+  --bs-btn-disabled-border-color: transparent;
+  --bs-btn-disabled-color: var(--bs-gray-700); 
 }
 
 .btn-action-item:hover,
 .bg-purple-active {
-  background-color: var(--bs-gray-200) !important;
+  background-color: var(--bg-table-hover) !important;
   color: black !important;
 }
 
@@ -149,5 +151,19 @@ export default defineComponent({
   opacity: 0;
   max-height: 0;
   transform: translateY(-5px);
+}
+.btn-tertiary {
+  background-color: white;
+  color:black;
+  border:none;
+}
+
+.btn-tertiary:hover {
+  background-color: var(--purple-sb);
+  color: white;
+}
+.btn-tertiary.active {
+  background-color: var(--purple-sb) !important;
+  color: white !important;
 }
 </style>

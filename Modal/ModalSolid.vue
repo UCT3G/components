@@ -205,7 +205,7 @@ export default {
 
 <style scoped>
 .Popup-cont {
-  z-index: 100;
+  z-index: 1050;
   border: unset;
   backdrop-filter: blur(5px);
   /* height: calc(100vh);     */
@@ -214,7 +214,7 @@ export default {
 
 .pop-up {
   height: fit-content;
-  z-index: 500;
+  z-index: 1060;
   border: unset;
   overflow: hidden;
   /**ESTO ES LO QUE OCULTA */
