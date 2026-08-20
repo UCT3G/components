@@ -1,6 +1,6 @@
 <template>
   <span class="status-badge" :class="`status-${variant}`">
-    <span class="status-dot"></span>
+    <span class="status-dot" :style="{ width: dotSize, height: dotSize }"></span>
     {{ text }}
   </span>
 </template>
@@ -19,6 +19,10 @@ export default defineComponent({
       type: String,
       default: "primary", // success, warning, danger, info, primary
       validator: (value) => ["success", "warning", "danger", "info", "primary"].includes(value)
+    },
+    dotSize: {
+      type: String,
+      default: "8px"
     }
   }
 });
@@ -28,7 +32,7 @@ export default defineComponent({
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 5px 12px;
   border-radius: 16px;
   font-size: 0.85rem;
@@ -37,10 +41,9 @@ export default defineComponent({
 }
 
 .status-dot {
-  width: 10px;
-  height: 10px;
   border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 /* Variante Warning (Naranja) */
