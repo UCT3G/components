@@ -112,9 +112,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
-    .subtitulo { font-size: 35px; line-height: 1.1;}
+    .subtitulo { font-size: 35px; line-height: 1.1; white-space: pre-line; }
 
-    .texto-caja { font-size: 16px; line-height: 1.5;}
+    .texto-caja { font-size: 16px; line-height: 1.5; white-space: pre-line; }
 
     .badge-personalizado { background-color: var(--bs-border-color); color: black;}
 

@@ -1,6 +1,6 @@
 <template>
     <div class="w-100 fondo" :class="{'modo-edicion': isEditMode}">
-        <div class="row m-0 d-flex justify-content-center align-items-center pb-5" :class="isEditMode ? 'h-100' : 'min-vh-100'">
+        <div class="row m-0 d-flex justify-content-center pb-5" :class="isEditMode ? 'h-100 align-items-start pt-3' : 'min-vh-100 align-items-center'">
             <div class="col-11 col-sm-10 col-md-8 col-lg-7">
                 <LoadingScreen :visible="loadingConfig" />
                 
@@ -235,9 +235,12 @@ export default defineComponent({
         const tok = ref('');
         const jwtToken = ref('');
         const t = route.query.c;
-
         store.dispatch('tema/actualizarTema', props.tema);
-        const CerrarEncuesta = async () => { verEncuesta.value = false; }
+
+        const CerrarEncuesta = async () => { 
+            verEncuesta.value = false; 
+            mostrarMensajeEstado('Gracias por participar.', 'Ya contestaste esta evaluación. ¡Gracias!');
+        }
 
         const animatedState = computed(() => ({
             title: animatedTitle.value,
@@ -387,12 +390,12 @@ export default defineComponent({
         });
 
         const mostrarMensajeEstado = async (titulo, cuerpo) => {
+            MostrarBotonInicio.value = false;
             mensajeEstado.value = { titulo, cuerpo };
             animatedEstadoTitulo.value = '';
             animatedEstadoCuerpo.value = '';
             await animarCampo(titulo, animatedEstadoTitulo);
             await animarCampo(cuerpo, animatedEstadoCuerpo);
-            MostrarBotonInicio.value = false;
         };
 
         const configurarMensajeError = (data) => {
@@ -505,5 +508,5 @@ export default defineComponent({
         background: radial-gradient(circle, var(--azulNormal) 0%, var(--azulDark) 100%);
         position: relative;
     }
-    .fondo.modo-edicion { height: 100% !important; max-height: 100% !important; overflow-y: auto; overflow-x: hidden; }
+    .fondo.modo-edicion { height: auto !important; max-height: none !important; overflow: visible; }
 </style>
