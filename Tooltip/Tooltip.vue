@@ -5,6 +5,7 @@
       { 'is-visible': visible },
       'align-' + align
     ]"
+    :style="computedStyle"
   >
     <div class="p-tooltip-internal">
       <div v-if="title" class="row mb-2 border-bottom pb-1 gx-0 mx-0">
@@ -37,7 +38,7 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent, computed } from 'vue';
 
 export default defineComponent({
   name: 'Tooltip',
@@ -58,7 +59,25 @@ export default defineComponent({
       type: String,
       default: 'center',
       validator: (value) => ['left', 'center', 'right'].includes(value)
+    },
+    width: {
+      type: String,
+      default: '350px'
     }
+  },
+  setup(props) {
+    const computedStyle = computed(() => {
+      const w = props.width;
+      if (!w || w === '350px') return { width: '350px' };
+      if (w === 'auto' || w === 'max-content') {
+        return { width: 'max-content', maxWidth: '350px', minWidth: '180px' };
+      }
+      return { width: w, maxWidth: '90vw' };
+    });
+
+    return {
+      computedStyle
+    };
   }
 });
 </script>
