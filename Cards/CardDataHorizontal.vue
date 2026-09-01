@@ -59,7 +59,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, onUnmounted, watch } from "vue";
+import { defineComponent, ref, onMounted, onBeforeUnmount, watch } from "vue";
 import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 
 export default defineComponent({
@@ -131,7 +131,7 @@ export default defineComponent({
       }
     });
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
       if (resizeObserver) resizeObserver.disconnect();
       if (scrollContainer.value) {
         scrollContainer.value.removeEventListener('scroll', checkScrollState);

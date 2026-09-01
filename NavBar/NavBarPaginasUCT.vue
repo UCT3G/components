@@ -72,7 +72,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, getCurrentInstance } from 'vue';
+import { defineComponent, ref, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue';
 import DynamicSvgLoader from '../LoaderSVG/LoaderSVG.vue';
 import { Offcanvas } from 'bootstrap';
 
@@ -97,6 +97,7 @@ export default defineComponent({
     },
     setup() {
         const offcanvasElement = ref(null);
+        let offcanvasInstance = null;
 
         // Obtener la instancia actual del componente
         const instance = getCurrentInstance();
@@ -105,7 +106,14 @@ export default defineComponent({
 
         onMounted(() => {
             if (offcanvasElement.value) {
-                new Offcanvas(offcanvasElement.value);
+                offcanvasInstance = new Offcanvas(offcanvasElement.value);
+            }
+        });
+
+        onBeforeUnmount(() => {
+            if (offcanvasInstance) {
+                offcanvasInstance.dispose();
+                offcanvasInstance = null;
             }
         });
 
