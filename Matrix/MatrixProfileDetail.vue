@@ -1,7 +1,7 @@
 <template>
-  <div v-if="colaborador" class="perfil-modal">
+  <div v-if="colaborador" class="perfil-modal text-start">
     <!-- Header del Perfil -->
-    <div class="d-flex align-items-center gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
       <div v-if="colaborador.no_empleado" class="foto-container-modal">
         <img 
           :src="getEmployeePhotoUrl(colaborador.no_empleado)" 
@@ -17,71 +17,154 @@
       >
         {{ iniciales(colaborador.nombre) }}
       </div>
-      <div>
-        <h5 class="mb-1 fw-bold">{{ colaborador.nombre }}</h5>
-        <p class="mb-0 text-secondary small">{{ colaborador.cargo }}</p>
-      </div>
-    </div>
-
-    <!-- Badge de Cuadrante -->
-    <div 
-      v-if="cuadrante" 
-      class="d-inline-block px-3 py-1 rounded-pill text-white fw-semibold small mb-4"
-      :style="{ background: cuadrante.color_hex }"
-    >
-      {{ cuadrante.icono || '' }} {{ cuadrante.nombre_caja }}
-    </div>
-
-    <!-- Puntajes (Ejes X e Y) -->
-    <div class="scores-grid mb-4">
-      <div class="d-flex flex-column gap-1 bg-light rounded-3 p-3">
-        <span class="text-uppercase fw-bold small text-secondary mb-1">{{ config?.titulo_eje_x || 'Eje X' }}</span>
-        <span class="score-value">{{ colaborador.valor_x }}</span>
-        <div class="score-bar">
-          <div 
-            class="score-bar-fill"
-            :style="{ width: colaborador.valor_x + '%', background: cuadrante?.color_hex || 'var(--purple-sb)' }"
-          ></div>
-        </div>
-      </div>
-      <div class="d-flex flex-column gap-1 bg-light rounded-3 p-3">
-        <span class="text-uppercase fw-bold small text-secondary mb-1">{{ config?.titulo_eje_y || 'Eje Y' }}</span>
-        <span class="score-value">{{ colaborador.valor_y }}</span>
-        <div class="score-bar">
-          <div 
-            class="score-bar-fill"
-            :style="{ width: colaborador.valor_y + '%', background: cuadrante?.color_hex || 'var(--purple-sb)' }"
-          ></div>
+      <div class="flex-grow-1">
+        <h5 class="mb-1 fw-bold text-dark">{{ colaborador.nombre }}</h5>
+        <p class="mb-2 text-secondary small">{{ colaborador.puesto || colaborador.cargo || 'Evaluado' }}</p>
+        
+        <!-- Chips compactos de Cuadrante y Puntuaciones -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <span 
+            v-if="cuadrante" 
+            class="badge rounded-pill text-white px-2 py-1 small fw-semibold"
+            :style="{ background: cuadrante.color_hex || 'var(--purple-sb)' }"
+          >
+            {{ cuadrante.nombre_caja }}
+          </span>
+          <span v-if="colaborador.valor_x !== undefined && colaborador.valor_x !== null" class="badge bg-light text-dark border px-2 py-1 small">
+            {{ config?.titulo_eje_x || 'X' }}: <strong>{{ colaborador.valor_x }}</strong>
+          </span>
+          <span v-if="colaborador.valor_y !== undefined && colaborador.valor_y !== null" class="badge bg-light text-dark border px-2 py-1 small">
+            {{ config?.titulo_eje_y || 'Y' }}: <strong>{{ colaborador.valor_y }}</strong>
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- Descripción del Cuadrante -->
-    <div v-if="cuadrante?.descripcion" class="bg-light rounded-3 p-3 small text-secondary">
-      <p class="small fw-bold text-uppercase mb-1" style="letter-spacing:0.8px;color:#6c757d">
-        Perfil del cuadrante
-      </p>
-      <p class="mb-0">{{ cuadrante.descripcion }}</p>
+    <!-- Spinner de Carga de Requisitos -->
+    <div v-if="loadingAvance" class="py-4 d-flex flex-column align-items-center justify-content-center">
+      <LoadingUCT :blockFullScreem="false" style="max-width: 100px;" />
+      <span class="text-muted small mt-2">Cargando requisitos...</span>
+    </div>
+
+    <!-- Bloque de Avance y Requisitos -->
+    <div v-else-if="avanceData">
+      <!-- Tarjeta de Estado General -->
+      <div class="pe-2 border rounded-3 p-3 bg-light text-start mb-3">
+        <h6 :class="['fw-bold mb-1', avanceData.todo_completo ? 'text-success' : 'text-danger']">
+          {{ avanceData.todo_completo ? 'Evaluación Completa' : 'Evaluación Incompleta' }}
+        </h6>
+        <p class="small mb-0 text-muted">
+          {{ avanceData.todo_completo 
+            ? 'Todos los requisitos del perfil y psicométricos se han registrado con éxito.' 
+            : 'La evaluación no cuenta con todos los registros necesarios.' 
+          }}
+        </p>
+      </div>
+
+      <!-- Columnas de Ponderaciones y Psicométricos -->
+      <div class="row g-2">
+        <!-- Ponderaciones -->
+        <div class="col-12 col-sm-6">
+          <h6 class="fw-bold small mb-2 text-secondary text-uppercase" style="letter-spacing: 0.5px;">
+            Ponderaciones
+          </h6>
+          <div v-if="!avanceData.ponderaciones || avanceData.ponderaciones.length === 0" class="text-muted small py-2 text-center bg-white rounded border">
+            Sin ponderaciones.
+          </div>
+          <div v-else class="d-flex flex-column gap-1">
+            <BorderCard
+              v-for="pond in avanceData.ponderaciones"
+              :key="pond.id_ponderacion"
+              :text="pond.nombre"
+              :borderColor="pond.completado ? 'var(--bs-success)' : 'var(--bs-danger)'"
+              :icon="pond.completado ? 'icons/check-square' : 'icons/hourglass'"
+              :iconTooltip="pond.completado ? 'Listo' : 'Pendiente'"
+            />
+          </div>
+        </div>
+
+        <!-- Psicométricos -->
+        <div class="col-12 col-sm-6">
+          <h6 class="fw-bold small mb-2 text-secondary text-uppercase" style="letter-spacing: 0.5px;">
+            Psicométricos
+          </h6>
+          <div v-if="!avanceData.psicometricos || Object.keys(avanceData.psicometricos).length === 0" class="text-muted small py-2 text-center bg-white rounded border">
+            Sin psicométricos.
+          </div>
+          <div v-else class="d-flex flex-column gap-1">
+            <BorderCard
+              v-for="(psico, key) in avanceData.psicometricos"
+              :key="key"
+              :text="psico.nombre"
+              :borderColor="psico.completado ? 'var(--bs-success)' : 'var(--bs-danger)'"
+              :icon="psico.completado ? 'icons/check-square' : 'icons/hourglass'"
+              :iconTooltip="psico.completado ? 'Listo' : 'Pendiente'"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sin datos de avance -->
+    <div v-else class="text-center text-muted py-3 small bg-light rounded-3 border">
+      No se encontró información de requisitos para esta evaluación.
     </div>
   </div>
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent, ref, watch } from 'vue';
+import { useStore } from 'vuex';
 import { getEmployeePhotoUrl } from '@/utils/utils';
+import BorderCard from '@/components/Cards/BorderCard.vue';
+import LoadingUCT from '@/components/Loading/Loading.vue';
 
 export default defineComponent({
   name: 'MatrixProfileDetail',
+  components: {
+    BorderCard,
+    LoadingUCT
+  },
   props: {
     colaborador: { type: Object, required: true },
     cuadrante: { type: Object, default: null },
     config: { type: Object, default: null }
   },
-  setup() {
+  setup(props) {
+    const store = useStore();
+    const loadingAvance = ref(false);
+    const avanceData = ref(null);
+
     const iniciales = (nombre = '') =>
       nombre.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
 
-    return { iniciales, getEmployeePhotoUrl };
+    const fetchAvance = async () => {
+      const idUsuarioEvaluacion = props.colaborador?.id_usuario_evaluacion || props.colaborador?.id;
+      if (!idUsuarioEvaluacion) {
+        avanceData.value = null;
+        return;
+      }
+      loadingAvance.value = true;
+      try {
+        avanceData.value = await store.dispatch("EvaluacionesBoxGrid/getAvanceEvaluacion", {
+          idUsuarioEvaluacion,
+        });
+      } catch (error) {
+        console.error("Error al obtener avance en MatrixProfileDetail:", error);
+        avanceData.value = null;
+      } finally {
+        loadingAvance.value = false;
+      }
+    };
+
+    watch(() => props.colaborador, fetchAvance, { immediate: true });
+
+    return { 
+      iniciales, 
+      getEmployeePhotoUrl,
+      loadingAvance,
+      avanceData
+    };
   }
 });
 </script>
@@ -115,32 +198,4 @@ export default defineComponent({
   border: 3px solid;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
-
-.scores-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.score-value {
-  font-size: 28px;
-  font-weight: 800;
-  color: #212529;
-  line-height: 1;
-}
-
-.score-bar {
-  height: 4px;
-  background: #e9ecef;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-
-.score-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.6s ease;
-}
-
 </style>

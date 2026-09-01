@@ -36,7 +36,10 @@
     <!-- Tabla dinámica -->
     <div class="d-flex justify-content-center flex-column">
       <div class="m-4">
+        <TablaCargando v-if="cargando || !tabla" />
+
         <TablaDinamica
+          v-else
           :consultar_registros="filtrar"
           :tablaBase="tabla"
           :tabla_nombre="tablaNombre"
@@ -45,7 +48,7 @@
         />
 
         <!-- Checkbox o botón -->
-        <template v-if="botonesActivos">
+        <template v-if="botonesActivos && tabla">
           <template 
             v-for="(registro, index) in tabla.registros" 
             :key="registro[campoId]"
@@ -83,12 +86,13 @@
 import { defineComponent, ref, onMounted, computed, nextTick } from "vue";
 import { useStore } from "vuex";
 import TablaDinamica from "@/components/TablaDinamica/TablaDinamica.vue";
+import TablaCargando from "@/components/TablaDinamica/TablaLoader.vue";
 import Checkbox from "@/components/Inputs/Checkbox.vue";
 import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 
 export default defineComponent({
   name: "TablaSelect",
-  components: { TablaDinamica, Checkbox, DynamicSvgLoader },
+  components: { TablaDinamica, TablaCargando, Checkbox, DynamicSvgLoader },
 
   props: {
     tablaNombre: { type: String, required: true },   // Ej: TB_GT_USUARIOS
@@ -113,10 +117,14 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
 
+    const cargando = ref(false);
     const filtrar = ref(false);
     const botonesActivos = ref(false);
     const registrosSeleccionados = ref([]);
     const NoRegistrosVisibles = ref(10);
+
+    const moduloActivo = computed(() => store.getters["user/getModuloActivo"]);
+    const token = computed(() => store.state.user.token);
 
     const tabla = computed(() =>
       store.getters["reporteador/getTablaPorNombre"](props.tablaNombre)
@@ -186,9 +194,30 @@ export default defineComponent({
 
     const emitirSeleccion = () => emit("onAddMultiples", registrosSeleccionados.value);
 
-    onMounted(configurarTabla);
+    const cargarTabla = async () => {
+      if (!tabla.value) {
+        cargando.value = true;
+        try {
+          await store.dispatch("reporteador/agregarDataReporteadorModulo", {
+            modulo: moduloActivo.value?.modulo_nombre || "",
+            sistema: moduloActivo.value?.sistema || "TRESGUERRAS",
+            token: token.value,
+            tablas_nombres: [props.tablaNombre],
+            formularios_nombres: [],
+          });
+        } catch (error) {
+          console.error(`Error al cargar tabla ${props.tablaNombre} en TableSelect:`, error);
+        } finally {
+          cargando.value = false;
+        }
+      }
+      configurarTabla();
+    };
+
+    onMounted(cargarTabla);
 
     return {
+      cargando,
       tabla,
       filtrar,
       botonesActivos,
