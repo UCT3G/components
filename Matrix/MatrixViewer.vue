@@ -163,7 +163,8 @@ export default defineComponent({
     click_perfil: { type: Boolean, default: true },
     click_cuadrante: { type: Boolean, default: true },
     cuadrante_seleccionado: { type: Object, default: null },
-    busqueda: { type: String, default: '' }
+    busqueda: { type: String, default: '' },
+    colaboradores_seleccionados: { type: [Array, Number, String], default: () => [] }
   },
   emits: ['seleccionarCuadrante', 'update:cuadrante_seleccionado', 'configuracion-guardada'],
   setup(props, { emit }) {
@@ -209,6 +210,7 @@ export default defineComponent({
       ranges,
       click_perfil: toRef(props, 'click_perfil'),
       click_cuadrante: toRef(props, 'click_cuadrante'),
+      colaboradores_seleccionados: toRef(props, 'colaboradores_seleccionados'),
       onSelectColaborador: (d) => {
         if (!props.click_perfil) return;
         colaboradorSeleccionado.value = d;

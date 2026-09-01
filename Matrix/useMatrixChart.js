@@ -66,7 +66,7 @@ const wrapText = (text, maxChars = 15) => {
  * Composable para manejar la lógica del gráfico ECharts de la Matriz de Talento.
  * Separa la configuración visual del componente de UI.
  */
-export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFiltro, busqueda, ranges, onSelectColaborador, onSelectCuadrante, click_perfil, click_cuadrante }) {
+export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFiltro, busqueda, ranges, onSelectColaborador, onSelectCuadrante, click_perfil, click_cuadrante, colaboradores_seleccionados, colaborador_seleccionado }) {
 
   const N = computed(() => Math.round(Math.sqrt(config.value?.tipo_grid || 9)));
 
@@ -110,6 +110,10 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
     if (!config.value?.cajas) return {};
     const n = N.value;
     const cfg = config.value;
+    const rawSel = colaboradores_seleccionados?.value ?? colaborador_seleccionado?.value;
+    const idsSeleccionados = Array.isArray(rawSel)
+      ? rawSel
+      : (rawSel != null ? [rawSel] : []);
 
     // 1. Zonas coloreadas (markArea)
     const markAreaData = cfg.cajas.map(caja => {
@@ -179,50 +183,27 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
         || (cuadranteFiltro.value.fila === q?.fila && cuadranteFiltro.value.columna === q?.columna);
 
       const color = q?.color_hex || '#546e7a';
-      let symbol = 'circle';
-
-      if (c.no_empleado) {
-        const imageUrl = getEmployeePhotoUrl(c.no_empleado);
-        // Crear un SVG dinámico que contiene la imagen recortada en círculo
-        const svg = `
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-            <defs>
-              <clipPath id="circleClip">
-                <circle cx="50" cy="50" r="48"/>
-              </clipPath>
-            </defs>
-            <circle cx="50" cy="50" r="50" fill="${color}" />
-            <image href="${imageUrl}" x="2" y="2" width="96" height="96" clip-path="url(#circleClip)" preserveAspectRatio="xMidYMid slice" />
-            <circle cx="50" cy="50" r="48" fill="none" stroke="${color}" stroke-width="4" />
-          </svg>
-        `.trim();
-
-        try {
-          symbol = `image://data:image/svg+xml;base64,${btoa(svg)}`;
-        } catch (e) {
-          console.error("Error generating circular SVG symbol", e);
-          symbol = 'circle';
-        }
-      }
-
       const rawX = Number(c.valor_x ?? 0);
       const rawY = Number(c.valor_y ?? 0);
 
       const posX = rawX + getJitter(c.id, 'x');
       const posY = rawY + getJitter(c.id, 'y');
+      const esSeleccionado = idsSeleccionados.includes(c.id);
 
       return {
         value: [posX, posY],
-        nombre: c.nombre, cargo: c.cargo || '', id: c.id,
+        nombre: c.nombre, 
+        cargo: c.cargo || '', 
+        id: c.id,
         id_caja: c.id_caja,
         no_empleado: c.no_empleado,
         etiqueta_trayectoria: c.etiqueta_trayectoria,
         es_mas_reciente: c.es_mas_reciente,
         color_borde: c.color_borde,
         status: c.status,
-        valor_x: rawX, valor_y: rawY,
-        symbol: symbol,
-        label: { show: !c.no_empleado && !c.etiqueta_trayectoria },
+        valor_x: rawX, 
+        valor_y: rawY,
+        es_seleccionado: esSeleccionado,
         itemStyle: {
           color: '#ffffff',
           borderColor: color,
@@ -315,6 +296,8 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
             const strokeColor = resolveCanvasColor(data.color_borde) || color || '#546e7a';
             const children = [];
 
+            const esSeleccionado = data.es_seleccionado;
+
             if (data.etiqueta_trayectoria) {
               const textLabel = String(data.etiqueta_trayectoria);
               const isLatest = data.es_mas_reciente;
@@ -353,8 +336,67 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
                   opacity: opacity
                 }
               });
-            } else if (!cuadranteFiltro.value) {
-              // MODO MATRIZ GENERAL (Sin cuadrante seleccionado): Renderizar Puntos Limpios
+            } else if (esSeleccionado) {
+              // COLABORADOR SELECCIONADO EN MODO LOCAL: Renderizar Avatar Destacado con Foto
+              const avatarSize = Math.max(36, r * 1.35);
+              const avatarRadius = avatarSize / 2;
+
+              // Círculo base blanco con sombra y borde de estado
+              children.push({
+                type: 'circle',
+                z: 20,
+                shape: { cx: center[0], cy: center[1], r: avatarRadius },
+                style: {
+                  fill: '#ffffff',
+                  stroke: strokeColor,
+                  lineWidth: 3,
+                  shadowBlur: 12,
+                  shadowColor: 'rgba(0, 0, 0, 0.35)',
+                  shadowOffsetY: 2
+                }
+              });
+
+              // Imagen con foto o iniciales
+              if (data.no_empleado) {
+                children.push({
+                  type: 'image',
+                  z: 21,
+                  style: {
+                    image: getEmployeePhotoUrl(data.no_empleado),
+                    x: center[0] - avatarRadius + 1.5,
+                    y: center[1] - avatarRadius + 1.5,
+                    width: avatarSize - 3,
+                    height: avatarSize - 3
+                  },
+                  clipPath: {
+                    type: 'circle',
+                    shape: { cx: center[0], cy: center[1], r: avatarRadius - 1.5 }
+                  }
+                });
+              } else {
+                const inis = iniciales(data.nombre);
+                children.push({
+                  type: 'circle',
+                  z: 21,
+                  shape: { cx: center[0], cy: center[1], r: avatarRadius - 1.5 },
+                  style: { fill: strokeColor }
+                });
+                children.push({
+                  type: 'text',
+                  z: 22,
+                  style: {
+                    text: inis,
+                    x: center[0],
+                    y: center[1],
+                    fill: '#ffffff',
+                    align: 'center',
+                    verticalAlign: 'middle',
+                    font: `700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
+                  }
+                });
+              }
+            } else {
+              // MODO MATRIZ GENERAL: Siempre renderizar puntos limpios (círculos)
               const dotRadius = Math.max(4, Math.min(6, r * 0.32));
               const dotColor = resolveCanvasColor(data.color_borde || data.color) || strokeColor || '#0f172a';
 
@@ -370,76 +412,6 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
                   opacity: opacity,
                   shadowBlur: enFiltro ? 4 : 0,
                   shadowColor: 'rgba(15, 23, 42, 0.25)'
-                }
-              });
-            } else {
-              children.push({
-                type: 'circle',
-                z: 0,
-                shape: { cx: center[0], cy: center[1], r: r },
-                style: {
-                  fill: data.no_empleado ? '#ffffff' : '#c2185b',
-                  opacity: opacity,
-                  shadowBlur: enFiltro ? 4 : 0,
-                  shadowColor: 'rgba(15, 23, 42, 0.18)',
-                  shadowOffsetX: 0,
-                  shadowOffsetY: 1.5
-                }
-              });
-
-              if (data.no_empleado) {
-                children.push({
-                  type: 'image',
-                  z: 1,
-                  style: {
-                    image: getEmployeePhotoUrl(data.no_empleado),
-                    x: center[0] - r,
-                    y: center[1] - r,
-                    width: size,
-                    height: size,
-                    opacity: opacity
-                  },
-                  clipPath: {
-                    type: 'circle',
-                    shape: { cx: center[0], cy: center[1], r: r }
-                  }
-                });
-              } else {
-                children.push({
-                  type: 'group',
-                  z: 1,
-                  style: { opacity: opacity },
-                  children: [
-                    {
-                      type: 'circle',
-                      shape: { cx: center[0], cy: center[1] - (r * 0.25), r: r * 0.35 },
-                      style: { fill: '#ffffff' }
-                    },
-                    {
-                      type: 'path',
-                      shape: {
-                        d: 'M12 13c-3.5 0-6 1.8-6 4v1h12v-1c0-2.2-2.5-4-6-4z',
-                        x: center[0] - r,
-                        y: center[1] - r,
-                        width: size,
-                        height: size
-                      },
-                      style: { fill: '#ffffff' }
-                    }
-                  ]
-                });
-              }
-
-              // Borde exterior del nodo configurado por el padre (color_borde)
-              children.push({
-                type: 'circle',
-                z: 3,
-                shape: { cx: center[0], cy: center[1], r: r - 0.5 },
-                style: {
-                  fill: 'none',
-                  stroke: strokeColor,
-                  lineWidth: 2,
-                  opacity: opacity
                 }
               });
             }
