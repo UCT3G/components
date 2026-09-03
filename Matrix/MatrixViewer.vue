@@ -10,10 +10,11 @@
       <!-- Acciones Derecha: Botón Configuración + Cápsula Pill con Switch -->
       <div class="d-flex align-items-center gap-2">
         <BotonIconoSecondary
+          v-if="editable"
           class="text-extra-small"
           iconName="gears-solid.svg"
           width_icon="14px"
-          @clickSecondary="onConfiguracion"
+          @clickSecondary="$emit('click-config')"
           title="Configurar matriz"
         >
         </BotonIconoSecondary>
@@ -81,7 +82,7 @@
                 :key="colab.id"
                 class="popout-avatar-wrapper position-absolute cursor-pointer"
                 :style="{ left: colab.posX + '%', top: colab.posY + '%' }"
-                :title="colab.nombre + (colab.cargo ? ' - ' + colab.cargo : '')"
+                :title="colab.nombre + (colab.puesto ? ' - ' + colab.puesto : '')"
                 @click="seleccionarColaboradorDetalle(colab)"
               >
                 <div class="popout-avatar-ring">
@@ -103,48 +104,19 @@
       </transition>
     </div>
 
-    <!-- Modal: Perfil del Colaborador -->
-    <ModalSolid
-      v-model:visible="modalVisible"
-      :titulo="colaboradorSeleccionado ? colaboradorSeleccionado.nombre : 'Perfil'"
-      size="medium"
-      :fullScreenHeight="false"
-    >
-      <MatrixProfileDetail 
-        :colaborador="colaboradorSeleccionado"
-        :cuadrante="cuadranteDelSeleccionado"
-        :config="config"
-      />
-    </ModalSolid>
-
-    <!-- Modal: Configuración de Matriz BoxGrid -->
-    <ModalSolid
-      v-model:visible="modalConfigVisible"
-      :titulo="tituloModalConfig"
-      size="large"
-      :confirm="false"
-    >
-      <FormBoxGrid
-        :tipo_grid="tipoGridActivo"
-        @guardado="onConfiguracionGuardada"
-      />
-    </ModalSolid>
   </div>
 </template>
 
 <script>
 import { defineComponent, ref, computed, toRef, onMounted, onBeforeUnmount, watch } from 'vue';
 import EChartsVisualizer from '@/components/DataCharts/EChartsVisualizer.vue';
-import ModalSolid from '@/components/Modal/ModalSolid.vue';
-import MatrixProfileDetail from '@/components/Matrix/MatrixProfileDetail.vue';
 import BotonIconoSecondary from '@/components/ButtonWithIcon/ButtonSecondary.vue';
 import { useMatrixChart } from '@/components/Matrix/useMatrixChart';
 import { getEmployeePhotoUrl } from '@/utils/utils';
-import FormBoxGrid from '@/screens/AdministracionCatalogos/BoxGrid/components/FormBoxGrid.vue';
 
 export default defineComponent({
   name: 'MatrixViewer',
-  components: { EChartsVisualizer, ModalSolid, MatrixProfileDetail, BotonIconoSecondary, FormBoxGrid },
+  components: { EChartsVisualizer, BotonIconoSecondary },
   props: {
     config: { 
       type: Object, 
@@ -164,9 +136,10 @@ export default defineComponent({
     click_cuadrante: { type: Boolean, default: true },
     cuadrante_seleccionado: { type: Object, default: null },
     busqueda: { type: String, default: '' },
-    colaboradores_seleccionados: { type: [Array, Number, String], default: () => [] }
+    colaboradores_seleccionados: { type: [Array, Number, String], default: () => [] },
+    editable: { type: Boolean, default: false }
   },
-  emits: ['seleccionarCuadrante', 'update:cuadrante_seleccionado', 'configuracion-guardada'],
+  emits: ['seleccionarCuadrante', 'update:cuadrante_seleccionado', 'configuracion-guardada', 'select-colaborador', 'click-config'],
   setup(props, { emit }) {
     const chartRef = ref(null);
     const config = computed(() => ({
@@ -190,8 +163,6 @@ export default defineComponent({
 
     const busqueda = computed(() => props.busqueda || '');
     const cuadranteFiltro = ref(null);
-    const modalVisible = ref(false);
-    const colaboradorSeleccionado = ref(null);
     const verRejilla = ref(false);
 
     watch(() => props.cuadrante_seleccionado, (nuevoVal) => {
@@ -199,6 +170,14 @@ export default defineComponent({
     }, { immediate: true });
 
     const N = computed(() => Math.round(Math.sqrt(config.value.tipo_grid || 9)));
+
+    const emitirSeleccionColaborador = (colab) => {
+      if (!props.click_perfil || !colab) return;
+      const cuadrante = colab.id_caja
+        ? config.value?.cajas?.find(c => c.id_caja === colab.id_caja) || null
+        : null;
+      emit('select-colaborador', { colaborador: colab, cuadrante });
+    };
 
     // Composables y Lógica Visual
     const { echartsOption, handleChartClick, iniciales, getJitter } = useMatrixChart({
@@ -212,9 +191,7 @@ export default defineComponent({
       click_cuadrante: toRef(props, 'click_cuadrante'),
       colaboradores_seleccionados: toRef(props, 'colaboradores_seleccionados'),
       onSelectColaborador: (d) => {
-        if (!props.click_perfil) return;
-        colaboradorSeleccionado.value = d;
-        modalVisible.value = true;
+        emitirSeleccionColaborador(d);
       },
       onSelectCuadrante: (caja) => {
         if (!props.click_cuadrante) return;
@@ -226,12 +203,6 @@ export default defineComponent({
     });
 
     const colabPhotoErrors = ref({});
-
-    const cuadranteDelSeleccionado = computed(() =>
-      colaboradorSeleccionado.value?.id_caja
-        ? config.value?.cajas?.find(c => c.id_caja === colaboradorSeleccionado.value.id_caja) || null
-        : null
-    );
 
     const numeroCuadrante = computed(() => {
       if (!cuadranteFiltro.value) return '';
@@ -283,9 +254,7 @@ export default defineComponent({
     };
 
     const seleccionarColaboradorDetalle = (colab) => {
-      if (!props.click_perfil) return;
-      colaboradorSeleccionado.value = colab;
-      modalVisible.value = true;
+      emitirSeleccionColaborador(colab);
     };
 
     let chartTimer = null;
@@ -302,26 +271,11 @@ export default defineComponent({
       if (chartTimer) clearTimeout(chartTimer);
     });
 
-    const modalConfigVisible = ref(false);
-    const tipoGridActivo = computed(() => config.value?.tipo_grid);
-    const tituloModalConfig = computed(() =>
-      tipoGridActivo.value ? `CONFIGURAR MATRIZ ${tipoGridActivo.value}-BOX` : 'CONFIGURAR MATRIZ'
-    );
-
-    const onConfiguracion = () => modalConfigVisible.value = true;
-    const onConfiguracionGuardada = () => {
-      modalConfigVisible.value = false;
-      emit('configuracion-guardada');
-    };
-
     return {
-      chartRef, 
-      config, 
-      cuadranteFiltro, 
-      modalVisible, 
-      colaboradorSeleccionado,
-      echartsOption, 
-      cuadranteDelSeleccionado, 
+      chartRef,
+      config,
+      cuadranteFiltro,
+      echartsOption,
       verRejilla,
       numeroCuadrante,
       colaboradoresDelCuadrante,
@@ -329,12 +283,7 @@ export default defineComponent({
       seleccionarColaboradorDetalle,
       getEmployeePhotoUrl,
       iniciales,
-      colabPhotoErrors,
-      onConfiguracion,
-      modalConfigVisible,
-      tipoGridActivo,
-      tituloModalConfig,
-      onConfiguracionGuardada
+      colabPhotoErrors
     };
   }
 });

@@ -27,6 +27,7 @@
       <button 
         v-if="modo === 'multiple'" 
         class="btn btn-secondary ms-2" 
+        :disabled="loading || registrosSeleccionados.length === 0"
         @click="emitirSeleccion"
       >
         Agregar
@@ -79,6 +80,8 @@
       </div>
     </div>
 
+    <!-- Overlay bloqueante de carga cuando se procesa la selección -->
+    <LoadingUCT v-if="loading" :blockFullScreem="true" />
   </div>
 </template>
 
@@ -89,10 +92,11 @@ import TablaDinamica from "@/components/TablaDinamica/TablaDinamica.vue";
 import TablaCargando from "@/components/TablaDinamica/TablaLoader.vue";
 import Checkbox from "@/components/Inputs/Checkbox.vue";
 import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
+import LoadingUCT from "@/components/Loading/Loading.vue";
 
 export default defineComponent({
   name: "TablaSelect",
-  components: { TablaDinamica, TablaCargando, Checkbox, DynamicSvgLoader },
+  components: { TablaDinamica, TablaCargando, Checkbox, DynamicSvgLoader, LoadingUCT },
 
   props: {
     tablaNombre: { type: String, required: true },   // Ej: TB_GT_USUARIOS
@@ -109,6 +113,10 @@ export default defineComponent({
     queryData: {
       type: Array,
       default: null // Ej: [1, 'param']
+    },
+    loading: {
+      type: Boolean,
+      default: false
     }
   },
 

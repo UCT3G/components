@@ -192,16 +192,20 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
 
       return {
         value: [posX, posY],
-        nombre: c.nombre, 
-        cargo: c.cargo || '', 
+        nombre: c.nombre,
+        puesto: c.puesto || '',
         id: c.id,
+        id_usuario_evaluacion: c.id_usuario_evaluacion,
         id_caja: c.id_caja,
         no_empleado: c.no_empleado,
         etiqueta_trayectoria: c.etiqueta_trayectoria,
         es_mas_reciente: c.es_mas_reciente,
         color_borde: c.color_borde,
         status: c.status,
-        valor_x: rawX, 
+        ejercicio: c.ejercicio,
+        periodo: c.periodo,
+        nombre_perfil: c.nombre_perfil,
+        valor_x: rawX,
         valor_y: rawY,
         es_seleccionado: esSeleccionado,
         itemStyle: {
@@ -427,7 +431,7 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
             ...d
           })),
           markArea: {
-            z: -1, 
+            z: -1,
             silent: click_cuadrante ? !click_cuadrante.value : false,
             emphasis: { disabled: true },
             label: {
