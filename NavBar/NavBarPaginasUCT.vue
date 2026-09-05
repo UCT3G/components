@@ -141,6 +141,7 @@ export default defineComponent({
     transition: 0.2s;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px,
         rgba(0, 0, 0, 0.23) 0px 3px 6px;
+    z-index: 11;
 }
 
 .NavbarUCT-button:focus {
@@ -157,35 +158,84 @@ export default defineComponent({
 }
 
 .NavbarUCT-dropdown {
-    background: var(--blueBerryPastel);
-    border: 1px solid var(--highlighter);
-    backdrop-filter: blur(5px);
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    position: absolute;
+    font-size: 13.5px;
+    background: linear-gradient(
+        45deg,
+        rgba(var(--dropdown-bg), 0.80) 0%,
+        rgba(246, 246, 255, 0.4) 40%
+    );
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 12px;
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.20),
+        0 2px 8px rgba(0, 0, 0, 0.11),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
     height: fit-content;
 }
 
-/* Modificaciones para el dropdown-item */
-.NavbarUCT-dropdown ::v-deep .dropdown-item {
-    color: var(--txt-navbar) !important;
+.NavbarUCT-dropdown :deep(.dropdown-item) {
+    position: relative;
+    color: var(--txttitulo);
     text-transform: uppercase;
-    font-weight: bolder;    
-   
+    font-weight: bolder;
+    transition: all .2s ease;
 }
 
-.NavbarUCT-dropdown ::v-deep .dropdown-item:hover {
-    background-color: var(--blueBerryLight);
+/* Barra lateral */
+.NavbarUCT-dropdown :deep(.dropdown-item::before) {
+    content: "";
+    position: absolute;
+    left: 1px;
+    top: 20%;
+    width: 3px;
+    height: 70%;
+    border-radius: 999px;
+    background: rgb(var(--dropdown-bg));
+    transform: scaleY(0);
+    transition: transform .2s ease;
+}
+
+/* Hover */
+.NavbarUCT-dropdown :deep(.dropdown-item:hover) {
+    background: var(--dropdown-hover);
+}
+
+.NavbarUCT-dropdown :deep(.dropdown-item:hover::before) {
+    transform: scaleY(1);
 }
 
 @media (max-width: 768px) {
     .NavbarUCT-dropdown {
-        margin-left: 290%;
-        margin-top: 50%;
+        min-width: 240px;
+        max-width: calc(100vw - 20px);
+        margin: 0;
+        border-radius: 10px;
+        font-size: 12px;
+        background: linear-gradient(
+            45deg,
+            rgba(var(--dropdown-bg), .85) 0%,
+            rgba(246,246,255,.55) 45%
+        );
+        box-shadow:
+            0 8px 20px rgba(0,0,0,.18),
+            inset 0 1px 0 rgba(255,255,255,.55);
+        
     }
-    .NavbarUCT-dropdown ::v-deep .dropdown-item {        
-        font-size: 12px; /* Reducir el tamaño de fuente a 10px */   
-        white-space: normal; /* Permitir que el texto se ajuste */
-        overflow-wrap: break-word; /* Ajustar palabras largas */
-        word-wrap: break-word; /* Compatibilidad con navegadores antiguos */
+
+    .NavbarUCT-dropdown :deep(.dropdown-item) {
+        font-size: 12px;
+        padding: 12px 18px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .NavbarUCT-dropdown :deep(.dropdown-item::before) {
+        left: 0;
+        width: 3px;
+        height: 65%;
     }
 }
 

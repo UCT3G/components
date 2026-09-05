@@ -341,15 +341,19 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
                 }
               });
             } else if (esSeleccionado) {
-              // COLABORADOR SELECCIONADO EN MODO LOCAL: Renderizar Avatar Destacado con Foto
-              const avatarSize = Math.max(36, r * 1.35);
+              // COLABORADOR SELECCIONADO EN MODO LOCAL: Renderizar Avatar Destacado con Foto Proporcional
+              const cx = Math.round(center[0]);
+              const cy = Math.round(center[1]);
+              const avatarSize = Math.round(Math.max(38, r * 1.35));
               const avatarRadius = avatarSize / 2;
+              const innerRadius = avatarRadius - 1.5;
+              const innerDiameter = innerRadius * 2;
 
               // Círculo base blanco con sombra y borde de estado
               children.push({
                 type: 'circle',
                 z: 20,
-                shape: { cx: center[0], cy: center[1], r: avatarRadius },
+                shape: { cx, cy, r: avatarRadius },
                 style: {
                   fill: '#ffffff',
                   stroke: strokeColor,
@@ -362,19 +366,27 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
 
               // Imagen con foto o iniciales
               if (data.no_empleado) {
+                // Las fotos institucionales de RH tienen proporción vertical 3:4 (~1.33).
+                // Calculamos el alto proporcional para cubrir el círculo sin aplastar ni deformar el rostro:
+                const imgWidth = innerDiameter;
+                const imgHeight = Math.round(imgWidth * 1.333);
+                const imgX = cx - innerRadius;
+                // Centrado vertical compensado al 42% para enfocar el rostro:
+                const imgY = cy - Math.round(imgHeight * 0.42);
+
                 children.push({
                   type: 'image',
                   z: 21,
                   style: {
                     image: getEmployeePhotoUrl(data.no_empleado),
-                    x: center[0] - avatarRadius + 1.5,
-                    y: center[1] - avatarRadius + 1.5,
-                    width: avatarSize - 3,
-                    height: avatarSize - 3
+                    x: imgX,
+                    y: imgY,
+                    width: imgWidth,
+                    height: imgHeight
                   },
                   clipPath: {
                     type: 'circle',
-                    shape: { cx: center[0], cy: center[1], r: avatarRadius - 1.5 }
+                    shape: { cx, cy, r: innerRadius }
                   }
                 });
               } else {
@@ -382,7 +394,7 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
                 children.push({
                   type: 'circle',
                   z: 21,
-                  shape: { cx: center[0], cy: center[1], r: avatarRadius - 1.5 },
+                  shape: { cx, cy, r: innerRadius },
                   style: { fill: strokeColor }
                 });
                 children.push({
@@ -390,8 +402,8 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
                   z: 22,
                   style: {
                     text: inis,
-                    x: center[0],
-                    y: center[1],
+                    x: cx,
+                    y: cy,
                     fill: '#ffffff',
                     align: 'center',
                     verticalAlign: 'middle',
