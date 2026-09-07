@@ -9,7 +9,16 @@
         :disabled="disabled && modelValue !== tab.value"
         @click="handleTabClick(tab.value)"
       >
-        <span class="tab-label">{{ tab.label }}</span>
+        <div class="tab-content">
+          <DynamicSvgLoader
+            v-if="tab.icon"
+            :fileName="cleanIconName(tab.icon)"
+            :icon_active="modelValue === tab.value"
+            :width_icon="tab.iconWidth || '16px'"
+            :height_icon="tab.iconHeight || '16px'"
+          />
+          <span class="tab-label">{{ tab.label }}</span>
+        </div>
         <span class="tab-indicator"></span>
       </button>
     </div>
@@ -23,7 +32,16 @@
         :disabled="disabled && subModelValue !== subtab.value"
         @click="handleSubtabClick(subtab.value)"
       >
-        <span class="subtab-label">{{ subtab.label }}</span>
+        <div class="subtab-content">
+          <DynamicSvgLoader
+            v-if="subtab.icon"
+            :fileName="cleanIconName(subtab.icon)"
+            :icon_active="subModelValue === subtab.value"
+            :width_icon="subtab.iconWidth || '14px'"
+            :height_icon="subtab.iconHeight || '14px'"
+          />
+          <span class="subtab-label">{{ subtab.label }}</span>
+        </div>
       </button>
     </div>
   </div>
@@ -31,14 +49,18 @@
 
 <script>
 import { defineComponent, computed } from 'vue';
+import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 
 export default defineComponent({
   name: 'TabsNavigator',
+  components: {
+    DynamicSvgLoader
+  },
   props: {
     tabs: {
       type: Array,
       required: true,
-      // Formato esperado: [{ value: 'tab1', label: 'Tab 1', subtabs: [...] }, ...]
+      // Formato esperado: [{ value: 'tab1', label: 'Tab 1', icon: 'icons/...', subtabs: [...] }, ...]
     },
     modelValue: {
       type: [String, Number],
@@ -74,6 +96,11 @@ export default defineComponent({
       activeTab.value?.subtabs || []
     );
 
+    const cleanIconName = (iconName) => {
+      if (!iconName) return '';
+      return iconName.endsWith('.svg') ? iconName.slice(0, -4) : iconName;
+    };
+
     const handleTabClick = (value) => {
       if (value === props.modelValue) return;
 
@@ -108,7 +135,8 @@ export default defineComponent({
       handleTabClick,
       handleSubtabClick,
       hasSubtabs,
-      currentSubtabs
+      currentSubtabs,
+      cleanIconName
     };
   }
 });
@@ -133,17 +161,49 @@ export default defineComponent({
 
 .tab-button {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 5px 10px;
   border: none;
   outline: none;
   color: var(--bs-gray-500);
-  background: white;
-  font-weight: 500;
+  background: var(--bs-gray-200);
+  font-weight: 600;
   font-size: 14px;
   font-style: italic;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+}
+
+.tab-content,
+.subtab-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.tab-button :deep(.loaderSVG-contend),
+.tab-button :deep(.loaderSVG-contend-selected),
+.subtab-button :deep(.loaderSVG-contend),
+.subtab-button :deep(.loaderSVG-contend-selected) {
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  fill: currentColor;
+}
+
+.tab-button :deep(svg),
+.subtab-button :deep(svg) {
+  fill: currentColor;
+  display: block;
 }
 
 .tab-button:not(:last-child)::after {
@@ -174,12 +234,12 @@ export default defineComponent({
 
 .tab-button:hover:not(:disabled):not(.active) {
   color: var(--purple-sb);
-  background: var(--bs-gray-300);
+  background: var(--bs-gray-200);
   transition: all 0.3s ease;
 }
 
 .tab-button.active {
-  color: var(--purple-sb);
+  color: var( --blueBerry);
   background: var(--blueBerryPastel);
   font-weight: 600;
   box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.25);
@@ -211,10 +271,14 @@ export default defineComponent({
 }
 
 .subtab-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 20px;
   border: 1px solid var(--bs-gray-200);
-  background: white;
+  background: var(--bs-gray-200);
   color: var(--bs-gray-500);
+  font-weight: 600;
   font-size: 13px;
   font-style: italic;
   cursor: pointer;
@@ -233,6 +297,7 @@ export default defineComponent({
 
 .subtab-button:hover:not(:disabled):not(.active) {
   color: var(--purple-sb);
+  background: var(--bs-gray-200);
 }
 
 .subtab-button:hover:not(:disabled):not(.active)::before {
@@ -242,6 +307,7 @@ export default defineComponent({
 .subtab-button.active {
   color: var(--purple-sb);
   background: white;
+  font-weight: 600;
   border: none;
   border-bottom: 2px solid var(--purple-sb);  
 }
