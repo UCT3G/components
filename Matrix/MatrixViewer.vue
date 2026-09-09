@@ -20,7 +20,7 @@
         </BotonIconoSecondary>
 
         <!-- Cápsula Pill con Switch -->
-        <div class="bg-light rounded-pill px-3 py-1 border d-inline-flex align-items-center gap-2 shadow-xs">
+        <div v-if="permitir_dispersion" class="bg-light rounded-pill px-3 py-1 border d-inline-flex align-items-center gap-2 shadow-xs">
           <span class="text-extra-small fw-semibold text-secondary select-none">
             {{ verRejilla ? 'Vista matriz' : 'Vista dispersión' }}
           </span>
@@ -38,7 +38,7 @@
 
     <!-- Chart -->
     <div class="viewer-body position-relative overflow-hidden flex-grow-1 d-flex justify-content-center align-items-center">
-      <div class="viewer-chart-wrapper position-relative h-100">
+      <div ref="wrapperRef" class="viewer-chart-wrapper position-relative h-100">
         <EChartsVisualizer
           ref="chartRef"
           :option="echartsOption"
@@ -67,12 +67,20 @@
             <!-- Header de la Tarjeta Flotante -->
             <div class="popout-header d-flex align-items-center justify-content-between position-relative z-2 mb-3">
               <div class="d-flex align-items-center gap-2 text-dark">
-                <span class="fs-6 fw-medium" style="font-style: italic;">{{ cuadranteFiltro.nombre_caja }}</span>
+                <!-- Badge con conteo de colaboradores responsivo -->
+                <div 
+                  v-if="!esModoTrayectoria && colaboradoresDelCuadrante.length > 0"
+                  class="popout-badge d-inline-flex align-items-center gap-1 bg-white rounded-pill shadow-sm"
+                >
+                  <img :src="iconUsuario" alt="Usuario" class="popout-badge-icon" />
+                  <span class="popout-badge-count">{{ colaboradoresDelCuadrante.length }}</span>
+                </div>
+                <span class="popout-title fw-medium">{{ cuadranteFiltro.nombre_caja }}</span>
               </div>
             </div>
 
             <!-- Canvas con Avatares de Colaboradores -->
-            <div class="popout-canvas position-relative z-2 flex-grow-1 w-100" style="min-height: 280px;">
+            <div class="popout-canvas position-relative z-2 flex-grow-1 w-100" style="min-height: 0;">
               <div v-if="!colaboradoresDelCuadrante.length" class="d-flex align-items-center justify-content-center h-100 text-white-50 fw-semibold">
                 Sin colaboradores en esta caja
               </div>
@@ -81,11 +89,26 @@
                 v-for="colab in colaboradoresDelCuadrante"
                 :key="colab.id"
                 class="popout-avatar-wrapper position-absolute cursor-pointer"
-                :style="{ left: colab.posX + '%', top: colab.posY + '%' }"
+                :class="{
+                  'popout-item-selected': colab.esSeleccionado,
+                  'popout-item-dimmed': colab.esAtenuado
+                }"
+                :style="{ 
+                  left: colab.posX + '%', 
+                  top: colab.posY + '%',
+                  zIndex: colab.esSeleccionado ? 30 : 10
+                }"
                 :title="colab.nombre + (colab.puesto ? ' - ' + colab.puesto : '')"
                 @click="seleccionarColaboradorDetalle(colab)"
               >
-                <div class="popout-avatar-ring">
+                <div 
+                  class="popout-avatar-ring"
+                  :class="{ 
+                    'popout-ring-selected': colab.esSeleccionado,
+                    'popout-ring-dimmed': colab.esAtenuado
+                  }"
+                  :style="{ borderColor: colab.color_borde || '#ffffff' }"
+                >
                   <img
                     v-if="colab.no_empleado && !colabPhotoErrors[colab.no_empleado]"
                     :src="getEmployeePhotoUrl(colab.no_empleado)"
@@ -113,6 +136,7 @@ import EChartsVisualizer from '@/components/DataCharts/EChartsVisualizer.vue';
 import BotonIconoSecondary from '@/components/ButtonWithIcon/ButtonSecondary.vue';
 import { useMatrixChart } from '@/components/Matrix/useMatrixChart';
 import { getEmployeePhotoUrl } from '@/utils/utils';
+import iconUsuario from '@/assets/images/icons/usuario.svg';
 
 export default defineComponent({
   name: 'MatrixViewer',
@@ -137,7 +161,8 @@ export default defineComponent({
     cuadrante_seleccionado: { type: Object, default: null },
     busqueda: { type: String, default: '' },
     colaboradores_seleccionados: { type: [Array, Number, String], default: () => [] },
-    editable: { type: Boolean, default: false }
+    editable: { type: Boolean, default: false },
+    permitir_dispersion: { type: Boolean, default: false }
   },
   emits: ['seleccionarCuadrante', 'update:cuadrante_seleccionado', 'configuracion-guardada', 'select-colaborador', 'click-config'],
   setup(props, { emit }) {
@@ -169,6 +194,10 @@ export default defineComponent({
       cuadranteFiltro.value = nuevoVal;
     }, { immediate: true });
 
+    watch(() => props.permitir_dispersion, (permitido) => {
+      if (!permitido) verRejilla.value = false;
+    });
+
     const N = computed(() => Math.round(Math.sqrt(config.value.tipo_grid || 9)));
 
     const emitirSeleccionColaborador = (colab) => {
@@ -179,6 +208,10 @@ export default defineComponent({
       emit('select-colaborador', { colaborador: colab, cuadrante });
     };
 
+    const wrapperRef = ref(null);
+    const containerWidth = ref(750);
+    let resizeObserver = null;
+
     // Composables y Lógica Visual
     const { echartsOption, handleChartClick, iniciales, getJitter } = useMatrixChart({
       config,
@@ -187,6 +220,7 @@ export default defineComponent({
       cuadranteFiltro,
       busqueda,
       ranges,
+      containerWidth,
       click_perfil: toRef(props, 'click_perfil'),
       click_cuadrante: toRef(props, 'click_cuadrante'),
       colaboradores_seleccionados: toRef(props, 'colaboradores_seleccionados'),
@@ -203,6 +237,10 @@ export default defineComponent({
     });
 
     const colabPhotoErrors = ref({});
+
+    const esModoTrayectoria = computed(() => {
+      return (props.colaboradores || []).some(c => !!c.etiqueta_trayectoria);
+    });
 
     const numeroCuadrante = computed(() => {
       if (!cuadranteFiltro.value) return '';
@@ -226,10 +264,25 @@ export default defineComponent({
       const boxXMin = xMin + (col - 1) * pasoX;
       const boxYMin = yMin + (fila - 1) * pasoY;
 
-      return props.colaboradores.filter(c => {
+      // Normalizar identificadores de colaboradores seleccionados
+      const rawSel = props.colaboradores_seleccionados;
+      const idsSeleccionados = Array.isArray(rawSel)
+        ? rawSel
+        : (rawSel != null && rawSel !== '' ? [rawSel] : []);
+      const haySeleccion = idsSeleccionados.length > 0;
+
+      // Filtrar colaboradores que pertenecen a esta caja
+      const colaboradoresEnCaja = props.colaboradores.filter(c => {
         if (c.id_caja && idCaja) return c.id_caja === idCaja;
         return false;
-      }).map(c => {
+      });
+
+      // Determinar si alguno de los seleccionados está presente en ESTA caja
+      const haySeleccionEnEstaCaja = haySeleccion && colaboradoresEnCaja.some(c =>
+        idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
+      );
+
+      const items = colaboradoresEnCaja.map(c => {
         const valXWithJitter = (c.valor_x || 0) + getJitter(c.id, 'x');
         const valYWithJitter = (c.valor_y || 0) + getJitter(c.id, 'y');
 
@@ -239,12 +292,25 @@ export default defineComponent({
         const posX = 15 + relX * 70;
         const posY = 15 + (1 - relY) * 70;
 
+        const esSeleccionado = haySeleccionEnEstaCaja && idsSeleccionados.some(id =>
+          id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion
+        );
+
         return {
           ...c,
           posX,
-          posY
+          posY,
+          esSeleccionado,
+          esAtenuado: haySeleccionEnEstaCaja && !esSeleccionado
         };
       });
+
+      // Ordenar: atenuados primero y el seleccionado al final para garantizar que quede encima
+      if (haySeleccionEnEstaCaja) {
+        items.sort((a, b) => (a.esSeleccionado ? 1 : 0) - (b.esSeleccionado ? 1 : 0));
+      }
+
+      return items;
     });
 
     const cerrarPopout = () => {
@@ -265,10 +331,24 @@ export default defineComponent({
 
     onMounted(() => {
       chartTimer = setTimeout(bindChartEvents, 400);
+      if (wrapperRef.value) {
+        if (wrapperRef.value.clientWidth > 0) {
+          containerWidth.value = wrapperRef.value.clientWidth;
+        }
+        resizeObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            if (entry.contentRect.width > 0) {
+              containerWidth.value = Math.round(entry.contentRect.width);
+            }
+          }
+        });
+        resizeObserver.observe(wrapperRef.value);
+      }
     });
 
     onBeforeUnmount(() => {
       if (chartTimer) clearTimeout(chartTimer);
+      if (resizeObserver) resizeObserver.disconnect();
     });
 
     return {
@@ -283,7 +363,10 @@ export default defineComponent({
       seleccionarColaboradorDetalle,
       getEmployeePhotoUrl,
       iniciales,
-      colabPhotoErrors
+      colabPhotoErrors,
+      iconUsuario,
+      esModoTrayectoria,
+      wrapperRef
     };
   }
 });
@@ -304,8 +387,8 @@ export default defineComponent({
 .viewer-chart-wrapper {
   height: 100%;
   aspect-ratio: 1.25 / 1;
-  max-width: 100%;
-  max-height: 100%;
+  max-width: min(100%, 750px);
+  max-height: 600px;
   margin: 0 auto;
 }
 
@@ -324,19 +407,46 @@ export default defineComponent({
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(1.5px);
   z-index: 100;
+  container-type: size;
 }
 
 .matrix-popout-card {
-  width: 92%;
-  max-width: 580px;
-  height: 88%;
-  max-height: 450px;
+  aspect-ratio: 1.25 / 1;
+  width: min(92cqw, calc(88cqh * 1.25), 760px);
+  max-width: min(92cqw, 760px);
+  max-height: 88cqh;
+  height: auto;
+  container-type: inline-size;
   box-shadow: 0 30px 65px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.popout-title {
+  font-size: clamp(0.95rem, 2.6cqw, 1.3rem);
+  line-height: 1.25;
+}
+
+.popout-badge {
+  height: clamp(18px, 3.5cqw, 24px);
+  padding: 0 clamp(6px, 1.2cqw, 10px);
+  border: 1px solid var(--bs-gray-300);
+  flex-shrink: 0;
+}
+
+.popout-badge-icon {
+  width: clamp(8px, 1.5cqw, 11px);
+  height: clamp(9.5px, 1.8cqw, 13px);
+  display: block;
+}
+
+.popout-badge-count {
+  font-size: clamp(9.5px, 1.8cqw, 12px);
+  font-weight: 400;
+  line-height: 1;
+}
+
 .popout-number-bg {
-  font-size: 100px;
+  font-size: clamp(80px, 20cqw, 150px);
   font-weight: 900;
   color: #ffffff;
   line-height: 1;
@@ -355,15 +465,18 @@ export default defineComponent({
 }
 
 .popout-avatar-ring {
-  width: 44px;
-  height: 44px;
+  width: clamp(38px, 6.8cqw, 48px);
+  height: clamp(38px, 6.8cqw, 48px);
   border-radius: 50%;
-  border: 3.5px solid white;
+  border-width: 3.5px;
+  border-style: solid;
   overflow: hidden;
   background-color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .popout-avatar-img {
@@ -375,7 +488,25 @@ export default defineComponent({
 .popout-avatar-initials {
   color: black;
   font-weight: 700;
-  font-size: 14px;
+  font-size: clamp(12px, 2.2cqw, 15px);
+}
+
+/* Estado Seleccionado: Opacidad 100%, halo blanco de contraste y sombra 3D en relieve */
+.popout-ring-selected {
+  opacity: 1 !important;
+  transform: scale(1.1);
+}
+
+/* Estado Atenuado (Pares a comparar): Mismo tamaño 44px pero translúcidos */
+.popout-ring-dimmed {
+  opacity: 0.52 !important;
+  filter: saturate(0.85);
+}
+
+/* Al pasar el cursor sobre un par atenuado, pasa al 100% de color y sube al frente */
+.popout-avatar-wrapper:hover .popout-ring-dimmed {
+  opacity: 1 !important;
+  transform: scale(1.2);
 }
 
 .popout-fade-enter-active,

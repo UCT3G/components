@@ -1,17 +1,20 @@
 import { computed } from 'vue';
 import { getEmployeePhotoUrl } from '@/utils/utils';
 
-const usuariosSvgPath = `M44.83.13c.37.06.73.15,1.06.27,1.19.41,2.32,1,3.33,1.76,2.03,1.51,3.54,3.68,4.15,6.15.99,3.96-.26,8.05-3.25,10.73-3.88,3.48-9.54,3.8-13.65.85s-5.7-8.29-3.68-13.13c1.42-3.43,4.6-6.24,8.36-6.64,1.16-.12,2.47-.18,3.68.02ZM50.95,10.98c0-4.49-3.64-8.14-8.14-8.14s-8.14,3.64-8.14,8.14,3.64,8.14,8.14,8.14,8.14-3.64,8.14-8.14Z M0,44.84v-1.59c3.34-9.18,13.94-13.81,23.07-9.87,4.51,1.94,7.95,5.56,9.42,10.24.3.95-.13,1.79-1.01,1.98-.76.16-1.46-.33-1.73-1.17-1.06-3.34-3.11-6.01-6.19-7.73-5.33-2.98-11.95-2.45-16.66,1.44C1.9,42.28,3.35,47.52,0,44.84Z M27.18,17.31c0,6.02-4.88,10.91-10.91,10.91s-10.91-4.88-10.91-10.91,4.88-10.91,10.91-10.91,10.91,4.88,10.91,10.91ZM24.41,17.31c0-4.49-3.64-8.14-8.14-8.14s-8.14,3.64-8.14,8.14,3.64,8.14,8.14,8.14,8.14-3.64,8.14-8.14Z M56.31,38.14c-1.19-3.75-3.63-6.65-7.17-8.3-5.12-2.39-11.14-1.59-15.48,1.84l-2.39-1.5c5.04-4.67,12.19-5.96,18.51-3.12,4.41,1.98,7.83,5.55,9.21,10.21.26.86-.15,1.7-.87,1.9-.67.19-1.52-.1-1.81-1.03Z`;
+const usuarioSvgPaths = `
+  <path d="M0,38.43v-1.59c3.34-9.18,13.94-13.81,23.07-9.87,4.51,1.94,7.95,5.56,9.42,10.24.3.95-.13,1.79-1.01,1.98-.76.16-1.46-.33-1.73-1.17-1.06-3.34-3.11-6.01-6.19-7.73-5.33-2.98-11.95-2.45-16.66,1.44C1.9,35.87,3.35,41.12,0,38.43Z"/>
+  <path d="M27.18,10.91c0,6.02-4.88,10.91-10.91,10.91s-10.91-4.88-10.91-10.91S10.25,0,16.27,0s10.91,4.88,10.91,10.91ZM24.41,10.9c0-4.49-3.64-8.14-8.14-8.14s-8.14,3.64-8.14,8.14,3.64,8.14,8.14,8.14,8.14-3.64,8.14-8.14Z"/>
+`;
 
 const getBadgeSvgUri = (count) => {
   const numStr = String(count);
-  const totalWidth = Math.round(30 + numStr.length * 7.5);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="20" viewBox="0 0 ${totalWidth} 20">
-    <rect width="${totalWidth}" height="20" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
-    <g transform="translate(6, 4.5) scale(0.22)" fill="#334155">
-      <path d="${usuariosSvgPath}"/>
+  const totalWidth = Math.round(22 + numStr.length * 6.8);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="18" viewBox="0 0 ${totalWidth} 18">
+    <rect width="${totalWidth}" height="18" rx="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+    <g transform="translate(5, 3.8) scale(0.24)" fill="#334155">
+      ${usuarioSvgPaths}
     </g>
-    <text x="24" y="14" text-anchor="start" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="10.5" font-weight="500">${count}</text>
+    <text x="15.5" y="12.5" text-anchor="start" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="9.5" font-weight="400">${count}</text>
   </svg>`.trim();
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
@@ -63,10 +66,79 @@ const wrapText = (text, maxChars = 15) => {
 };
 
 /**
+ * Envuelve el título de la caja de forma adaptativa y generosa según el ancho real de la celda:
+ * - maxL1: límite de caracteres para la línea 1 (descuenta badge si está activo).
+ * - maxRest: límite de caracteres para las líneas siguientes (ancho completo de la celda).
+ * - Admite hasta 3 líneas naturales antes de aplicar elipsis si el texto es muy largo.
+ * - Reconoce separadores comunes (/ y -) como saltos naturales.
+ */
+const wrapBoxTitle = (text, maxL1 = 26, maxRest = 32, maxLines = 3) => {
+  if (!text) return [];
+
+  // Normalizar separadores comunes para permitir quiebres limpios
+  const normalized = text
+    .replace(/\//g, ' / ')
+    .replace(/-/g, ' - ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const words = normalized.split(' ').filter(Boolean);
+  if (!words.length) return [];
+
+  const lines = [];
+  let currentLine = '';
+  let wordIndex = 0;
+
+  while (wordIndex < words.length && lines.length < maxLines) {
+    const isFirstLine = lines.length === 0;
+    const currentMax = isFirstLine ? maxL1 : maxRest;
+    const isLastAllowedLine = lines.length === maxLines - 1;
+    const word = words[wordIndex];
+
+    if (!currentLine) {
+      if (word.length <= currentMax) {
+        currentLine = word;
+        wordIndex++;
+      } else {
+        if (isLastAllowedLine) {
+          currentLine = word.slice(0, currentMax - 1) + '…';
+          wordIndex = words.length;
+        } else {
+          currentLine = word;
+          wordIndex++;
+        }
+      }
+    } else {
+      if ((currentLine + ' ' + word).length <= currentMax) {
+        currentLine += ' ' + word;
+        wordIndex++;
+      } else {
+        lines.push(currentLine);
+        currentLine = '';
+      }
+    }
+  }
+
+  if (currentLine && lines.length < maxLines) {
+    if (wordIndex < words.length && !currentLine.endsWith('…')) {
+      const currentMax = lines.length === 0 ? maxL1 : maxRest;
+      if (currentLine.length + 1 <= currentMax) {
+        currentLine += '…';
+      } else {
+        currentLine = currentLine.slice(0, currentMax - 1).trim() + '…';
+      }
+    }
+    lines.push(currentLine);
+  }
+
+  return lines;
+};
+
+/**
  * Composable para manejar la lógica del gráfico ECharts de la Matriz de Talento.
  * Separa la configuración visual del componente de UI.
  */
-export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFiltro, busqueda, ranges, onSelectColaborador, onSelectCuadrante, click_perfil, click_cuadrante, colaboradores_seleccionados, colaborador_seleccionado }) {
+export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFiltro, busqueda, ranges, containerWidth, onSelectColaborador, onSelectCuadrante, click_perfil, click_cuadrante, colaboradores_seleccionados, colaborador_seleccionado }) {
 
   const N = computed(() => Math.round(Math.sqrt(config.value?.tipo_grid || 9)));
 
@@ -89,8 +161,8 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
     if (verRejilla?.value) return 0;
     const numericId = typeof id === 'number' ? id : (String(id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 1);
     const seed = axis === 'x' ? 12.9898 : 78.233;
-    // El jitter debe ser proporcional al rango para que no se note demasiado o muy poco
-    const factor = (axis === 'x' ? xRange.value : yRange.value) * 0.02;
+    // El jitter debe ser sutil y proporcional al rango para no falsear calificaciones (desfase sutil de ~4 a 5px)
+    const factor = (axis === 'x' ? xRange.value : yRange.value) * 0.007;
     return (Math.abs(Math.sin(numericId * seed)) * factor * 2 - factor);
   };
 
@@ -105,6 +177,165 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
     return list.filter(c => c.id_caja != null);
   });
 
+  /**
+   * Renderizador visual unificado para los elementos de colaboradores (burbujas, avatares y puntos).
+   * Se reutiliza entre la serie base y la serie seleccionada.
+   */
+  const renderColaboradorItem = (params, api, dataset) => {
+    const center = api.coord([api.value(0), api.value(1)]);
+    const data = dataset?.[params.dataIndex];
+    if (!data) return;
+
+    const n = N.value;
+    const baseSize = n === 2 ? 46 : n === 3 ? 38 : 30;
+    const size = cuadranteFiltro.value ? baseSize * 1.35 : baseSize;
+    const r = size / 2;
+    const q = data.id_caja ? config.value?.cajas?.find(caja => caja.id_caja === data.id_caja) || null : null;
+    const color = q?.color_hex || '#546e7a';
+    const enFiltro = !cuadranteFiltro.value || (cuadranteFiltro.value.fila === q?.fila && cuadranteFiltro.value.columna === q?.columna);
+    const opacity = enFiltro ? 1 : 0.15;
+
+    const strokeColor = resolveCanvasColor(data.color_borde) || color || '#546e7a';
+    const children = [];
+
+    const esSeleccionado = data.es_seleccionado;
+
+    if (data.etiqueta_trayectoria) {
+      const textLabel = String(data.etiqueta_trayectoria);
+      const isLatest = data.es_mas_reciente;
+      const bgFill = '#ffffff';
+      const strokeWidth = isLatest ? 2.2 : 1.6;
+      const textFill = isLatest ? '#0f172a' : '#334155';
+      const trajectoryRadius = Math.max(16, r * 0.95);
+
+      children.push({
+        type: 'circle',
+        z: 1,
+        shape: { cx: center[0], cy: center[1], r: trajectoryRadius },
+        style: {
+          fill: bgFill,
+          stroke: strokeColor,
+          lineWidth: strokeWidth,
+          opacity: opacity,
+          shadowBlur: 3,
+          shadowColor: 'rgba(15, 23, 42, 0.15)',
+          shadowOffsetY: 1
+        }
+      });
+
+      const fontSize = Math.round(trajectoryRadius * 0.65);
+      children.push({
+        type: 'text',
+        z: 3,
+        style: {
+          text: textLabel,
+          x: center[0],
+          y: center[1],
+          fill: textFill,
+          align: 'center',
+          verticalAlign: 'middle',
+          font: `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+          opacity: opacity
+        }
+      });
+    } else if (esSeleccionado) {
+      // COLABORADOR SELECCIONADO EN MODO LOCAL: Renderizar Avatar Destacado con Foto Proporcional
+      const cx = Math.round(center[0]);
+      const cy = Math.round(center[1]);
+      const avatarSize = Math.round(Math.max(38, r * 1.35));
+      const avatarRadius = avatarSize / 2;
+      const innerRadius = avatarRadius - 1.5;
+      const innerDiameter = innerRadius * 2;
+
+      // Círculo base blanco con sombra y borde de estado
+      children.push({
+        type: 'circle',
+        z: 20,
+        shape: { cx, cy, r: avatarRadius },
+        style: {
+          fill: '#ffffff',
+          stroke: strokeColor,
+          lineWidth: 3,
+          shadowBlur: 12,
+          shadowColor: 'rgba(0, 0, 0, 0.35)',
+          shadowOffsetY: 2
+        }
+      });
+
+      // Imagen con foto o iniciales
+      if (data.no_empleado) {
+        // Las fotos institucionales de RH tienen proporción vertical 3:4 (~1.33).
+        // Calculamos el alto proporcional para cubrir el círculo sin aplastar ni deformar el rostro:
+        const imgWidth = innerDiameter;
+        const imgHeight = Math.round(imgWidth * 1.333);
+        const imgX = cx - innerRadius;
+        // Centrado vertical compensado al 42% para enfocar el rostro:
+        const imgY = cy - Math.round(imgHeight * 0.42);
+
+        children.push({
+          type: 'image',
+          z: 21,
+          style: {
+            image: getEmployeePhotoUrl(data.no_empleado),
+            x: imgX,
+            y: imgY,
+            width: imgWidth,
+            height: imgHeight
+          },
+          clipPath: {
+            type: 'circle',
+            shape: { cx, cy, r: innerRadius }
+          }
+        });
+      } else {
+        const inis = iniciales(data.nombre);
+        children.push({
+          type: 'circle',
+          z: 21,
+          shape: { cx, cy, r: innerRadius },
+          style: { fill: strokeColor }
+        });
+        children.push({
+          type: 'text',
+          z: 22,
+          style: {
+            text: inis,
+            x: cx,
+            y: cy,
+            fill: '#ffffff',
+            align: 'center',
+            verticalAlign: 'middle',
+            font: `700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
+          }
+        });
+      }
+    } else {
+      // MODO MATRIZ GENERAL: Siempre renderizar puntos limpios (círculos)
+      const dotRadius = Math.max(4, Math.min(6, r * 0.32));
+      const dotColor = resolveCanvasColor(data.color_borde || data.color) || strokeColor || '#0f172a';
+
+      children.push({
+        type: 'circle',
+        z: 2,
+        silent: true,
+        shape: { cx: center[0], cy: center[1], r: dotRadius },
+        style: {
+          fill: dotColor,
+          stroke: '#ffffff',
+          lineWidth: 1,
+          opacity: opacity,
+          shadowBlur: enFiltro ? 4 : 0,
+          shadowColor: 'rgba(15, 23, 42, 0.25)'
+        }
+      });
+    }
+
+    return {
+      type: 'group',
+      children: children
+    };
+  };
+
   // ── Generación de Opciones de ECharts ───────────────────────────────
   const echartsOption = computed(() => {
     if (!config.value?.cajas) return {};
@@ -114,6 +345,17 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
     const idsSeleccionados = Array.isArray(rawSel)
       ? rawSel
       : (rawSel != null ? [rawSel] : []);
+
+    const esModoTrayectoria = (colaboradoresFiltrados.value || []).some(c => !!c.etiqueta_trayectoria);
+
+    // Cálculo reactivo del ancho real por cuadrante y caracteres disponibles
+    const N_val = N.value || 3;
+    const currentContainerW = containerWidth?.value || 750;
+    const gridNetW = Math.max(280, currentContainerW - (verRejilla.value ? 90 : 60));
+    const cellW = gridNetW / N_val;
+    const usefulCellW = Math.max(40, cellW - 16);
+    const fontSize = cuadranteFiltro.value ? 12.5 : (N_val === 2 ? 13 : N_val === 3 ? 10.5 : 9);
+    const avgCharW = Math.max(4.6, fontSize * 0.58);
 
     // 1. Zonas coloreadas (markArea)
     const markAreaData = cfg.cajas.map(caja => {
@@ -132,13 +374,30 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
         return c.id_caja && caja.id_caja ? c.id_caja === caja.id_caja : false;
       }).length;
 
-      const rawName = caja.nombre_caja || '';
-      const maxChars = N.value === 4 ? 18 : N.value === 3 ? 26 : 34;
-      const wrappedLines = wrapText(rawName, maxChars).split('\n');
-      const boxNameText = wrappedLines.map(line => `{boxName|${line}}`).join('\n');
+      const showBadge = !esModoTrayectoria && countInBox > 0;
+      const badgeUri = showBadge ? getBadgeSvgUri(countInBox) : '';
+      const badgeWidth = showBadge ? Math.round(22 + String(countInBox).length * 6.8) : 0;
 
-      const badgeUri = getBadgeSvgUri(countInBox);
-      const badgeWidth = Math.round(30 + String(countInBox).length * 7.5);
+      // Límites dinámicos exactos calculados a partir de los píxeles reales del cuadrante
+      const maxL1 = showBadge
+        ? Math.max(8, Math.floor((usefulCellW - badgeWidth - 6) / avgCharW))
+        : Math.max(12, Math.floor(usefulCellW / avgCharW));
+      const maxRest = Math.max(12, Math.floor(usefulCellW / avgCharW));
+
+      const rawName = caja.nombre_caja || '';
+      const wrappedLines = wrapBoxTitle(rawName, maxL1, maxRest, 3);
+
+      const boxLabelFormatter = () => {
+        if (!wrappedLines.length) return '';
+        if (showBadge) {
+          const [first, ...rest] = wrappedLines;
+          if (!rest.length) {
+            return `{badge|}  {boxName|${first}}`;
+          }
+          return `{badge|}  {boxName|${first}}\n` + rest.map(line => `{boxName|${line}}`).join('\n');
+        }
+        return wrappedLines.map(line => `{boxName|${line}}`).join('\n');
+      };
 
       return [
         {
@@ -148,18 +407,18 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
             show: activa,
             position: 'insideTopLeft',
             distance: 8,
-            formatter: () => countInBox > 0 ? `{badge|}  ${boxNameText}` : boxNameText,
+            formatter: boxLabelFormatter,
             rich: {
               badge: {
                 backgroundColor: {
                   image: badgeUri
                 },
                 width: badgeWidth,
-                height: 20
+                height: 18
               },
               boxName: {
                 fontSize: cuadranteFiltro.value ? 12.5 : (N.value === 2 ? 13 : N.value === 3 ? 10.5 : 9),
-                fontStyle: 'italic',
+                fontStyle: 'normal',
                 fontWeight: '500',
                 color: 'black',
                 lineHeight: 14,
@@ -176,8 +435,39 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
       ];
     });
 
-    // 2. Scatter: colaboradores con jittering
-    const scatterData = colaboradoresFiltrados.value.map(c => {
+    // 2. Scatter: colaboradores con jittering (máximo 10 por cuadrante en modo general para evitar saturar)
+    const MAX_PUNTOS_POR_CUADRANTE = 10;
+
+    let colaboradoresParaGraficar = colaboradoresFiltrados.value || [];
+
+    if (!esModoTrayectoria && colaboradoresParaGraficar.length > 0) {
+      const porCaja = new Map();
+      colaboradoresParaGraficar.forEach(c => {
+        const key = c.id_caja ?? 'sin_caja';
+        if (!porCaja.has(key)) porCaja.set(key, []);
+        porCaja.get(key).push(c);
+      });
+
+      const listaLimitada = [];
+      porCaja.forEach(colabs => {
+        if (colabs.length <= MAX_PUNTOS_POR_CUADRANTE) {
+          listaLimitada.push(...colabs);
+        } else {
+          // Priorizar siempre los colaboradores seleccionados para que nunca desaparezcan
+          const seleccionados = colabs.filter(c => idsSeleccionados.includes(c.id));
+          const noSeleccionados = colabs.filter(c => !idsSeleccionados.includes(c.id));
+
+          const cuposRestantes = Math.max(0, MAX_PUNTOS_POR_CUADRANTE - seleccionados.length);
+          const muestra = noSeleccionados.slice(0, cuposRestantes);
+
+          listaLimitada.push(...muestra, ...seleccionados);
+        }
+      });
+
+      colaboradoresParaGraficar = listaLimitada;
+    }
+
+    const scatterData = colaboradoresParaGraficar.map(c => {
       const q = c.id_caja ? config.value?.cajas?.find(caja => caja.id_caja === c.id_caja) || null : null;
       const enFiltro = !cuadranteFiltro.value
         || (cuadranteFiltro.value.fila === q?.fila && cuadranteFiltro.value.columna === q?.columna);
@@ -218,6 +508,15 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
         }
       };
     });
+
+    // Separamos en dos capas independientes:
+    // 1. Capa base (puntos normales y trayectoria histórica) con z: 10
+    // 2. Capa seleccionada (colaboradores seleccionados con foto y evaluación más reciente) con z: 50
+    // Al manejar capas con niveles 'z' independientes en ECharts, el motor Canvas dibuja
+    // físicamente la serie seleccionada DESPUÉS de todos los puntos base, garantizando
+    // que ningún punto cercano o con coordenadas idénticas tape la foto del colaborador.
+    const scatterDataPuntos = scatterData.filter(d => !d.es_seleccionado && !d.es_mas_reciente);
+    const scatterDataSeleccionados = scatterData.filter(d => d.es_seleccionado || d.es_mas_reciente);
 
     return {
       backgroundColor: 'transparent',
@@ -282,162 +581,13 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
             };
           })
         },
+        // Capa 1: Puntos normales no seleccionados y cuadrantes de fondo (z: 10)
         {
+          name: 'colaboradores-base',
           type: 'custom',
           z: 10,
-          renderItem: (params, api) => {
-            const center = api.coord([api.value(0), api.value(1)]);
-            const data = scatterData[params.dataIndex];
-            const n = N.value;
-            const baseSize = n === 2 ? 46 : n === 3 ? 38 : 30;
-            const size = cuadranteFiltro.value ? baseSize * 1.35 : baseSize;
-            const r = size / 2;
-            const q = data.id_caja ? config.value?.cajas?.find(caja => caja.id_caja === data.id_caja) || null : null;
-            const color = q?.color_hex || '#546e7a';
-            const enFiltro = !cuadranteFiltro.value || (cuadranteFiltro.value.fila === q?.fila && cuadranteFiltro.value.columna === q?.columna);
-            const opacity = enFiltro ? 1 : 0.15;
-
-            const strokeColor = resolveCanvasColor(data.color_borde) || color || '#546e7a';
-            const children = [];
-
-            const esSeleccionado = data.es_seleccionado;
-
-            if (data.etiqueta_trayectoria) {
-              const textLabel = String(data.etiqueta_trayectoria);
-              const isLatest = data.es_mas_reciente;
-              const bgFill = '#ffffff';
-              const strokeWidth = isLatest ? 2.2 : 1.6;
-              const textFill = isLatest ? '#0f172a' : '#334155';
-              const trajectoryRadius = Math.max(16, r * 0.95);
-
-              children.push({
-                type: 'circle',
-                z: 1,
-                shape: { cx: center[0], cy: center[1], r: trajectoryRadius },
-                style: {
-                  fill: bgFill,
-                  stroke: strokeColor,
-                  lineWidth: strokeWidth,
-                  opacity: opacity,
-                  shadowBlur: 3,
-                  shadowColor: 'rgba(15, 23, 42, 0.15)',
-                  shadowOffsetY: 1
-                }
-              });
-
-              const fontSize = Math.round(trajectoryRadius * 0.65);
-              children.push({
-                type: 'text',
-                z: 3,
-                style: {
-                  text: textLabel,
-                  x: center[0],
-                  y: center[1],
-                  fill: textFill,
-                  align: 'center',
-                  verticalAlign: 'middle',
-                  font: `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
-                  opacity: opacity
-                }
-              });
-            } else if (esSeleccionado) {
-              // COLABORADOR SELECCIONADO EN MODO LOCAL: Renderizar Avatar Destacado con Foto Proporcional
-              const cx = Math.round(center[0]);
-              const cy = Math.round(center[1]);
-              const avatarSize = Math.round(Math.max(38, r * 1.35));
-              const avatarRadius = avatarSize / 2;
-              const innerRadius = avatarRadius - 1.5;
-              const innerDiameter = innerRadius * 2;
-
-              // Círculo base blanco con sombra y borde de estado
-              children.push({
-                type: 'circle',
-                z: 20,
-                shape: { cx, cy, r: avatarRadius },
-                style: {
-                  fill: '#ffffff',
-                  stroke: strokeColor,
-                  lineWidth: 3,
-                  shadowBlur: 12,
-                  shadowColor: 'rgba(0, 0, 0, 0.35)',
-                  shadowOffsetY: 2
-                }
-              });
-
-              // Imagen con foto o iniciales
-              if (data.no_empleado) {
-                // Las fotos institucionales de RH tienen proporción vertical 3:4 (~1.33).
-                // Calculamos el alto proporcional para cubrir el círculo sin aplastar ni deformar el rostro:
-                const imgWidth = innerDiameter;
-                const imgHeight = Math.round(imgWidth * 1.333);
-                const imgX = cx - innerRadius;
-                // Centrado vertical compensado al 42% para enfocar el rostro:
-                const imgY = cy - Math.round(imgHeight * 0.42);
-
-                children.push({
-                  type: 'image',
-                  z: 21,
-                  style: {
-                    image: getEmployeePhotoUrl(data.no_empleado),
-                    x: imgX,
-                    y: imgY,
-                    width: imgWidth,
-                    height: imgHeight
-                  },
-                  clipPath: {
-                    type: 'circle',
-                    shape: { cx, cy, r: innerRadius }
-                  }
-                });
-              } else {
-                const inis = iniciales(data.nombre);
-                children.push({
-                  type: 'circle',
-                  z: 21,
-                  shape: { cx, cy, r: innerRadius },
-                  style: { fill: strokeColor }
-                });
-                children.push({
-                  type: 'text',
-                  z: 22,
-                  style: {
-                    text: inis,
-                    x: cx,
-                    y: cy,
-                    fill: '#ffffff',
-                    align: 'center',
-                    verticalAlign: 'middle',
-                    font: `700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
-                  }
-                });
-              }
-            } else {
-              // MODO MATRIZ GENERAL: Siempre renderizar puntos limpios (círculos)
-              const dotRadius = Math.max(4, Math.min(6, r * 0.32));
-              const dotColor = resolveCanvasColor(data.color_borde || data.color) || strokeColor || '#0f172a';
-
-              children.push({
-                type: 'circle',
-                z: 2,
-                silent: true,
-                shape: { cx: center[0], cy: center[1], r: dotRadius },
-                style: {
-                  fill: dotColor,
-                  stroke: '#ffffff',
-                  lineWidth: 1,
-                  opacity: opacity,
-                  shadowBlur: enFiltro ? 4 : 0,
-                  shadowColor: 'rgba(15, 23, 42, 0.25)'
-                }
-              });
-            }
-
-            return {
-              type: 'group',
-              children: children
-            };
-          },
-          data: scatterData.map(d => ({
+          renderItem: (params, api) => renderColaboradorItem(params, api, scatterDataPuntos),
+          data: scatterDataPuntos.map(d => ({
             name: d.nombre,
             value: d.value,
             ...d
@@ -457,6 +607,20 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
             },
             data: markAreaData
           }
+        },
+        // Capa 2: Colaborador(es) seleccionado(s) con avatar/foto (z: 50)
+        // Al estar en una serie independiente con nivel z superior (z: 50 > z: 10),
+        // ECharts/ZRender garantiza en Canvas que la foto siempre se pinte encima de cualquier punto.
+        {
+          name: 'colaboradores-seleccionados',
+          type: 'custom',
+          z: 50,
+          renderItem: (params, api) => renderColaboradorItem(params, api, scatterDataSeleccionados),
+          data: scatterDataSeleccionados.map(d => ({
+            name: d.nombre,
+            value: d.value,
+            ...d
+          }))
         }
       ]
     };
@@ -470,6 +634,13 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
       }
     } else if (params.componentType === 'series' && (params.componentSubType === 'scatter' || params.componentSubType === 'custom')) {
       if (!cuadranteFiltro.value && !params.data?.etiqueta_trayectoria) {
+        // En la matriz general, hacer clic sobre la foto o punto de un colaborador abre el cuadrante al que pertenece
+        if (params.data?.id_caja) {
+          const caja = config.value?.cajas?.find(c => c.id_caja === params.data.id_caja);
+          if (caja) {
+            onSelectCuadrante(caja);
+          }
+        }
         return;
       }
       onSelectColaborador(params.data);
