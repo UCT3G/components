@@ -1,37 +1,41 @@
 <template>
   <div>
     <!-- Controles -->
-    <div class="mb-2 d-flex justify-content-end align-items-center m-4">
-      <input 
-        type="number" 
-        v-model="NoRegistrosVisibles" 
-        min="10" max="200"
-        class="form-control size-input d-inline-block ms-2"
-        @change="actualizarRegistros"
-      />
-
-      <!-- Selección múltiple -->
-      <div 
-        v-if="modo === 'multiple'"
-        @click="seleccionarRegistros"
-        class="ms-2 d-flex align-items-center"
-        style="height: 38px; cursor: pointer;"
-      >
-        <DynamicSvgLoader 
-          :fileName="iconSelect" 
-          width_icon="37px" 
-          height_icon="37px"
+    <div class="mb-2 d-flex justify-content-between align-items-center m-4">
+      <!-- Izquierda: Selector de cantidad de registros visibles -->
+      <div class="d-flex align-items-center gap-2">
+        <span class="small text-muted fw-semibold user-select-none">Mostrar:</span>
+        <input 
+          type="number" 
+          v-model="NoRegistrosVisibles" 
+          min="10" max="200"
+          class="form-control form-control-sm size-input text-center"
+          @change="actualizarRegistros"
         />
+        <span class="small text-muted user-select-none">filas</span>
       </div>
 
-      <button 
-        v-if="modo === 'multiple'" 
-        class="btn btn-secondary ms-2" 
-        :disabled="loading || registrosSeleccionados.length === 0"
-        @click="emitirSeleccion"
-      >
-        Agregar
-      </button>
+      <!-- Derecha: Acciones de selección múltiple -->
+      <div v-if="modo === 'multiple'" class="d-flex align-items-center gap-2">
+        <button 
+          type="button"
+          class="btn btn-secondary btn-select-all"
+          @click="seleccionarRegistros"
+        >
+          <span>{{ registrosSeleccionados.length > 0 ? 'Deseleccionar todos' : 'Seleccionar todos' }}</span>
+          <span v-if="registrosSeleccionados.length > 0" class="badge bg-secondary rounded-pill badge-count">
+            {{ registrosSeleccionados.length }}
+          </span>
+        </button>
+
+        <button
+          class="btn btn-primary m-0" 
+          :disabled="loading || registrosSeleccionados.length === 0"
+          @click="emitirSeleccion"
+        >
+          Agregar
+        </button>
+      </div>
     </div>
 
     <!-- Tabla dinámica -->
@@ -91,12 +95,11 @@ import { useStore } from "vuex";
 import TablaDinamica from "@/components/TablaDinamica/TablaDinamica.vue";
 import TablaCargando from "@/components/TablaDinamica/TablaLoader.vue";
 import Checkbox from "@/components/Inputs/Checkbox.vue";
-import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
 import LoadingUCT from "@/components/Loading/Loading.vue";
 
 export default defineComponent({
   name: "TablaSelect",
-  components: { TablaDinamica, TablaCargando, Checkbox, DynamicSvgLoader, LoadingUCT },
+  components: { TablaDinamica, TablaCargando, Checkbox, LoadingUCT },
 
   props: {
     tablaNombre: { type: String, required: true },   // Ej: TB_GT_USUARIOS
@@ -138,9 +141,6 @@ export default defineComponent({
       store.getters["reporteador/getTablaPorNombre"](props.tablaNombre)
     );
 
-    const iconSelect = computed(() =>
-      registrosSeleccionados.value.length > 0 ? 'icons/check-2' : 'icons/checkbox-unchecked'
-    );
 
     const configurarTabla = () => {
       if (!tabla.value) return;
@@ -231,7 +231,6 @@ export default defineComponent({
       botonesActivos,
       registrosSeleccionados,
       NoRegistrosVisibles,
-      iconSelect,
       seleccionarRegistros,
       actualizarRegistros,
       emitirSeleccion,
@@ -245,22 +244,23 @@ export default defineComponent({
 <style scoped>
 .size-input {
   width: 80px;
+  height: 31px;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 10px;
 }
-:deep(.loaderSVG-contend) {
-  padding: 0 !important;
-  display: flex !important;
+.btn-select-all {
+  height: 31px;
+  font-size: 13px;
+  padding: 3px 12px;
+  border-radius: 25px;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  --icon_color: var(--bs-gray-600);
-  --icon_color_hover: var(--purple-sb);
-  transition: transform 0.2s ease;
+  gap: 6px;
+  line-height: 1.1;
 }
-:deep(.loaderSVG-contend:hover) {
-  transform: scale(1.1);
-}
-:deep(.loaderSVG-contend svg) {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
+.badge-count {
+  font-size: 10px;
+  padding: 2px 6px;
 }
 </style>
