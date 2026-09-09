@@ -69,11 +69,11 @@
               <div class="d-flex align-items-center gap-2 text-dark">
                 <!-- Badge con conteo de colaboradores responsivo -->
                 <div 
-                  v-if="!esModoTrayectoria && colaboradoresDelCuadrante.length > 0"
+                  v-if="!esModoTrayectoria && totalColaboradoresCuadrante > 0"
                   class="popout-badge d-inline-flex align-items-center gap-1 bg-white rounded-pill shadow-sm"
                 >
                   <img :src="iconUsuario" alt="Usuario" class="popout-badge-icon" />
-                  <span class="popout-badge-count">{{ colaboradoresDelCuadrante.length }}</span>
+                  <span class="popout-badge-count">{{ totalColaboradoresCuadrante }}</span>
                 </div>
                 <span class="popout-title fw-medium">{{ cuadranteFiltro.nombre_caja }}</span>
               </div>
@@ -90,8 +90,7 @@
                 :key="colab.id"
                 class="popout-avatar-wrapper position-absolute cursor-pointer"
                 :class="{
-                  'popout-item-selected': colab.esSeleccionado,
-                  'popout-item-dimmed': colab.esAtenuado
+                  'popout-item-selected': colab.esSeleccionado
                 }"
                 :style="{ 
                   left: colab.posX + '%', 
@@ -104,8 +103,7 @@
                 <div 
                   class="popout-avatar-ring"
                   :class="{ 
-                    'popout-ring-selected': colab.esSeleccionado,
-                    'popout-ring-dimmed': colab.esAtenuado
+                    'popout-ring-selected': colab.esSeleccionado
                   }"
                   :style="{ borderColor: colab.color_borde || '#ffffff' }"
                 >
@@ -247,6 +245,11 @@ export default defineComponent({
       return (cuadranteFiltro.value.fila - 1) * N.value + cuadranteFiltro.value.columna;
     });
 
+    const totalColaboradoresCuadrante = computed(() => {
+      if (!cuadranteFiltro.value || !props.colaboradores?.length) return 0;
+      return props.colaboradores.filter(c => c.id_caja && c.id_caja === cuadranteFiltro.value.id_caja).length;
+    });
+
     const colaboradoresDelCuadrante = computed(() => {
       if (!cuadranteFiltro.value || !props.colaboradores.length) return [];
       const fila = cuadranteFiltro.value.fila;
@@ -282,7 +285,14 @@ export default defineComponent({
         idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
       );
 
-      const items = colaboradoresEnCaja.map(c => {
+      // Si hay selección en esta caja, solo mostramos los seleccionados (los demás desaparecen)
+      const listaVisible = haySeleccionEnEstaCaja
+        ? colaboradoresEnCaja.filter(c =>
+            idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
+          )
+        : colaboradoresEnCaja;
+
+      return listaVisible.map(c => {
         const valXWithJitter = (c.valor_x || 0) + getJitter(c.id, 'x');
         const valYWithJitter = (c.valor_y || 0) + getJitter(c.id, 'y');
 
@@ -292,25 +302,13 @@ export default defineComponent({
         const posX = 15 + relX * 70;
         const posY = 15 + (1 - relY) * 70;
 
-        const esSeleccionado = haySeleccionEnEstaCaja && idsSeleccionados.some(id =>
-          id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion
-        );
-
         return {
           ...c,
           posX,
           posY,
-          esSeleccionado,
-          esAtenuado: haySeleccionEnEstaCaja && !esSeleccionado
+          esSeleccionado: haySeleccionEnEstaCaja
         };
       });
-
-      // Ordenar: atenuados primero y el seleccionado al final para garantizar que quede encima
-      if (haySeleccionEnEstaCaja) {
-        items.sort((a, b) => (a.esSeleccionado ? 1 : 0) - (b.esSeleccionado ? 1 : 0));
-      }
-
-      return items;
     });
 
     const cerrarPopout = () => {
@@ -358,6 +356,7 @@ export default defineComponent({
       echartsOption,
       verRejilla,
       numeroCuadrante,
+      totalColaboradoresCuadrante,
       colaboradoresDelCuadrante,
       cerrarPopout,
       seleccionarColaboradorDetalle,
@@ -495,18 +494,6 @@ export default defineComponent({
 .popout-ring-selected {
   opacity: 1 !important;
   transform: scale(1.1);
-}
-
-/* Estado Atenuado (Pares a comparar): Mismo tamaño 44px pero translúcidos */
-.popout-ring-dimmed {
-  opacity: 0.52 !important;
-  filter: saturate(0.85);
-}
-
-/* Al pasar el cursor sobre un par atenuado, pasa al 100% de color y sube al frente */
-.popout-avatar-wrapper:hover .popout-ring-dimmed {
-  opacity: 1 !important;
-  transform: scale(1.2);
 }
 
 .popout-fade-enter-active,
