@@ -239,7 +239,7 @@ export default defineComponent({
 }
 
 .tab-button.active {
-  color: var( --blueBerry);
+  color: var(--purple-sb);
   background: var(--blueBerryPastel);
   font-weight: 600;
   box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.25);
