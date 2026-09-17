@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed, watch, onMounted } from 'vue';
+import { defineComponent, ref, computed, watch, onBeforeUnmount } from 'vue';
 import { Dropdown } from 'bootstrap';
 import DynamicSvgLoader from "@/components/LoaderSVG/LoaderSVG.vue";
 
@@ -161,6 +161,15 @@ export default defineComponent({
         }
       }
     };
+
+    onBeforeUnmount(() => {
+      if (dropdownToggle.value) {
+        const bsDropdown = Dropdown.getInstance(dropdownToggle.value);
+        if (bsDropdown) {
+          bsDropdown.dispose();
+        }
+      }
+    });
 
     return {
       searchQuery,

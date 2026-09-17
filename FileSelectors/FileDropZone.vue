@@ -85,26 +85,17 @@
                 <p class="mb-0 fw-bold text-truncate small" :title="file.name">{{ file.name }}</p>
                 <p class="mb-0 text-muted small">{{ file.size ? formatFileSize(file.size) : '' }}</p>
               </div>
-              <div class="d-flex align-items-center gap-1">
-                <DynamicSvgLoader 
-                  @click.stop.prevent="downloadFile(file)"
-                  fileName="icons/CloudArrowDown" 
-                  title="Descargar archivo"
-                  class="iconBtn flex-shrink-0"
-                  width_icon="24px"
-                  height_icon="24px"
-                >
-                </DynamicSvgLoader>
-                <DynamicSvgLoader 
-                  v-if="!disabled"
-                  @click.stop.prevent="deleteExistingFile(file)"
-                  fileName="icons/UCT_Kanban/eliminar" 
-                  title="Eliminar archivo"
-                  class="iconBtn flex-shrink-0"
-                  width_icon="24px"
-                  height_icon="24px"
-                >
-                </DynamicSvgLoader>
+              <div @click.stop class="d-flex align-items-center">
+                <slot name="file-actions" :file="file" :acciones="getOpcionesArchivo(file)">
+                  <DropDownTrespuntos
+                    v-if="getOpcionesArchivo(file).length > 0"
+                    iconName="ellipsis-vertical.svg"
+                    width_icon="4px"
+                    :lista="getOpcionesArchivo(file)"
+                    :data="file"
+                    @elementoSeleccionado="handleAccionArchivo"
+                  />
+                </slot>
               </div>
             </div>
           </div>
@@ -119,11 +110,12 @@ import { defineComponent, ref, computed, watch } from "vue";
 import { toast } from 'vue3-toastify';
 import { useStore } from "vuex";
 import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
+import DropDownTrespuntos from '@/components/ListaDesplegable/DropDownTrespuntos.vue';
 import { DEV_BASE_URL } from "@/../axios-config.js";
 
 export default defineComponent({
   name: "FileSelector",
-  components:{DynamicSvgLoader},
+  components: { DynamicSvgLoader, DropDownTrespuntos },
   props: {
     /**
      * Tipos aceptados, ejemplo:
@@ -143,10 +135,11 @@ export default defineComponent({
     stacked: { type: Boolean, default: false }, // Forzar diseño vertical
     disabled: { type: Boolean, default: false },
     multiple: { type: Boolean, default: false },
-    existingFiles: { type: Array, default: () => [] }
+    existingFiles: { type: Array, default: () => [] },
+    acciones: { type: [Array, Function], default: null }
   },
 
-  emits: ["file-selected", "files-selected", "delete-file"],
+  emits: ["file-selected", "files-selected", "delete-file", "accion"],
 
   setup(props, { emit }) {
     const store = useStore();
@@ -318,6 +311,25 @@ export default defineComponent({
       emit("delete-file", file);
     };
 
+    const getOpcionesArchivo = (file) => {
+      if (typeof props.acciones === 'function') {
+        return props.acciones(file) || [];
+      }
+      if (Array.isArray(props.acciones)) {
+        return props.acciones;
+      }
+      return props.disabled ? ['Descargar'] : ['Descargar', 'Eliminar'];
+    };
+
+    const handleAccionArchivo = ({ nombre, data }) => {
+      if (nombre === 'Descargar') {
+        downloadFile(data);
+      } else if (nombre === 'Eliminar') {
+        deleteExistingFile(data);
+      }
+      emit('accion', { accion: nombre, file: data });
+    };
+
     const formatFileSize = (bytes) => {
       if (!bytes) return "0 Bytes";
       const k = 1024;
@@ -337,6 +349,8 @@ export default defineComponent({
       formatFileSize,
       downloadFile,
       deleteExistingFile,
+      getOpcionesArchivo,
+      handleAccionArchivo,
       existingFileName,
       existingFileUrl,
       hasAnyFile,
@@ -395,9 +409,8 @@ export default defineComponent({
 }
 
 .file-info :deep(.iconBtn) {
-  --icon_color: black;       
-  --icon_color_hover: var(--bs-danger);  
-  padding: 4px !important;   /* Reducir padding de 10px a 4px para acercar los iconos */
+  --icon_color: black;         
+  padding: 4px !important; 
 }
 
 .file-info :deep(.iconBtn svg) {

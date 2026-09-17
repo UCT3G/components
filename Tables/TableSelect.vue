@@ -1,42 +1,50 @@
 <template>
   <div>
     <!-- Controles -->
-    <div class="mb-2 d-flex justify-content-end align-items-center m-4">
-      <input 
-        type="number" 
-        v-model="NoRegistrosVisibles" 
-        min="10" max="200"
-        class="form-control size-input d-inline-block ms-2"
-        @change="actualizarRegistros"
-      />
-
-      <!-- Selección múltiple -->
-      <div 
-        v-if="modo === 'multiple'"
-        @click="seleccionarRegistros"
-        class="ms-2 d-flex align-items-center"
-        style="height: 38px; cursor: pointer;"
-      >
-        <DynamicSvgLoader 
-          :fileName="iconSelect" 
-          width_icon="37px" 
-          height_icon="37px"
+    <div class="mb-2 d-flex justify-content-between align-items-center m-4">
+      <!-- Izquierda: Selector de cantidad de registros visibles -->
+      <div class="d-flex align-items-center gap-2">
+        <span class="small text-muted fw-semibold user-select-none">Mostrar:</span>
+        <input 
+          type="number" 
+          v-model="NoRegistrosVisibles" 
+          min="10" max="200"
+          class="form-control form-control-sm size-input text-center"
+          @change="actualizarRegistros"
         />
+        <span class="small text-muted user-select-none">filas</span>
       </div>
 
-      <button 
-        v-if="modo === 'multiple'" 
-        class="btn btn-secondary ms-2" 
-        @click="emitirSeleccion"
-      >
-        Agregar
-      </button>
+      <!-- Derecha: Acciones de selección múltiple -->
+      <div v-if="modo === 'multiple'" class="d-flex align-items-center gap-2">
+        <button 
+          type="button"
+          class="btn btn-secondary btn-select-all"
+          @click="seleccionarRegistros"
+        >
+          <span>{{ registrosSeleccionados.length > 0 ? 'Deseleccionar todos' : 'Seleccionar todos' }}</span>
+          <span v-if="registrosSeleccionados.length > 0" class="badge bg-secondary rounded-pill badge-count">
+            {{ registrosSeleccionados.length }}
+          </span>
+        </button>
+
+        <button
+          class="btn btn-primary m-0" 
+          :disabled="loading || registrosSeleccionados.length === 0"
+          @click="emitirSeleccion"
+        >
+          Agregar
+        </button>
+      </div>
     </div>
 
     <!-- Tabla dinámica -->
     <div class="d-flex justify-content-center flex-column">
       <div class="m-4">
+        <TablaCargando v-if="cargando || !tabla" />
+
         <TablaDinamica
+          v-else
           :consultar_registros="filtrar"
           :tablaBase="tabla"
           :tabla_nombre="tablaNombre"
@@ -45,7 +53,7 @@
         />
 
         <!-- Checkbox o botón -->
-        <template v-if="botonesActivos">
+        <template v-if="botonesActivos && tabla">
           <template 
             v-for="(registro, index) in tabla.registros" 
             :key="registro[campoId]"
@@ -76,6 +84,8 @@
       </div>
     </div>
 
+    <!-- Overlay bloqueante de carga cuando se procesa la selección -->
+    <LoadingUCT v-if="loading" :blockFullScreem="true" />
   </div>
 </template>
 
@@ -83,12 +93,13 @@
 import { defineComponent, ref, onMounted, computed, nextTick } from "vue";
 import { useStore } from "vuex";
 import TablaDinamica from "@/components/TablaDinamica/TablaDinamica.vue";
+import TablaCargando from "@/components/TablaDinamica/TablaLoader.vue";
 import Checkbox from "@/components/Inputs/Checkbox.vue";
-import DynamicSvgLoader from '@/components/LoaderSVG/LoaderSVG.vue';
+import LoadingUCT from "@/components/Loading/Loading.vue";
 
 export default defineComponent({
   name: "TablaSelect",
-  components: { TablaDinamica, Checkbox, DynamicSvgLoader },
+  components: { TablaDinamica, TablaCargando, Checkbox, LoadingUCT },
 
   props: {
     tablaNombre: { type: String, required: true },   // Ej: TB_GT_USUARIOS
@@ -105,6 +116,10 @@ export default defineComponent({
     queryData: {
       type: Array,
       default: null // Ej: [1, 'param']
+    },
+    loading: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -113,18 +128,19 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
 
+    const cargando = ref(false);
     const filtrar = ref(false);
     const botonesActivos = ref(false);
     const registrosSeleccionados = ref([]);
     const NoRegistrosVisibles = ref(10);
 
+    const moduloActivo = computed(() => store.getters["user/getModuloActivo"]);
+    const token = computed(() => store.state.user.token);
+
     const tabla = computed(() =>
       store.getters["reporteador/getTablaPorNombre"](props.tablaNombre)
     );
 
-    const iconSelect = computed(() =>
-      registrosSeleccionados.value.length > 0 ? 'icons/check-2' : 'icons/checkbox-unchecked'
-    );
 
     const configurarTabla = () => {
       if (!tabla.value) return;
@@ -186,15 +202,35 @@ export default defineComponent({
 
     const emitirSeleccion = () => emit("onAddMultiples", registrosSeleccionados.value);
 
-    onMounted(configurarTabla);
+    const cargarTabla = async () => {
+      if (!tabla.value) {
+        cargando.value = true;
+        try {
+          await store.dispatch("reporteador/agregarDataReporteadorModulo", {
+            modulo: moduloActivo.value?.modulo_nombre || "",
+            sistema: moduloActivo.value?.sistema || "TRESGUERRAS",
+            token: token.value,
+            tablas_nombres: [props.tablaNombre],
+            formularios_nombres: [],
+          });
+        } catch (error) {
+          console.error(`Error al cargar tabla ${props.tablaNombre} en TableSelect:`, error);
+        } finally {
+          cargando.value = false;
+        }
+      }
+      configurarTabla();
+    };
+
+    onMounted(cargarTabla);
 
     return {
+      cargando,
       tabla,
       filtrar,
       botonesActivos,
       registrosSeleccionados,
       NoRegistrosVisibles,
-      iconSelect,
       seleccionarRegistros,
       actualizarRegistros,
       emitirSeleccion,
@@ -208,22 +244,23 @@ export default defineComponent({
 <style scoped>
 .size-input {
   width: 80px;
+  height: 31px;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 10px;
 }
-:deep(.loaderSVG-contend) {
-  padding: 0 !important;
-  display: flex !important;
+.btn-select-all {
+  height: 31px;
+  font-size: 13px;
+  padding: 3px 12px;
+  border-radius: 25px;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  --icon_color: var(--bs-gray-600);
-  --icon_color_hover: var(--purple-sb);
-  transition: transform 0.2s ease;
+  gap: 6px;
+  line-height: 1.1;
 }
-:deep(.loaderSVG-contend:hover) {
-  transform: scale(1.1);
-}
-:deep(.loaderSVG-contend svg) {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
+.badge-count {
+  font-size: 10px;
+  padding: 2px 6px;
 }
 </style>

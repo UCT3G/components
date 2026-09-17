@@ -1,73 +1,15 @@
 <template>
-  <div class="container-fluid py-2">
-    <!-- Overlay de pantalla completa -->
-    <LoadingUCT :blockFullScreem="true" v-if="loading"/>
+  <div class="container-fluid py-1 position-relative">
+    <!-- Overlay de pantalla completa (solo si blockFullScreenLoading es true) -->
+    <LoadingUCT :blockFullScreem="true" v-if="loading && blockFullScreenLoading"/>
 
-    <!-- Card de selects y botón editar -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <div class="row align-items-center g-3">
-          <!-- Checkbox que permite activar/desactivar la edición -->
-          <div class="col-12 col-md-auto">
-            <div v-if="editable" class="d-flex align-items-center gap-1">
-              <div class="d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" v-if="canEdit && (catalogoOptions.length || useCustomAddEvent)">
-                <DynamicSvgLoader 
-                  @click.stop.prevent="handleAddClick"
-                  fileName="icons/AGREGAR-24" 
-                  :title="addCustomTitle"
-                  width_icon="16px"
-                  class="iconBtn"
-                >
-                </DynamicSvgLoader>
-              </div>
-              <!-- Switch -->
-              <div class="form-check form-switch d-flex align-items-center mb-0">
-                <input 
-                  type="checkbox" 
-                  class="form-check-input" 
-                  role="switch"
-                  id="editToggle" 
-                  v-model="editar" 
-                  :disabled="!requiredSelected"
-                >
-                <label 
-                  class="form-check-label label ms-2 small" 
-                  for="editToggle"
-                >
-                  {{ editar ? 'Editando' : 'Editar' }}
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Render dinámico de selects -->
-          <div class="col-12 col-md d-flex flex-wrap justify-content-md-end gap-3">
-            <!-- Si hay selects, renderizarlos -->
-            <template v-if="selects.length > 0">
-              <div 
-                v-for="sel in selects" 
-                :key="sel.key"
-                class="d-flex flex-column "
-              >
-                <div v-if="sel.visible" >
-                  <!-- <label class="small text-muted mb-1">Selecciona {{ sel.label }}:</label> -->
-                  <select v-model="selectedValues[sel.key]" class="form-select form-select-sm">
-                    <option disabled value="">Selecciona {{ sel.label }} </option>
-                    <option v-for="opt in sel.options" :key="opt" :value="opt">
-                    {{ opt }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-            </template>
-
-            <!-- Si no hay selects, usar slot personalizado -->
-            <template v-else>
-              <slot name="header-content"></slot>
-            </template>
-          </div>
-        </div>
-      </div>
+    <!-- Overlay de carga local sobre todo TableEditing (selects, tabla y botones) -->
+    <div 
+      v-if="loading && !blockFullScreenLoading" 
+      class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75 rounded-4" 
+      style="z-index: 2000;"
+    >
+      <LoadingUCT :blockFullScreem="false" />
     </div>
 
     <!--MENSAJE DE ADVERTENCIA -->
@@ -77,13 +19,58 @@
       </div>
     </div>
 
-    <!-- Card de la tabla -->
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <form @submit.prevent="save">
-          <!-- Tabla dinámica -->
-          <table class="table">
-            <thead>
+    <!-- Card de selects y botón editar -->
+    <div class="mb-4 mt-3">
+      <div class="row align-items-center g-3">
+        <!-- Render dinámico de selects -->
+        <div class="col-12 col-md d-flex flex-wrap justify-content-md-end gap-3">
+          <!-- Si hay selects, renderizarlos -->
+          <template v-if="selects.length > 0">
+            <div 
+              v-for="sel in selects" 
+              :key="sel.key"
+              class="d-flex flex-column "
+            >
+              <div v-if="sel.visible" >
+                <!-- <label class="small text-muted mb-1">Selecciona {{ sel.label }}:</label> -->
+                <select v-model="selectedValues[sel.key]" class="form-select">
+                  <option disabled value="">Selecciona {{ sel.label }} </option>
+                  <option v-for="opt in sel.options" :key="opt" :value="opt">
+                  {{ opt }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </template>
+
+          <!-- Si no hay selects, usar slot personalizado -->
+          <template v-else>
+            <slot name="header-content"></slot>
+          </template>
+        </div>
+
+        <!-- Botón de agregar si canEdit y hay opciones -->
+        <div class="col-12 col-md-auto" v-if="editable && canEdit && (catalogoOptions.length || useCustomAddEvent)">
+          <IconBoton 
+            @click.stop.prevent="handleAddClick"
+            iconName="AGREGAR-24.svg" 
+            width_icon="13px"
+            :title="addCustomTitle"
+          >
+            {{ addCustomTitle }}
+          </IconBoton>
+        </div>
+      </div>
+    </div>
+
+    <div>
+
+      <!-- tabla -->
+      <form @submit.prevent="save">
+        <!-- Tabla -->
+        <div class="table-responsive rounded-4 mb-4 shadow-sm" :style="{ maxHeight: tablaMaxHeight }">
+          <table class="table table-hover mb-0 align-middle small">
+            <thead class="table-light sticky-top shadow-sm">
               <tr>
                 <!-- Renderiza los encabezados a partir de props.columns -->
                 <th v-for="col in columns" :key="col.key" :class="col.headerAlign || 'text-center'">{{ col.label }}</th>
@@ -91,74 +78,90 @@
             </thead>
             <tbody>
               <!-- Una fila por cada elemento de props.rows -->
-              <tr v-for="(row, idx) in rows" :key="idx">
-                <!-- Una celda por cada columna -->
-                <td v-for="col in columns" :key="col.key" :class="col.align || 'text-center'">
-                  <!-- Si la columna tiene renderButtons definido -->
-                  <template v-if="col.renderButtons ">
-                    <template v-for="btn in getButtonsForRow(col, row)" :key="btn.action">
-                      <!-- Botón con ícono -->
-                      <IconBoton  
-                        v-if="btn.type === 'icon'"
-                        :width_icon="btn.width_icon" 
-                        :iconName="btn.icono"
-                        :title="btn.label" 
-                        @click.stop.prevent="actionButton(btn.action, row)"
-                      />
+              <template v-if="rows && rows.length > 0">
+                <tr v-for="(row, idx) in rows" :key="idx">
+                  <!-- Una celda por cada columna -->
+                  <td v-for="col in columns" :key="col.key" :class="getCellAlign(col)">
+                    <!-- Si la columna tiene renderButtons definido -->
+                    <template v-if="col.renderButtons ">
+                      <template v-for="btn in getButtonsForRow(col, row)" :key="btn.action">
+                        <!-- Botón con ícono -->
+                        <IconBoton  
+                          v-if="btn.type === 'icon'"
+                          :width_icon="btn.width_icon" 
+                          :iconName="btn.icono"
+                          :title="btn.label" 
+                          @click.stop.prevent="actionButton(btn.action, row)"
+                        />
 
-                      <!-- Tres puntos options -->
-                      <DropDownTrespuntos 
-                        v-else-if="btn.type === 'dropdown'"
-                        @elementoSeleccionado="(event) => handleDropdownSelection(event.nombre, row, btn.options)"
-                        width_icon="34px"
-                        :iconName="'ellipsis-horizontal.svg'" 
-                        :lista="btn.options.map(o => o.label)"
-                      />
+                        <!-- Tres puntos options -->
+                        <DropDownTrespuntos 
+                          v-else-if="btn.type === 'dropdown'"
+                          @elementoSeleccionado="(event) => handleDropdownSelection(event.nombre, row, btn.options)"
+                          width_icon="34px"
+                          :iconName="'ellipsis-horizontal.svg'" 
+                          :lista="btn.options.map(o => o.label)"
+                        />
 
-                      <!-- Botón svg -->
-                      <DynamicSvgLoader 
-                        v-else-if="btn.type === 'svg'"
-                        @click.stop.prevent="actionButton(btn.action, row)"
-                        :fileName="btn.fileName" 
-                        :title="btn.label"
-                        :width_icon="btn.width_icon"
-                        :class="btn.class"
-                      >
-                      </DynamicSvgLoader>
+                        <!-- Botón svg -->
+                        <DynamicSvgLoader 
+                          v-else-if="btn.type === 'svg'"
+                          @click.stop.prevent="actionButton(btn.action, row)"
+                          :fileName="btn.fileName" 
+                          :title="btn.label"
+                          :width_icon="btn.width_icon"
+                          :class="btn.class"
+                        >
+                        </DynamicSvgLoader>
+                      </template>
                     </template>
-                  </template>
 
-                  <!-- Si la columna es editable y canEdit = true, se muestra input -->
-                  <template v-else-if="col.editable && canEdit">
-                    <input
-                      v-model="row[col.key]"
-                      :type="col.inputType"
-                      class="form-control form-control-sm table-input"
-                      :min="col.validateNumbers ? (col.min ?? 0) : null"
-                      :max="col.validateNumbers ? (col.max ?? 100) : null"
-                      :required="col.required ?? requireInputs"
-                      :step="col.validateNumbers ? (col.allowDecimals ? '0.01' : '1') : null"
-                      @input="(col.validateNumbers) && validateNumber(row, col.key, col.min, col.max, col.allowDecimals)"
-                      @keydown="(col.validateNumbers) && blockInvalidChars($event, col.allowDecimals)"
-                    />
-                  </template>
-                  <template v-else>
-                    <div v-if="col.inputType === 'color'" class="d-flex align-items-center justify-content-center">
-                      <div 
-                        class="color-preview-circle" 
-                        :style="{ backgroundColor: row[col.key] }"
-                        :title="row[col.key]"
-                      ></div>
-                    </div>
-                    <span v-else>
-                      {{ typeof col.formatter === 'function' ? col.formatter(row[col.key], row) : (row[col.key] ?? '-') }}
-                    </span>
-                  </template>
+                    <!-- Si la columna es editable y canEdit = true, se muestra input -->
+                    <template v-else-if="col.editable && canEdit">
+                      <input
+                        v-model="row[col.key]"
+                        :type="col.inputType"
+                        :class="[
+                          'form-control form-control-sm',
+                          col.inputType === 'color' 
+                            ? 'form-control-color mx-auto' 
+                            : (col.inputType === 'number' || col.validateNumbers ? 'table-input text-end' : 'table-input text-start')
+                        ]"
+                        :min="col.validateNumbers ? (col.min ?? 0) : null"
+                        :max="col.validateNumbers ? (col.max ?? 100) : null"
+                        :required="col.required ?? requireInputs"
+                        :step="col.validateNumbers ? (col.allowDecimals ? '0.01' : '1') : null"
+                        @input="(col.validateNumbers) && validateNumber(row, col.key, col.min, col.max, col.allowDecimals)"
+                        @keydown="(col.validateNumbers) && blockInvalidChars($event, col.allowDecimals)"
+                      />
+                    </template>
+                    <template v-else>
+                      <div v-if="col.inputType === 'color'" class="d-flex align-items-center justify-content-center">
+                        <div 
+                          class="color-preview-circle" 
+                          :style="{ backgroundColor: row[col.key] }"
+                          :title="row[col.key]"
+                        ></div>
+                      </div>
+                      <span v-else>
+                        {{ typeof col.formatter === 'function' ? col.formatter(row[col.key], row) : (row[col.key] ?? '-') }}
+                      </span>
+                    </template>
+                  </td>
+                </tr>
+              </template>
+
+              <!-- Mensaje si no hay filas -->
+              <tr v-else>
+                <td :colspan="columns.length || 1" class="text-center text-muted py-4">
+                  <slot name="empty-state">
+                    {{ noDataText }}
+                  </slot>
                 </td>
               </tr>
 
               <!-- Fila de Total -->
-              <tr v-if="sumRules.length > 0" class="total-row">
+              <tr v-if="rows && rows.length > 0 && sumRules.length > 0" class="total-row">
                 <td v-for="(col, index) in columns" :key="col.key" :class="col.align || 'text-center'">
                   <template v-if="index === 0">
                     <strong>Total</strong>
@@ -176,18 +179,18 @@
 
             </tbody>
           </table>
+        </div>
 
-          <!-- Botón guardar y cancelar aparece solo si editable y canEdit y NO hideActions -->
-          <div v-if="editable && canEdit && !hideActions" class="d-flex justify-content-center gap-2 mt-3">
-            <button type="submit" class="btn btn-primary"> 
-              Guardar
-            </button> 
-            <button type="button" class="btn btn-secondary"  @click="cancel">
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </div>
+        <!-- Botón guardar y cancelar sticky solo con utilerías de Bootstrap -->
+        <div v-if="showBottomActions" class="sticky-bottom bg-white d-flex justify-content-center gap-1 mt-3">
+          <button type="submit" class="btn btn-primary px-4"> 
+            Guardar
+          </button> 
+          <button type="button" class="btn btn-secondary px-3" @click="cancel">
+            Cancelar
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- Modal para el catalogo -->
@@ -221,7 +224,7 @@
         </div>
            
         <!-- Botones de acción -->
-        <div class="d-flex justify-content-end gap-2">
+        <div class="sticky-bottom bg-white border-top shadow-sm d-flex justify-content-end gap-2 p-2">
           <button 
             class="btn btn-primary" 
             @click="addRowsPonderaciones"
@@ -262,6 +265,8 @@ export default defineComponent({
     mensaje: { type: String, default: "" },
     useCustomAddEvent: { type: Boolean, default: false },
     addCustomTitle: { type: String, default: "Agregar criterio" },
+    noDataText: { type: String, default: "No hay datos disponibles" },
+    blockFullScreenLoading: { type: Boolean, default: false }, // Controla si bloquea la pantalla completa
     hideActions: { type: Boolean, default: false }, // Ocultar botones de guardar/cancelar
     editing: { type: Boolean, default: false } // Sincroniza el estado de edición desde el padre
   },
@@ -271,7 +276,7 @@ export default defineComponent({
     const showCatalogo = ref(false);
     const selectedCatalogo = ref([]);
     const selectedValues = ref({}); 
-    const editar = ref(props.editing); // <--- Inicia con el valor de la prop
+    const editar = ref(true); // <--- Inicia editando por defecto
 
     // Sincronizar hacia adentro: si el padre cambia la prop, actualizar el ref local
     watch(() => props.editing, (newVal) => {
@@ -297,15 +302,24 @@ export default defineComponent({
 
     // condición general para habilitar edición
     const canEdit = computed(() => {
-        return editar.value && requiredSelected.value;
+        return props.editable && editar.value && requiredSelected.value;
+    });
+
+    const showBottomActions = computed(() => {
+      return props.editable && canEdit.value && !props.hideActions;
+    });
+
+    const tablaMaxHeight = computed(() => {
+      return showBottomActions.value 
+        ? 'calc(100vh - 360px)' 
+        : 'calc(100vh - 290px)';
     });
 
     // observar cambios en cualquiera de los selects
     watch(
       selectedValues,
       (vals) => {
-        emit("fetch-data", { ...vals }); 
-        editar.value = false;
+        emit("fetch-data", { ...vals });
       },
       { deep: true }
     );
@@ -406,6 +420,15 @@ export default defineComponent({
       }
     };
 
+    // Obtener la alineación automática según el tipo de columna
+    const getCellAlign = (col) => {
+      if (col.align) return col.align;
+      if (col.renderButtons || col.inputType === "color") return "text-center";
+      if (col.inputType === "number" || col.validateNumbers) return "text-end";
+      if (col.inputType === "text" || !col.inputType) return "text-start";
+      return "text-center";
+    };
+
     return {
       selectedValues,
       editar,
@@ -425,107 +448,20 @@ export default defineComponent({
       actionButton,
       handleDropdownSelection,
       handleAddClick,
+      showBottomActions,
+      tablaMaxHeight,
+      getCellAlign
     };
   }
 });
 </script>
 
 <style scoped>
-.checkbox-hover label:hover {color: var(--bluelight-sb) !important;}
-.checkbox-hover {
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s ease;
-}
-.checkbox-hover:hover {background-color: var(--bs-gray-200);}
-.label:hover{color:var(--bluelight-sb)}
-input[type="checkbox"]:hover {border-color: var(--bluelight-sb);}
-input[type="checkbox"]:focus {box-shadow: 0 0 5px var(--bluelight-sb);border-color: var(--bluelight-sb);}
 .iconBtn{padding: unset;fill: var(--bs-gray-700);}
 .iconBtn:hover {fill: var(--bluelight-sb);}
 .boton-color{fill:var(--bs-gray-500)}
 .boton-color:hover {fill: var(--acceso1);transform: scale(1.1);}
 
-/* ===== Contenedor principal ===== */
-.container-fluid {font-family: 'Inter', sans-serif;color: var(--bs-gray-700);}
-
-/* ===== Cards ===== */
-.card {
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  margin-bottom: 1.5rem;
-  background-color: white;
-}
-.card:hover {transform: translateY(-3px);box-shadow: 0 6px 20px rgba(0,0,0,0.12);}
-.card-body {padding: 1rem 1.5rem;}
-
-/* ===== Overlay de Loading ===== */
-.loading-overlay-fullscreen {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: var(--bs-gray-100);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(4px);
-}
-
-/* ===== Selects e Inputs ===== */
-.form-select,
-.form-control {
-  border-radius: 8px;
-  border: 1px solid var(--bs-gray-400);
-  padding: 6px 12px;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
-  min-width: 170px;
-}
-
-.form-select:focus,
-.form-control:focus {
-  border-color: var(--bluelight-sb);
-  box-shadow: 0 0 0 2px rgba(54, 54, 54, 0.2);
-  outline: none;
-}
-
-.form-control.w-auto {
-  min-width: 10px;
-  max-width: 70px;
-  display: inline-block;
-  text-align: center;
-  margin: 0 auto;
-}
-.table-input {
-  width: auto;
-  min-width: 70px;
-  display: inline-block;
-  text-align: center;
-  margin: 0 auto;
-}
-/* ===== Tabla ===== */
-.table {width: 100%;}
-.table th {
-  background-color: var(--bs-gray-100);
-  color: var(--bs-gray-800);
-  font-weight: 600;
-  text-align: center;
-  padding: 10px 12px;
-  border-top: none;
-}
-.table thead th {border-right: 2px solid var(--bs-gray-300) ;}
-.table td {
-  background-color: white;
-  border-top: none;
-  border-right: 2px solid var(--bs-gray-300); 
-  padding: 10px 12px;
-  text-align: center;
-  vertical-align: middle;
-}
-.table td:last-child {border-right: none; }
-.table thead th:last-child {border-right: none; }
-.table tr:hover td { background-color: var(--bs-gray-100); transition: background-color 0.2s ease;}
 .total-row {
   background-color: var(--bs-gray-100);
   border-top: 2px solid var(--bs-gray-300);
@@ -534,8 +470,7 @@ input[type="checkbox"]:focus {box-shadow: 0 0 5px var(--bluelight-sb);border-col
 .total-row td {padding: 12px 8px;}
 .total-valid {color: var(--bs-green); }
 .total-invalid {color: var(--bs-red); }
-.form-check-input:checked {background-color: var(--bluelight-sb);border-color: var(--bluelight-sb);}
-.text-muted {color: var(--bs-gray-600);}
+/* .form-check-input:checked {background-color: var(--bluelight-sb);border-color: var(--bluelight-sb);} */
 .color-preview-circle {
   width: 22px;
   height: 22px;

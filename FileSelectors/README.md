@@ -1,21 +1,26 @@
 # FileDropZone Component
 
-El componente `FileDropZone` (interno: `FileSelector`) proporciona una interfaz intuitiva para la selección de archivos mediante "drag & drop" o clic, con soporte integrado para la validación de tipos, descarga de archivos existentes desde el servidor, modo de selección múltiple y control de estados (como deshabilitado).
+El componente `FileDropZone` (interno: `FileSelector`) proporciona una interfaz intuitiva para la selección de archivos mediante "drag & drop" o clic, con soporte integrado para la validación de tipos, descarga de archivos existentes desde el servidor, modo de selección múltiple, control de estados (como deshabilitado), menú contextual de tres puntos personalizable y slots para personalización total de acciones.
+
+---
 
 ## Características
 
 - **Drag & Drop**: Zona interactiva para soltar archivos con estados visuales reactivos al arrastrar (`is-dragover`).
-- **Validación de Tipos**: Filtra archivos permitidos mediante extensiones o mimetypes en la selección y el arrastre.
+- **Validación de Tipos**: Filtra archivos permitidos mediante extensiones o mimetypes en la selección y el arrastre (`accept`).
 - **Archivo existente vía Vuex**: En modo individual, puede mostrar y descargar automáticamente un archivo referenciado en el store.
-- **Archivo existente vía URL directa**: Alternativamente, acepta una URL explícita calculada en el componente padre, teniendo prioridad sobre Vuex.
-- **Modo Múltiple**: Soporta arrastrar/seleccionar múltiples archivos y gestionar una lista de archivos remotos ya existentes con opción de descarga y eliminación.
-- **Estado Deshabilitado**: Deshabilita la interacción de carga y oculta los controles de eliminación para comportarse en modo de solo lectura.
+- **Archivo existente vía URL directa**: Alternativamente, acepta una URL explícita calculada en el componente padre, teniendo prioridad sobre Vuex (`directUrl`).
+- **Modo Múltiple**: Soporta arrastrar/seleccionar múltiples archivos y gestionar una lista de archivos remotos ya existentes con menú contextual de opciones (`existingFiles`).
+- **Menú Contextual de Tres Puntos**: Integra `DropDownTrespuntos` con icono vertical para una interfaz limpia y compacta.
+- **Acciones Flexibles (Inversión de Control)**: Permite que el padre defina las acciones mediante un `Array` fijo o una `Function` que evalúe permisos o estados por cada archivo.
+- **Scoped Slot `#file-actions`**: Permite sobreescribir la UI de acciones por completo si en una pantalla no se desea el menú de tres puntos.
+- **Estado Deshabilitado**: Deshabilita la interacción de carga y oculta los controles de eliminación o edición para comportarse en modo de solo lectura (`disabled`).
 - **Diseño Adaptable**: Permite mostrar la información a un lado (horizontal) o apilarla verticalmente mediante la opción `stacked`.
 - **Información Detallada**: Muestra el nombre y tamaño formateado (Bytes, KB, MB) de los archivos locales o remotos.
 
 ---
 
-## Uso Básico (Individual)
+## 1. Uso Básico (Modo Individual)
 
 ```vue
 <template>
@@ -31,14 +36,41 @@ const handleFile = (file) => {
 
 ---
 
-## Uso en Modo Múltiple
+## 2. Uso con Archivo Existente (Individual)
 
-Ideal para subir y administrar múltiples archivos. Permite pasar un listado de archivos que ya están en el servidor.
+### Vía URL Directa (Recomendado)
+```vue
+<template>
+  <FileDropZone
+    accept=".html"
+    :directUrl="htmlExistenteUrl"
+    :stacked="true"
+    @file-selected="onHtmlFileChange"
+  />
+</template>
+```
+
+### Vía Vuex Store
+```vue
+<template>
+  <FileDropZone
+    getterPath="BSC/getPlantillaActual"
+    basePath="media/plantillas/"
+    @file-selected="onNewFile"
+  />
+</template>
+```
+
+---
+
+## 3. Uso en Modo Múltiple
+
+Ideal para subir y administrar listas de archivos. Se activa con `:multiple="true"` y gestiona la lista de archivos remotos mediante `existingFiles`.
 
 ```vue
 <template>
   <FileDropZone 
-    :multiple="true"
+    multiple 
     :existingFiles="archivosExistentes"
     accept=".pdf,.docx,.xlsx"
     @files-selected="handleMultipleFiles"
@@ -56,75 +88,141 @@ const archivosExistentes = ref([
 
 const handleMultipleFiles = (files) => {
   console.log("Archivos nuevos seleccionados:", files);
-  // Procesar archivos para subida
 };
 
 const handleDeleteFile = (file) => {
-  console.log("Eliminar archivo existente:", file);
-  // Lógica para borrar archivo en backend y actualizar la lista archivosExistentes
+  console.log("Eliminar archivo:", file);
+  archivosExistentes.value = archivosExistentes.value.filter(f => f.id !== file.id);
 };
 </script>
 ```
 
-### Estructura de los objetos en `existingFiles`
-
-Cada elemento del arreglo `existingFiles` debe cumplir con la siguiente estructura:
-
-- **`id`** *(Recomendado/Obligatorio)*: Se utiliza como identificador único para la clave (`key`) de renderizado de Vue y es fundamental en el evento `@delete-file` para saber cuál archivo debe ser removido (tanto en el frontend como en el backend).
-- **`name`** *(Obligatorio)*: El nombre del archivo que se mostrará visualmente y que se usará para nombrar el archivo cuando se descargue.
-- **`url`** *(Obligatorio)*: La URL pública de descarga. Se requiere para poder realizar la petición `fetch` y forzar la descarga del archivo.
-- **`size`** *(Opcional)*: El tamaño del archivo en bytes. Si no se define, se omite el tamaño en la interfaz.
+### Estructura de los objetos en `existingFiles`:
+- **`id`** *(Obligatorio/Recomendado)*: Identificador único para el renderizado y borrado.
+- **`name`** *(Obligatorio)*: Nombre mostrado y usado en la descarga.
+- **`url`** *(Obligatorio)*: URL pública para descarga o previsualización.
+- **`size`** *(Opcional)*: Tamaño en bytes (se formatea automáticamente a KB/MB).
 
 ---
 
-## Uso con Archivo Existente (Vuex - Individual)
+## 4. Gestión de Acciones en Modo Múltiple (`acciones` y `@accion`)
 
-Si el archivo existente se obtiene de un getter del store:
+Por defecto, cada archivo en la lista muestra un menú de tres puntos con `['Descargar', 'Eliminar']` (o solo `['Descargar']` si `disabled="true"`).
 
-```vue
-<FileDropZone
-  getterPath="BSC/getPlantillaActual"
-  basePath="media/plantillas/"
-  @file-selected="onNewFile"
-/>
-```
+A través de la prop `acciones`, el componente padre puede tomar el control total de las opciones del menú:
 
----
-
-## Uso con Archivo Existente (URL Directa - Individual)
-
-Si la URL del archivo existente se calcula en el componente padre (por ejemplo, a partir de props o IDs), usa `directUrl`. Tiene prioridad sobre `getterPath`.
+### Forma A: Opciones Estáticas Fijas (Array)
+Para cuando todos los archivos de la lista deben compartir las mismas opciones:
 
 ```vue
-<FileDropZone
-  accept=".html"
-  :directUrl="htmlExistenteUrl"
-  :stacked="true"
-  @file-selected="onHtmlFileChange"
-/>
+<template>
+  <FileDropZone 
+    multiple 
+    :existingFiles="archivos"
+    :acciones="['Descargar', 'Copiar enlace']"
+    @accion="onAccion"
+  />
+</template>
 
 <script setup>
-import { computed } from 'vue';
+import { toast } from 'vue3-toastify';
 
-const htmlExistenteUrl = computed(() => {
-  if (!props.editingId) return null;
-  return `https://ejemplo.com/media/Templates/Reportes/modulo_${props.moduloId}/estructuras/html/${props.editingId}.html`;
-});
+const onAccion = ({ accion, file }) => {
+  if (accion === 'Copiar enlace') {
+    navigator.clipboard.writeText(file.url);
+    toast.success('Enlace copiado');
+  }
+  // 'Descargar' lo maneja el componente automáticamente
+};
 </script>
 ```
 
-> **Nota**: Cuando `directUrl` está definida, el nombre del archivo se extrae automáticamente del último segmento de la URL.
+### Forma B: Opciones Dinámicas Condicionadas por Archivo (Function)
+Para cuando las opciones dependen de las propiedades o estado de cada archivo individual:
+
+```vue
+<template>
+  <FileDropZone 
+    multiple 
+    :existingFiles="evidencias"
+    :acciones="calcularOpcionesPorArchivo"
+    @accion="onAccion"
+  />
+</template>
+
+<script setup>
+const calcularOpcionesPorArchivo = (file) => {
+  const opciones = ['Descargar'];
+
+  // 1. Si es PDF o imagen, permitir previsualizar
+  if (file.name.endsWith('.pdf') || file.name.match(/\.(png|jpg|jpeg)$/i)) {
+    opciones.unshift('Previsualizar');
+  }
+
+  // 2. Si no está aprobado, permitir eliminar
+  if (!file.aprobado) {
+    opciones.push('Eliminar');
+  }
+
+  return opciones;
+};
+
+const onAccion = ({ accion, file }) => {
+  if (accion === 'Previsualizar') {
+    abrirModalVisor(file.url);
+  } else if (accion === 'Eliminar') {
+    borrarEnServidor(file.id);
+  }
+};
+</script>
+```
+
+### Forma C: Sin Opciones (Ocultar el menú de tres puntos)
+Si solo se desea mostrar la lista de archivos informativamente sin ningún menú:
+
+```vue
+<FileDropZone 
+  multiple 
+  :existingFiles="archivos"
+  :acciones="[]"
+/>
+```
 
 ---
 
-## Uso Deshabilitado / Solo Lectura
+## 5. Personalización Total de UI con Scoped Slot (`#file-actions`)
 
-Deshabilita la interacción de arrastrar/seleccionar archivos y las opciones de eliminación en el listado.
+Si en una pantalla específica no deseas el menú desplegable de tres puntos y prefieres mostrar botones visibles directos o etiquetas de estado:
+
+```vue
+<template>
+  <FileDropZone multiple :existingFiles="archivos">
+    <template #file-actions="{ file, acciones }">
+      <div class="d-flex align-items-center gap-2">
+        <span v-if="file.aprobado" class="badge bg-success">Aprobado</span>
+        <button 
+          class="btn btn-sm btn-outline-primary py-1 px-2"
+          @click="procesarArchivo(file)"
+        >
+          Procesar
+        </button>
+      </div>
+    </template>
+  </FileDropZone>
+</template>
+```
+
+---
+
+## 6. Modo Deshabilitado / Solo Lectura
+
+Deshabilita la zona de arrastre/clic y las opciones de eliminación en el listado de archivos:
 
 ```vue
 <FileDropZone
   :disabled="true"
-  :directUrl="'https://ejemplo.com/media/evidencia.pdf'"
+  multiple
+  :existingFiles="archivos"
 />
 ```
 
@@ -139,23 +237,19 @@ Deshabilita la interacción de arrastrar/seleccionar archivos y las opciones de 
 | `getterPath` | `String` | `null` | Ruta del getter en Vuex que devuelve el nombre del archivo guardado en el servidor (modo individual). |
 | `basePath` | `String` | `""` | Ruta base en el servidor donde se aloja el archivo (se concatena con `DEV_BASE_URL`). Solo aplica con `getterPath`. |
 | `directUrl` | `String` | `null` | URL directa del archivo existente. Tiene prioridad sobre `getterPath` (modo individual). |
-| `stacked` | `Boolean` | `false` | Si es `true`, obliga a que la zona de carga y la información del archivo se apilen verticalmente. |
-| `disabled` | `Boolean` | `false` | Si es `true`, deshabilita la zona de arrastre/clic y las opciones de eliminación. |
-| `multiple` | `Boolean` | `false` | Si es `true`, permite seleccionar múltiples archivos a la vez. |
-| `existingFiles` | `Array` | `() => []` | Lista de archivos remotos ya existentes para el modo múltiple. Cada objeto debe tener la estructura `{ id, name, url, size }`. |
+| `stacked` | `Boolean` | `false` | Si es `true`, apila verticalmente la zona de carga y la lista de archivos (`col-12`). |
+| `disabled` | `Boolean` | `false` | Si es `true`, deshabilita la zona de arrastre/clic y limita las acciones a solo lectura. |
+| `multiple` | `Boolean` | `false` | Si es `true`, permite seleccionar y gestionar múltiples archivos a la vez. |
+| `existingFiles` | `Array` | `() => []` | Lista de archivos remotos ya existentes para el modo múltiple. Objetos `{ id, name, url, size }`. |
+| `acciones` | `Array \| Function` | `null` | Lista de opciones para el menú de tres puntos o función `(file) => Array<string>`. Si es `null`, usa `['Descargar', 'Eliminar']` (o `['Descargar']` si `disabled`). |
 
-## Prioridad de la URL (Modo Individual)
+---
 
-```
-directUrl (si está definida)
-  └── Tiene prioridad absoluta
+## Slots
 
-getterPath (si directUrl es null)
-  └── store.getters[getterPath] + DEV_BASE_URL + basePath
-
-Ninguno
-  └── No se muestra archivo existente
-```
+| Slot | Scoped Props | Descripción |
+| :--- | :--- | :--- |
+| `#file-actions` | `{ file: Object, acciones: Array<string> }` | Permite reemplazar completamente el menú de tres puntos de cada fila en modo múltiple con botones o elementos personalizados. |
 
 ---
 
@@ -165,14 +259,16 @@ Ninguno
 | :--- | :--- | :--- |
 | `file-selected` | `File` | Se emite en modo individual al seleccionar un archivo local válido. |
 | `files-selected` | `Array<File>` | Se emite en modo múltiple al seleccionar uno o más archivos locales válidos. |
-| `delete-file` | `Object` | Se emite en modo múltiple cuando el usuario hace clic en el botón de eliminar un archivo de `existingFiles`. |
+| `delete-file` | `Object` | Se emite al seleccionar la acción nativa de eliminación sobre un archivo de `existingFiles`. |
+| `accion` | `{ accion: String, file: Object }` | Se emite al seleccionar **cualquier** opción del menú contextual de tres puntos en modo múltiple. |
 
 ---
 
-## Estilos y Personalización
+## Estilos y Tokens Visuales
 
-El componente utiliza clases de Bootstrap y variables CSS globales para mantener consistencia visual:
+El componente utiliza clases de Bootstrap y variables CSS globales del proyecto:
 
-- `--purple-sb`: Color de acento para la barra izquierda de información del archivo individual.
-- `--bs-gray-*`: Utilidades de Bootstrap para bordes y fondos de la zona de drop.
-- `.iconBtn`: Usado para dar estilo a los iconos de descarga y eliminación.
+- `--purple-sb`: Color de acento para la barra izquierda de cada tarjeta `.file-info`.
+- `--bs-gray-100` / `--bs-gray-200`: Fondos sutiles de la zona de drop y tarjetas de archivos.
+- `--bs-gray-400`: Borde discontinuo (dashed) de la zona de arrastre.
+- `DropDownTrespuntos`: Menú desplegable con efecto translúcido `backdrop-filter: blur`, compatible con temas claros y oscuros.
