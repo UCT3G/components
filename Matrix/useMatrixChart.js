@@ -481,6 +481,7 @@ export function useMatrixChart({ config, colaboradores, verRejilla, cuadranteFil
       const esSeleccionado = idsSeleccionados.includes(c.id);
 
       return {
+        ...c,
         value: [posX, posY],
         nombre: c.nombre,
         puesto: c.puesto || '',
