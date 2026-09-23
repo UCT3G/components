@@ -2,15 +2,16 @@
   <div 
     class="tooltip-shell shadow-lg border" 
     :class="[
-      { 'is-visible': visible },
+      { 'is-visible': visible, 'interactive': interactive },
       'align-' + align
     ]"
     :style="computedStyle"
   >
     <div class="p-tooltip-internal">
-      <div v-if="title" class="row mb-2 border-bottom pb-1 gx-0 mx-0">
-        <div class="col-12 d-flex align-items-center">
-          <span class="tooltip-title">{{ title }}</span>
+      <div v-if="title || $slots['header-action']" class="row mb-2 border-bottom pb-1 gx-0 mx-0">
+        <div class="col-12 d-flex align-items-center justify-content-between">
+          <span v-if="title" class="tooltip-title">{{ title }}</span>
+          <slot name="header-action"></slot>
         </div>
       </div>
       <div class="row gx-0 mx-0">
@@ -63,6 +64,10 @@ export default defineComponent({
     width: {
       type: String,
       default: '350px'
+    },
+    interactive: {
+      type: Boolean,
+      default: false
     }
   },
   setup(props) {
@@ -152,6 +157,10 @@ export default defineComponent({
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
+}
+
+.tooltip-shell.is-visible.interactive {
+    pointer-events: auto;
 }
 
 .tooltip-title {
