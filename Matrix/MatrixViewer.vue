@@ -8,7 +8,16 @@
       </div>
 
       <!-- Acciones Derecha: Botón Configuración + Cápsula Pill con Switch -->
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-1">
+        <button
+          v-if="top5_habilitado"
+          type="button"
+          class="btn-top5 d-inline-flex flex-column align-items-center justify-content-center lh-1 border-0 shadow-xs"
+          @click="$emit('click-top5')"
+        >
+          <span class="top5-label">TOP</span>
+          <span class="top5-number">5</span>
+        </button>
         <BotonIconoSecondary
           v-if="editable"
           class="text-extra-small"
@@ -16,9 +25,7 @@
           width_icon="14px"
           @clickSecondary="$emit('click-config')"
           title="Configurar matriz"
-        >
-        </BotonIconoSecondary>
-
+        />
         <!-- Cápsula Pill con Switch -->
         <div v-if="permitir_dispersion" class="bg-light rounded-pill px-3 py-1 border d-inline-flex align-items-center gap-2 shadow-xs">
           <span class="text-extra-small fw-semibold text-secondary select-none">
@@ -160,9 +167,10 @@ export default defineComponent({
     busqueda: { type: String, default: '' },
     colaboradores_seleccionados: { type: [Array, Number, String], default: () => [] },
     editable: { type: Boolean, default: false },
-    permitir_dispersion: { type: Boolean, default: false }
+    permitir_dispersion: { type: Boolean, default: false },
+    top5_habilitado: { type: Boolean, default: false }
   },
-  emits: ['seleccionarCuadrante', 'update:cuadrante_seleccionado', 'configuracion-guardada', 'select-colaborador', 'click-config'],
+  emits: ['seleccionarCuadrante', 'update:cuadrante_seleccionado', 'configuracion-guardada', 'select-colaborador', 'click-config', 'click-top5'],
   setup(props, { emit }) {
     const chartRef = ref(null);
     const config = computed(() => ({
@@ -505,5 +513,42 @@ export default defineComponent({
 .popout-fade-leave-to {
   opacity: 0;
   transform: scale(0.85);
+}
+
+/* Botón Top 5 */
+.btn-top5 {
+  background-color: var(--purple-sb);
+  color: white;
+  border-radius: 10px;
+  padding: 3px 8px;
+  min-width: 36px;
+  height: 31px;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-top5:hover {
+  background-color: var(--button-primary-bg);;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(48, 47, 48, 0.35);
+}
+
+.btn-top5:active {
+  transform: scale(0.96);
+}
+
+.top5-label {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.top5-number {
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+  margin-top: 1px;
 }
 </style>
