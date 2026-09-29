@@ -13,6 +13,7 @@
           v-if="top5_habilitado"
           type="button"
           class="btn-top5 d-inline-flex flex-column align-items-center justify-content-center lh-1 border-0 shadow-xs"
+          :class="{ 'btn-top5-active': top5_activo }"
           @click="$emit('click-top5')"
         >
           <span class="top5-label">TOP</span>
@@ -168,7 +169,8 @@ export default defineComponent({
     colaboradores_seleccionados: { type: [Array, Number, String], default: () => [] },
     editable: { type: Boolean, default: false },
     permitir_dispersion: { type: Boolean, default: false },
-    top5_habilitado: { type: Boolean, default: false }
+    top5_habilitado: { type: Boolean, default: false },
+    top5_activo: { type: Boolean, default: false }
   },
   emits: ['seleccionarCuadrante', 'update:cuadrante_seleccionado', 'configuracion-guardada', 'select-colaborador', 'click-config', 'click-top5'],
   setup(props, { emit }) {
@@ -293,12 +295,14 @@ export default defineComponent({
         idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
       );
 
-      // Si hay selección en esta caja, solo mostramos los seleccionados (los demás desaparecen)
-      const listaVisible = haySeleccionEnEstaCaja
-        ? colaboradoresEnCaja.filter(c =>
-            idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
-          )
-        : colaboradoresEnCaja;
+      // Si estamos en modo Top 5 activo, mostramos todos los de la caja pero resaltamos a los del Top 5
+      const listaVisible = props.top5_activo
+        ? colaboradoresEnCaja
+        : (haySeleccionEnEstaCaja
+            ? colaboradoresEnCaja.filter(c =>
+                idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
+              )
+            : colaboradoresEnCaja);
 
       return listaVisible.map(c => {
         const valXWithJitter = (c.valor_x || 0) + getJitter(c.id, 'x');
@@ -310,11 +314,15 @@ export default defineComponent({
         const posX = 15 + relX * 70;
         const posY = 15 + (1 - relY) * 70;
 
+        const esColabSeleccionado = idsSeleccionados.some(
+          id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion
+        );
+
         return {
           ...c,
           posX,
           posY,
-          esSeleccionado: haySeleccionEnEstaCaja
+          esSeleccionado: esColabSeleccionado
         };
       });
     });
@@ -528,10 +536,14 @@ export default defineComponent({
 }
 
 .btn-top5:hover {
-  background-color: var(--button-primary-bg);;
+  background-color: var(--button-primary-bg);
   color: white;
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(48, 47, 48, 0.35);
+}
+
+.btn-top5.btn-top5-active {
+  background: var(--button-primary-bg);
 }
 
 .btn-top5:active {
