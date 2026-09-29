@@ -295,14 +295,13 @@ export default defineComponent({
         idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
       );
 
-      // Si estamos en modo Top 5 activo, mostramos todos los de la caja pero resaltamos a los del Top 5
-      const listaVisible = props.top5_activo
-        ? colaboradoresEnCaja
-        : (haySeleccionEnEstaCaja
-            ? colaboradoresEnCaja.filter(c =>
-                idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
-              )
-            : colaboradoresEnCaja);
+      // Si hay selección en esta caja (sea por Top 5 o selección manual),
+      // mostramos solo a los seleccionados. Si no hay seleccionados en esta caja, mostramos a todos.
+      const listaVisible = haySeleccionEnEstaCaja
+        ? colaboradoresEnCaja.filter(c =>
+            idsSeleccionados.some(id => id == c.id || id == c.id_usuario || id == c.id_usuario_evaluacion)
+          )
+        : colaboradoresEnCaja;
 
       return listaVisible.map(c => {
         const valXWithJitter = (c.valor_x || 0) + getJitter(c.id, 'x');
