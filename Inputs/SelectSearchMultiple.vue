@@ -5,10 +5,10 @@
       ref="dropdownToggleRef"
       class="form-control d-flex flex-wrap align-items-center gap-1 p-1"
       :class="{ 'bg-light': disabled, 'cursor-text': !disabled }"
-      data-bs-toggle="dropdown"
+      :data-bs-toggle="disabled ? null : 'dropdown'"
       data-bs-auto-close="outside"
       aria-expanded="false"
-      @click="focusInput"
+      @click="!disabled && focusInput()"
     >
       <!-- Badges / Chips estilo Bootstrap -->
       <div class="d-flex flex-wrap align-items-center gap-1" v-if="selectedItems.length > 0">
@@ -32,8 +32,8 @@
         </span>
       </div>
 
-      <!-- Input de búsqueda y Chevron -->
-      <div class="d-flex align-items-center flex-grow-1" style="min-width: 130px;">
+      <!-- Input de búsqueda y Chevron (solo visible si no está deshabilitado) -->
+      <div v-if="!disabled" class="d-flex align-items-center flex-grow-1" style="min-width: 130px;">
         <input 
           ref="searchInputRef"
           type="text"
@@ -45,7 +45,7 @@
           @keydown="onKeyDown"
           autocomplete="off"
         />
-        <span class="text-secondary d-flex align-items-center px-1" v-if="!disabled">
+        <span class="text-secondary d-flex align-items-center px-1">
           <DynamicSvgLoader 
             fileName="icons/chevron-down" 
             width_icon="14px" 
@@ -53,6 +53,11 @@
           />
         </span>
       </div>
+
+      <!-- Fallback en modo lectura cuando no hay elementos seleccionados -->
+      <span v-else-if="selectedItems.length === 0" class="text-muted small p-1">
+        Sin selección
+      </span>
     </div>
 
     <!-- Menú Desplegable con Bootstrap Dropdown (Hermano del toggle) -->
@@ -150,6 +155,9 @@ export default defineComponent({
 
     // Placeholder dinámico
     const computedPlaceholder = computed(() => {
+      if (props.disabled) {
+        return '';
+      }
       if (isMaxReached.value) {
         return `Máximo alcanzado (${props.max})`;
       }
