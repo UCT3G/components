@@ -1,5 +1,9 @@
 <template>
-  <div class="dropdown select-search-integrated" v-if="options.length > 0">
+  <div
+    class="dropdown select-search-integrated"
+    :class="{ 'select-search-sm': size === 'sm' }"
+    v-if="options.length > 0"
+  >
     <div 
       ref="dropdownToggle"
       class="input-group input-container"
@@ -18,22 +22,35 @@
         @focus="onFocus"
         @blur="onBlur"
         @input="onInput"
+        @keydown.enter.prevent="onEnter"
         autocomplete="off"
       />
       <span class="input-group-text border-0 chevron-container">
         <DynamicSvgLoader 
           fileName="icons/chevron-down" 
-          width_icon="15px" 
-          height_icon="15px" 
+          :width_icon="size === 'sm' ? '13px' : '15px'" 
+          :height_icon="size === 'sm' ? '13px' : '15px'" 
         />
       </span>
     </div>
     
     <div class="dropdown-menu p-2 shadow w-100 border-0 custom-dropdown-menu">
       <div class="custom-list-container">
+        <button
+          v-if="clearable && (!isSearching || !searchQuery.trim())"
+          @mousedown.prevent
+          @click="clearSelection"
+          type="button"
+          class="dropdown-item rounded-2 mb-1 text-secondary"
+          :class="{'active': modelValue === null || modelValue === undefined || modelValue === ''}"
+        >
+          <small>{{ clearLabel || placeholder }}</small>
+        </button>
+
         <button 
           v-for="option in filteredOptions" 
           :key="option[valueKey]"
+          @mousedown.prevent
           @click="selectOption(option)"
           type="button"
           class="dropdown-item rounded-2 mb-1"
@@ -48,7 +65,11 @@
       </div>
     </div>
   </div>
-  <div v-else class="text-muted small p-2 border rounded bg-light d-flex align-items-center">
+  <div
+    v-else
+    class="text-muted small p-2 border rounded bg-light d-flex align-items-center select-search-empty"
+    :class="{ 'select-search-sm': size === 'sm' }"
+  >
     <span>{{ loading ? 'Cargando opciones...' : 'Sin opciones disponibles' }}</span>
   </div>
 </template>
@@ -98,6 +119,18 @@ export default defineComponent({
     loading: {
       type: Boolean,
       default: false
+    },
+    clearable: {
+      type: Boolean,
+      default: false
+    },
+    clearLabel: {
+      type: String,
+      default: ''
+    },
+    size: {
+      type: String,
+      default: 'md'
     }
   },
   emits: ['update:modelValue', 'change'],
@@ -105,6 +138,7 @@ export default defineComponent({
     const dropdownToggle = ref(null);
     const searchQuery = ref('');
     const isSearching = ref(false);
+    let blurTimeout = null;
 
     // Get label for current selection
     const selectedLabel = computed(() => {
@@ -114,11 +148,15 @@ export default defineComponent({
     });
 
     // Sync input with selection when not searching
-    watch(() => props.modelValue, () => {
-      if (!isSearching.value) {
-        searchQuery.value = selectedLabel.value;
-      }
-    }, { immediate: true });
+    watch(
+      [() => props.modelValue, () => props.options],
+      () => {
+        if (!isSearching.value) {
+          searchQuery.value = selectedLabel.value;
+        }
+      },
+      { immediate: true }
+    );
 
     // Filter options based on user input
     const filteredOptions = computed(() => {
@@ -130,14 +168,46 @@ export default defineComponent({
       );
     });
 
+    const hideDropdown = () => {
+      if (dropdownToggle.value) {
+        const bsDropdown = Dropdown.getInstance(dropdownToggle.value) || new Dropdown(dropdownToggle.value);
+        if (bsDropdown) {
+          bsDropdown.hide();
+        }
+      }
+    };
+
+    const clearSelection = () => {
+      if (blurTimeout) {
+        clearTimeout(blurTimeout);
+        blurTimeout = null;
+      }
+      isSearching.value = false;
+      searchQuery.value = '';
+      if (props.modelValue !== null) {
+        emit('update:modelValue', null);
+        emit('change', null);
+      }
+      hideDropdown();
+    };
+
     const onFocus = (e) => {
-      isSearching.value = true;
+      if (blurTimeout) {
+        clearTimeout(blurTimeout);
+        blurTimeout = null;
+      }
       e.target.select(); // Select all text for easy replacement
     };
 
     const onBlur = () => {
       // Small delay to allow click on dropdown item
-      setTimeout(() => {
+      if (blurTimeout) clearTimeout(blurTimeout);
+      blurTimeout = setTimeout(() => {
+        blurTimeout = null;
+        if (props.clearable && isSearching.value && searchQuery.value.trim() === '') {
+          clearSelection();
+          return;
+        }
         isSearching.value = false;
         searchQuery.value = selectedLabel.value;
       }, 200);
@@ -147,22 +217,32 @@ export default defineComponent({
       isSearching.value = true;
     };
 
+    const onEnter = (e) => {
+      if (props.clearable && searchQuery.value.trim() === '') {
+        clearSelection();
+        e.target?.blur();
+      }
+    };
+
     const selectOption = (option) => {
+      if (blurTimeout) {
+        clearTimeout(blurTimeout);
+        blurTimeout = null;
+      }
       emit('update:modelValue', option[props.valueKey]);
       emit('change', option);
       isSearching.value = false;
       searchQuery.value = option[props.labelKey];
       
       // Cerrar el dropdown manualmente después de seleccionar
-      if (dropdownToggle.value) {
-        const bsDropdown = Dropdown.getInstance(dropdownToggle.value) || new Dropdown(dropdownToggle.value);
-        if (bsDropdown) {
-          bsDropdown.hide();
-        }
-      }
+      hideDropdown();
     };
 
     onBeforeUnmount(() => {
+      if (blurTimeout) {
+        clearTimeout(blurTimeout);
+        blurTimeout = null;
+      }
       if (dropdownToggle.value) {
         const bsDropdown = Dropdown.getInstance(dropdownToggle.value);
         if (bsDropdown) {
@@ -173,12 +253,15 @@ export default defineComponent({
 
     return {
       searchQuery,
+      isSearching,
       filteredOptions,
       selectedLabel,
       selectOption,
+      clearSelection,
       onFocus,
       onBlur,
       onInput,
+      onEnter,
       dropdownToggle
     };
   }
@@ -271,5 +354,25 @@ export default defineComponent({
 .disabled {
   opacity: 0.65;
   pointer-events: none;
+}
+
+.select-search-sm .select-inner-input {
+  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  min-height: calc(1.5em + 0.5rem + 2px);
+}
+
+.select-search-sm .chevron-container {
+  padding: 0 12px;
+}
+
+.select-search-empty.select-search-sm {
+  padding: 0.25rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  min-height: calc(1.5em + 0.5rem + 2px);
+  border-radius: 25px !important;
+  background-color: var(--input) !important;
+  color: var(--input-txt) !important;
+  border: none !important;
 }
 </style>

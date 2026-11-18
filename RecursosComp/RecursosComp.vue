@@ -139,10 +139,10 @@ import yowiEncuestas from "@/assets/images/generales/yowiEncuestas.png";
 
           var servidor = "";
           // Llamada a interactive.html y paso de parámetros en la URL
-          if (DEV_BASE_URL == "http://localhost:8000") {
-            servidor = "http://localhost:8080/interactive.html";
+          if (DEV_BASE_URL.includes("localhost")) {
+            servidor = `${window.location.origin}/interactive.html`;
           } else {
-            servidor = DEV_BASE_URL + "static/interactive.html";
+            servidor =`${DEV_BASE_URL.replace(/\/$/, '')}/static/interactive.html`;
           }
 
           // servidor = 'https://uct.tresguerras.com.mx:8000/static/interactive.html'
@@ -151,6 +151,7 @@ import yowiEncuestas from "@/assets/images/generales/yowiEncuestas.png";
           console.log("URL: " + url);
 
           // Pasar parámetros a interactive.html
+          url.searchParams.set("base_url", DEV_BASE_URL.replace(/\/$/, ''));
           url.searchParams.set("materia", materia);
           url.searchParams.set("unidad", unidad);
           url.searchParams.set("tema", tema);
@@ -296,22 +297,15 @@ import yowiEncuestas from "@/assets/images/generales/yowiEncuestas.png";
           const temaId = partes[4].replace("tema", ""); // Obtener el id de tema
           var linkcompleto = "";
           var fileName = "";
+          const base = DEV_BASE_URL.replace(/\/$/, '');
           // Construir la URL para la descarga
           if (dato == 1) {
             fileName = partes[5]; // Nombre del archivo
-            if (DEV_BASE_URL == "http://localhost:8000") {
-              linkcompleto = `http://localhost:8000/descargar/${materiaId}/${unidadId}/${temaId}/${fileName}`;
-            } else {
-              linkcompleto = `${DEV_BASE_URL}descargar/${materiaId}/${unidadId}/${temaId}/${fileName}`;
-            }
+            linkcompleto = `${base}/descargar/${materiaId}/${unidadId}/${temaId}/${fileName}`;
           } else {
             const usuarioid = store.state.user.userProfile.id_usuario;
             fileName = "practica_tema" + temaId + ".pdf";
-            if (DEV_BASE_URL == "http://localhost:8000") {
-              linkcompleto = `http://localhost:8000/descargarPractica/${usuarioid}/${fileName}`;
-            } else {
-              linkcompleto = `${DEV_BASE_URL}descargarPractica/${usuarioid}/${fileName}`;
-            }
+            linkcompleto = `${base}/descargarPractica/${usuarioid}/${fileName}`;
           }
 
           // Hacer la solicitud al servidor
